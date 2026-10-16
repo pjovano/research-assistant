@@ -22,10 +22,13 @@ the new setup down, and it replaces the old one under the new name
 `research-assistant`. Your answers set the scope:
 
 - **This round builds for your own use, never for users who don't exist
-  yet.** From the ports plan it builds only what the primary Mac uses: the
-  host ports for the health and Remote Control jobs, and the iCloud
-  placeholder halt. Support for other OSes, hosted APIs, and other agent
-  hosts waits for a real need (§3, "Deferred").
+  yet.** From the ports plan it builds what the primary Mac uses (the host
+  ports for the health and Remote Control jobs, and the iCloud placeholder
+  halt) and the agent-host track, so that the setup can move off Claude Code
+  or off Claude's models: workers name a model tier, hooks and workers are
+  rendered from host-neutral specs, and the instructions name capabilities,
+  never one host's tool names (G17–G21). Support for other OSes and hosted
+  APIs waits for a real need (§3, "Deferred").
 - **The personal assistant is a skeleton only**: an empty domain repo, made
   from the domain template, where you add skills soon after the switch. Its
   first skills are plain skills of its own; the dispatcher waits until they
@@ -56,7 +59,7 @@ running the backfill ingest with it, and its code doesn't change.
 | --- | --- | --- |
 | `research-tools` | frozen; runs the backfill on the Mac | archived, read-only, kept for rollback |
 | `research-assistant` | new; starts as a snapshot of `research-tools` taken in W0; every research-side upgrade lands here | the research domain |
-| `agent-core` | new; `core/`: the shared standards, the audit engine, the host ports, the domain template; its root: the Remote Control job, and later the dispatcher | `core/` is what every domain carries; the root holds the Remote Control job, and becomes the front door when the dispatcher is built |
+| `agent-core` | new; `core/`: the shared standards, the audit engine, the host ports, the agent-host layer, the domain template; its root: the Remote Control job, and later the dispatcher | `core/` is what every domain carries; the root holds the Remote Control job, and becomes the front door when the dispatcher is built |
 | `personal-assistant` | new; made from the domain template; no skills yet | the place for your personal skills |
 | `assistant` | created in X0.1 with only a README, then superseded by `agent-core`'s root (§1) | deleted or archived |
 
@@ -102,7 +105,7 @@ cloud.
 | Three plans assume two full machines ("both machines", "clone on both", "rebuild both environments") | The primary/secondary plan replaces that assumption everywhere. Only the primary has the control plane, so every "both machines" becomes "the primary", and the dispatcher's state lives on the primary's own disk (`~/.agent-core/state/`), not in iCloud or git. That settles the assistant plan's open decisions 4 and 5. |
 | The rename moves the checkout and the launch agents, and would break the running setup mid-build | No GitHub rename. `research-assistant` is a new repo, and the switch is the rename. |
 | Two generators for the same `settings.json` sandbox block (ports PR 20 `policy.json`; assistant 3.4 `domain.json`) | One generator in `agent-core`. `domain.json` carries a `policy` section; `domain.py settings` reads it. |
-| "Capabilities" means two things: tool classes (ports) and the three risks of private data, untrusted content, and sending out (assistant) | The ports plan keeps **capabilities** for tool classes. The three risks become **exposure**, and `registry` checks each skill's declared exposure against its generated tool capabilities: a skill with `web` must declare untrusted content. Both wait with the dispatcher and the worker generator (§3, "Deferred"); the terms stand for that later round. |
+| "Capabilities" means two things: tool classes (ports) and the three risks of private data, untrusted content, and sending out (assistant) | The ports plan keeps **capabilities** for tool classes. The three risks become **exposure**, and `registry` checks each skill's declared exposure against its generated tool capabilities: a skill with `web` must declare untrusted content. Capabilities come with the worker generator (G19); exposure and `registry` wait with the dispatcher (§3, "Deferred"). |
 | Commit trailers: the audit wants `Defect-class:` on every commit, but a refactor has no defect class | `Defect-class:` for a fix, `Change-class: refactor\|feature — <what>` for everything else. The audit's sign 6 accepts either. This is settled in W1, because every upgrade commit needs it. |
 | The Vocabulary table is both moved (assistant 1.3) and parsed in place (audit PR 3), and it is the most-churned text in the repo (75 commits in two weeks) | The move happens first (A1). The audit lint then parses the domain's `.claude/glossary.md`. |
 | Ports PR 22 deletes `relay`, which the audit's `audit.js` is built on | PR 22 is deferred (§3, W6). If it is ever done, `audit.js` moves to the same `WorkerRunner`. |
@@ -136,7 +139,7 @@ Settled after W0. It replaces the assistant architecture plan's separate
 
 | Piece | Content |
 | --- | --- |
-| `agent-core` | one repo, two parts. `core/` holds what every domain shares: `skills/`, `agents/`, `workflows/`, `audit/`, `lib/` (the host ports for jobs and alerts), `templates/domain/`, `domain.py`. The root holds the Remote Control job and the root contract; the dispatcher's `domain.json`, its `.claude/settings.json`, and the skills `route`, `delegate`, `compose`, and `registry` join it when the dispatcher is built (§3, "Deferred"). The tests sit at the root, outside `core/`. |
+| `agent-core` | one repo, two parts. `core/` holds what every domain shares: `skills/`, `agents/`, `workflows/`, `audit/`, `lib/` (the host ports for jobs and alerts, and the agent-host port), `templates/domain/`, `domain.py`. The root holds the Remote Control job and the root contract; the dispatcher's `domain.json`, its `.claude/settings.json`, and the skills `route`, `delegate`, `compose`, and `registry` join it when the dispatcher is built (§3, "Deferred"). The tests sit at the root, outside `core/`. |
 | The front door | Until the dispatcher is built, Remote Control runs in `~/Developer/research-assistant`, the only domain with skills, and a remote session is a research session. When the dispatcher is built, Remote Control moves to `~/Developer/agent-core`, and the dispatcher hands each request to a session started in the owning domain's repo, so that domain's settings, sandbox, hooks, and MCP servers apply from its first turn. The dispatcher never loads a domain's contract into its own session: an instruction file cannot change a session's sandbox or permissions, and one session holding every domain's permissions is the combination §5 of the assistant plan forbids. |
 | What a domain carries | `core/` alone, vendored at `vendor/agent-core/` with `git subtree` from the branch `core`, which `agent-core`'s CI writes with `git subtree split --prefix core` after every merge to `main`. The dispatcher's contract and skills never enter a domain. A domain symlinks the core skills, workers, and workflows it uses into `.claude/`; the dispatcher symlinks them from `core/` the same way. |
 | Why a copy | the copy needs no setup in the build's cloud sessions or in CI, and a domain moves to a newer core only when it pulls on purpose. A checkout of `agent-core` beside each domain would also work, at the cost of setup in every environment and of the pinning. |
@@ -202,7 +205,7 @@ Settled after W0. It replaces the assistant architecture plan's separate
   fingerprint. `pyproject.toml`'s gating set stays `E4, E7, E9, F`; otherwise
   CI fails on the 33 existing too-many-arguments findings.
 - **`xref` is written against `model:` and the stage table's Model column
-  (U3).**
+  (U3).** G17 then extends the same check to tiers, so the two never disagree.
 - **The fast post-edit hook moves to the very start (X1)**, out of Check 8.
   - Today every Python edit waits for the full suite. The spike measured it
     on the 4-vCPU cloud VM: 4,965 tests in 118 s, and the post-edit hook 2 min
@@ -242,7 +245,7 @@ or practice grows the text a session loads.
 | Cuts first | U5 | Every run's report opens with the cuts: each as replacement text with the words it saves, ranked by how often the text is loaded (`clean-prose` §10), and the run's total saved. The prose reader judges each unit against `clean-prose` §7–8; the redundancy checker names each duplicate's single home |
 | Redundancy gates | U3, U5 | `redundancy` rows fail CI once the bench measures their precision at 0.9 or higher |
 | No rule lost | U6 | The fix loop applies a cut only with A1's diff check: every rule of the old text maps to a sentence of the new. A cut that drops a rule is reverted and reported |
-| No growth | U2b, U8 | U2b's splits and Check 9's practices grow no file's word count |
+| No growth | U2b, U8, G21 | U2b's splits, Check 9's practices, and G21's capability names grow no file's word count |
 | Cut target | X7.1 | The closing audit run cuts the whole instruction text by at least 20% of its words, the contract first. If the target cannot be met without dropping a rule, the run reports the shortfall and drops no rule |
 
 ### Hexagonal ports plan
@@ -250,9 +253,9 @@ or practice grows the text a session loads.
 - **This round builds only what the primary uses.** P1 (merged) declared the
   ports and the `mac-local` profile. P5+M3 builds the host ports' macOS
   adapters and the two jobs; P6+M4 builds `SyncedFolder` with its iCloud
-  adapter and the placeholder halt. Every other item of the ports plan serves
-  another OS, a hosted API, or another agent host, and waits (§3,
-  "Deferred").
+  adapter and the placeholder halt. The agent-host track (G17–G21) is built
+  in full. Every other item of the ports plan serves another OS or a hosted
+  API, and waits (§3, "Deferred").
 - **Counts, for the deferred `Vault` refactor (P7).**
   - 65 modules use the path constants, not 58, plus 92 test files that patch
     them.
@@ -330,7 +333,8 @@ that touch disjoint files.
 | | b | **G20** research `domain.json` created with its `folders` and `policy`, the manifest reader, and one settings generator, with the sensitive-folder read guard | agent-core + research-assistant | A1 |
 | **W4** | a | **U5** audit workflow and workers, its report opening with the cuts → **U6** loop and fix (worktree), no rule lost → **U7** Check 8 (plus stage timings in `ingest.py`) → **U8** Check 9, current practice, with no growth | agent-core (+ research for timings) | U4 |
 | | b | **A5** domain template + `new-domain`, with the folder step (folders in `~/Documents`, access, optional Obsidian vault) → **A4** `personal-assistant` made by `new-domain`, no skills and no folders yet | agent-core, personal-assistant | G20 |
-| **W5** | a | **U2b** the > 40-word sentence cleanup, with no file's word count grown | research-assistant | U3, U8 |
+| | c | **G17** tiers → **G18** `HookIo` + git pre-commit (the X1 affected-module checks; the full suite runs pre-push and in CI) → **G19** worker specs + generator (the agent-host port at `core/lib/agent_core/_ports/agent.py` and its adapters in `core/lib/agent_core/_adapters/agent/`, in `agent-core`). Each repo commits the agent files the generator renders from its specs, and CI fails if they differ from a fresh render. A domain symlinks the core's rendered files, never its specs | agent-core + research-assistant | U3 |
+| **W5** | a | **U2b** the > 40-word sentence cleanup → **G21** capability names in the prose (about 25 instruction files, in slices by skill); the capability names are core terms, defined in the core's `clean-prose`, not in a domain glossary; neither grows a file's word count | research-assistant | U3, U8, G19 |
 | | b | **P16** the README per role, for the primary: install on macOS; "Two machines: primary and secondaries"; "Retire a former full install" | research-assistant | X2, P5+M3 |
 | **W6** | — | **Deferred: not in this round** (below) | — | — |
 | **W7 hardening** | — | **X7.1** the upgraded audit in `all` mode with the fix loop, on every repo, toward the 20% cut target → **X7.2** a completeness critic: every acceptance row of the items this round builds has a CI test or a line in `rehearsal.md` → **X7.3** `cutover.py rehearse \| switch \| rollback` (read-only form first) and the switch runbook | all | W5 |
@@ -348,7 +352,6 @@ until you name that need, nothing of it is built.
 | P11, P12, P13 | `LayoutEngine` port; Marker API and `calibrate`; `LineRecognizer`, Tesseract, and `calibrate-ocr` | a second layout engine or OCR engine you want to use |
 | P8, P14, P15 | the contract per OS; requirement extras and locks; `bootstrap` and `doctor` | a second OS, or a second user's install |
 | P5+M3's and P6+M4's other-OS parts | systemd, the Linux readings, `notify-send`, ntfy; `Accelerator`; `Trash` | a second OS |
-| G17, G18, G19, G21 | model tiers; `HookIo` and the git pre-commit fallback; worker specs and the generator; capability names in the prose | a second agent host |
 | A3 | the dispatcher at `agent-core`'s root: `route`, `delegate`, `compose`, `registry`, `approvals`, `dispatch`; `handles`, `entry_skills`, `exposure`, `unattended` | the personal domain's own skills, which show what the domains share |
 | P22 | the Python batch driver | a second agent host |
 
@@ -368,8 +371,12 @@ until you name that need, nothing of it is built.
   writes the settings the generator prints. If G20 merges while such an item
   is open, the item moves its settings change into `policy` when it merges
   `main`.
+- **The audit comes before the agent-host track (G*)**, because G17 extends
+  the `xref` check that U3 writes.
 - **U2b comes after the audit track (W4-a)**, because U5 and U6 rewrite the
   audit skills that U2b's sentence cleanup also edits.
+- **The capability prose pass (G21) comes last**, because it rewrites the most
+  instruction files, and every earlier item edits some of them.
 - **A Vocabulary row added on a branch while A1 runs moves on merge.** A1
   moves `clean-prose`'s Vocabulary to `.claude/glossary.md`; a W2 item of
   another lane that adds a row resolves the merge conflict by adding the row
@@ -505,6 +512,7 @@ each wave's end.
 3. **Run `rehearsal.md`, old against new.** It holds every Mac-only acceptance
    row the items collected, including:
    - the full suite on macOS;
+   - generated `.claude/` files identical apart from ordering (G17–21);
    - a health sample;
    - no iCloud placeholder in the library or the inbox;
    - an `ingest` dry run;

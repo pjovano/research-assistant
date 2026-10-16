@@ -151,9 +151,25 @@ No Mac-only check.
 
 No Mac-only check.
 
+### G17
+
+No Mac-only check.
+
+### G18
+
+| ID | Phase | Check | Command or action | Passes when | Result |
+| --- | --- | --- | --- | --- | --- |
+| R-G18-1 | S | The git pre-commit hook runs on macOS | stage a file that fails ruff; `git commit` | the commit is refused with ruff's finding | |
+
+### G19
+
+| ID | Phase | Check | Command or action | Passes when | Result |
+| --- | --- | --- | --- | --- | --- |
+| R-G19-1 | S | The rendered worker files equal today's | `agents.py generate --host claude-code`; diff with the old checkout's `.claude/agents/` | equal apart from ordering | |
+
 ## W5
 
-### U2b
+### U2b, G21
 
 No Mac-only check.
 
@@ -187,10 +203,6 @@ Deferred (`PLAN.md` §3). R-P11-1 and R-P13-1 retired; R-P11-2 moved to R-all-3.
 ### P8, P14, P15
 
 Deferred (`PLAN.md` §3). R-P14-1, R-P15-1, and R-P15-2 retired.
-
-### G17, G18, G19, G21
-
-Deferred (`PLAN.md` §3). R-G18-1 and R-G19-1 retired.
 
 ### A3
 
