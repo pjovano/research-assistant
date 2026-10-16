@@ -25,7 +25,7 @@ for one operation.
 | writing | `research vault/writing/` | the user's writing, kept as a Zettelkasten: `1 notes/`, one atomic note per idea, its one to three claims with their sources and tasks; `2 projects/`, one project file per project, an Excalidraw board: its parents and children in its frontmatter, a card for each atomic note and an arrow for each relation between two of them, and its research question, abstract, drafts, tasks, and reading list shown on the board; `3 drafts/`, every version of every draft; `4 published/`, the finished pieces; the research assistant writes there when the user asks, and changes the user's prose only on request |
 | reading lists | `research vault/bibliographies/4 reading lists/` | one reading list per project, the works that bear on its questions as wanted or held, each wanted entry checked off by a batch once its work is placed on a bibliography; and the reading lists Discover produces, saved here when the user asks to keep one; none is a bibliography |
 | inbox | `~/Desktop/inbox/` | new PDFs awaiting ingest |
-| search stores | per machine, outside the vault | an embedding store and a full-text store built over the corpus, rebuilt rather than synced |
+| search stores | on the primary, outside the vault | an embedding store and a full-text store built over the corpus, rebuilt rather than synced |
 
 `research vault/` is an Obsidian vault. Every note is Obsidian Markdown, and
 every link between notes is a wikilink, so Obsidian's graph shows which

@@ -113,8 +113,8 @@ in its place.
 | symlink | a relative symbolic link under `.claude/` that resolves to a core unit inside the vendored core | link (for a symlink), alias, shortcut |
 | primary | the one machine that holds the control plane and runs every operation, written "the primary"; the `source_role` value `primary` is another term | main machine, home machine, always-on machine, master |
 | secondary | any machine other than the primary, which holds the vault through iCloud and runs no operation, written "a secondary"; the `source_role` value `secondary` is another term | laptop (for a secondary), client machine, remote machine, second machine |
-| `Defect-class:` trailer | the git trailer `Defect-class: <the defect class>` closing the message of a commit that fixes a defect | defect line, fix tag, defect note |
-| `Change-class:` trailer | the git trailer `Change-class: refactor — <what>` or `Change-class: feature — <what>` closing the message of a commit that fixes no defect | change line, change tag, kind trailer |
+| `Defect-class:` trailer | the git trailer `Defect-class: <the defect class>` in the last paragraph of the message of a commit that fixes a defect | defect line, fix tag, defect note |
+| `Change-class:` trailer | the git trailer `Change-class: refactor — <what>` or `Change-class: feature — <what>` in the last paragraph of the message of a commit that fixes no defect | change line, change tag, kind trailer |
 | inbox | `~/Desktop/inbox/`, new PDFs awaiting ingest and Word files awaiting import | drop folder, queue |
 | batch | the inbox's contents when ingest starts, each filed work an earlier batch left short of Stage 4, and each corpus file whose body is written and whose classification is not | run, ingest set, pass |
 | set-aside PDF | a PDF of a batch whose stage reached `stop and ask the user`: left as it is, its question kept for the batch's one report | held PDF, skipped PDF, blocked PDF, parked PDF |

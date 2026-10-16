@@ -85,9 +85,9 @@ every note lives in it.
 bibliographies.**
 
 **`~/Documents` holds folders side by side.** `library/` and `research
-vault/` are two of them. Each folder is assigned to the assistants that work
-on it; the librarian and the research assistant work on `library/` and
-`research vault/`. Any folder MAY be opened in Obsidian as a vault of its
+vault/` are two of them. Each folder is assigned to the repositories whose
+sessions work on it; the control plane works on `library/` and `research
+vault/`. Any folder MAY be opened in Obsidian as a vault of its
 own, as `research vault/` is. iCloud syncs every folder of `~/Documents`.
 
 **The primary runs every operation; a secondary holds the vault alone.** The
@@ -432,12 +432,12 @@ text; `vault-audit` audits both for special cases.
 **Every change to the control plane reaches `main` through a pull request.**
 
 * Commit on a branch cut from `main`; NEVER commit on `main` itself.
-* **End every commit's message with one trailer of its kind.** If the
-  commit fixes a defect, the trailer is `Defect-class: <the defect class>`.
-  Otherwise the trailer is `Change-class: refactor — <what>` or
-  `Change-class: feature — <what>`, `<what>` naming what the commit
-  restructures or adds. A merge commit carries no trailer: the commits it
-  merges carry theirs. `vault-audit` reads the trailers.
+* **Every commit's message carries one trailer of its kind in its last
+  paragraph.** If the commit fixes a defect, the trailer
+  is `Defect-class: <the defect class>`. Otherwise the trailer is
+  `Change-class: refactor — <what>` or `Change-class: feature — <what>`,
+  `<what>` naming what the commit restructures or adds. `vault-audit` reads
+  the trailers.
 * Push the branch and open its pull request, or push alone if the branch
   already has an open one.
 * Title the pull request with what the change fixes or adds, stated as the
@@ -466,9 +466,10 @@ damaged, repair that package alone with `uv pip sync --reinstall-package
 `uv pip sync` leaves a package untouched when its pinned version is installed.
 Two programs run outside the lock. `pandoc`, which the `edit-drafts` skill's
 `import` and `export` run, is installed on the primary with `brew install
-pandoc`, and CI installs the version its workflow names. `typst`, which
-`export --as pdf` runs, is installed on the primary with `brew install
-typst`; CI does not install it, and the test that needs it is skipped
+pandoc`; CI installs the version its workflow names, and
+`bin/cloud-setup.sh` installs the version it names. `typst`, which `export --as pdf`
+runs, is installed on the primary with `brew install typst`; neither CI nor
+`bin/cloud-setup.sh` installs it, and the test that needs it is skipped
 there.
 
 * After every edit to a Python file, the post-edit hook runs the affected

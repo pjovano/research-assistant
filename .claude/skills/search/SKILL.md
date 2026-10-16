@@ -80,7 +80,7 @@ changed. The manifest records each work's content hash under the chunking
 version; a change to how chunks are cut or contextualized bumps the version,
 and the next `sync` re-chunks every work and prunes the old chunks.
 
-**The search stores are per machine and rebuildable.** They live at
+**The search stores live on the primary and are rebuildable.** They live at
 `~/.research-vault/rag/`, or at the path `~/.research-vault/machine.json` names
 in `rag_dir`; `sync --rebuild` regenerates them from the corpus.
 

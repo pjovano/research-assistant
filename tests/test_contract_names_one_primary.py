@@ -9,7 +9,7 @@ from _support import PROJECT_ROOT, SKILLS_DIR
 
 INSTRUCTION_PATTERNS = ("CLAUDE.md", "AGENTS.md", "README.md", ".claude/*.md", ".claude/**/*.md")
 PEER_PHRASES = ("on each machine", "each machine's", "either machine", "both machines", "both environments",
-                "once per machine", "two machines", "two macs")
+                "per machine", "two machines", "two macs")
 KEPT_SENTENCES = ("two machines editing the same corpus file through iCloud at once",
                   "when two machines change it at once")
 WHITESPACE_RUN = re.compile(r"\s+")
