@@ -25,6 +25,8 @@ class it pins states its own coverage and is not listed.
 | `test_imports.py` | every facade, every `_` package, and every entry script imports; `vault.__all__` is pinned; the facade loads no token encoder |
 | `test_vault_frontmatter.py` | frontmatter round-trip, LF enforcement, PDF-link upsert, a byte-order mark stripped, `parse_note`, `StoredNote` |
 | `test_vault_citations.py` | the `source_type` and `source_role` vocabularies, `commentary_target`, citekeys |
+| `test_providers.py` | the composition root: each port's adapter under each profile, `mac-local` the default and today's classes, an override replacing the profile's entry for its port, a missing key named, the API key read from the variable `key_env` names and never shown, each adapter loaded on first call and kept, `lib/_ports` importing the standard library alone, the report `providers.py` prints |
+| `ports/test_*_contract.py` | one contract per port of `lib/_ports`, each a mixin an adapter's test case inherits, run here against the fakes of `_port_fakes.py`, `_rag_fakes.py`, `_health_fixtures.py`, and `_graph_fixtures.py`, and the full-text contract against the SQLite store besides |
 | `test_vault_root_guard.py` | the vault is the directory `machine.json` names in `vault_dir`, `~/Documents` absent the key, and holds `research vault/`; a directory without it refuses to import; an unreadable `machine.json` stops the script with its path |
 | `test_vault_locate.py` | `locate_pdf` keeps a bare path only inside a searched directory; NFC basenames over NFD filenames; the directory listings and conflict copies |
 | `test_vault_markdown.py` | the shared heading, footnote-definition, and wikilink patterns; `BibliographySpan` |

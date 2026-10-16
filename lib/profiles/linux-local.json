@@ -1,0 +1,20 @@
+{
+  "providers": {
+    "scheduler": {"adapter": "systemd"},
+    "notifier": {"adapter": "notify-send"},
+    "system_readings": {"adapter": "linux"},
+    "accelerator": {"adapter": "torch"},
+    "trash": {"adapter": "send2trash"},
+    "sync": {"adapter": "syncthing"},
+    "locations": {"adapter": "xdg"},
+    "embedder": {"adapter": "ollama"},
+    "embedding_store": {"adapter": "chroma"},
+    "fulltext_store": {"adapter": "sqlite"},
+    "reranker": {"adapter": "llama-server"},
+    "layout_engine": {"adapter": "marker-local"},
+    "line_recognizer": {"adapter": "tesseract"},
+    "transcriber": {"adapter": "whisper-cpp"},
+    "diarizer": {"adapter": "pyannote"},
+    "citation_parser": {"adapter": "hf-local"}
+  }
+}

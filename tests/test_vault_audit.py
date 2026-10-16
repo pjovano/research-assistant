@@ -50,8 +50,10 @@ REPOSITORY_FILES = {
     "workers": (".claude/agents/worker.md",),
     "code": ("lib/vault.py", "lib/_vault/notes.py", ".claude/skills/one/scripts/run.py",
              ".claude/skills/one/scripts/_run/core.py"),
-    "tests": ("tests/test_one.py", "tests/README.md", "tests/fixtures/goldens/case.json"),
-    "configuration": ("pyproject.toml", ".github/workflows/ci.yml", ".github/actions/empty-vault/action.yml"),
+    "tests": ("tests/test_one.py", "tests/ports/test_two_contract.py", "tests/README.md",
+              "tests/fixtures/goldens/case.json"),
+    "configuration": ("pyproject.toml", "lib/profiles/mac-local.json", ".github/workflows/ci.yml",
+                      ".github/actions/empty-vault/action.yml"),
 }
 CONFIGURATION_FILES = (*REPOSITORY_FILES["configuration"], "tests/fixtures/goldens/case.json")
 STRAY_FILES = ("README.md", ".claude/skills/one/notes.txt", "lib/data.json")
@@ -317,7 +319,7 @@ class TestAuditSet(unittest.TestCase):
 
     def test_counts_name_the_three_totals(self) -> None:
         counts = AuditSet.of_changes(self.control_plane, self.baseline_path).counts()
-        self.assertEqual({"instructions": 7, "code": 5, "control_plane": 17}, counts)
+        self.assertEqual({"instructions": 7, "code": 6, "control_plane": 19}, counts)
 
 
 class TestRelatedFiles(unittest.TestCase):

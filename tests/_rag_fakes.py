@@ -99,6 +99,7 @@ class FakeReranker:
         self._scores = scores_by_fragment or {}
         self._cause = cause
         self.queries: list[str] = []
+        self.stops = 0
 
     def unavailable_cause(self) -> str | None:
         return self._cause
@@ -109,6 +110,9 @@ class FakeReranker:
         self.queries.append(query)
         return [max((score for fragment, score in self._scores.items() if fragment in passage), default=0.0)
                 for passage in passages]
+
+    def stop(self) -> None:
+        self.stops += 1
 
 
 def temp_directory(test: unittest.TestCase) -> Path:
