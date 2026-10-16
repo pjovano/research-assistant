@@ -16,7 +16,7 @@ export const meta = {
 }
 
 const PYTHON = '~/.research-vault/venv/bin/python'
-const REPOSITORY = '~/Developer/research-tools'
+const REPOSITORY = '~/Developer/research-assistant'
 const SCRIPTS = {
   clean: skillScript('clean-pdfs/scripts/clean.py'),
   file: skillScript('file-pdfs/scripts/file.py'),

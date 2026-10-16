@@ -49,6 +49,7 @@ No Mac-only check.
 | --- | --- | --- | --- | --- | --- |
 | R-X3-1 | S | An `ingest` dry run resolves every script path | the `ingest` skill's dry run from `~/Developer/research-assistant` | every script path resolves under the new checkout; no path names `research-tools` | |
 | R-X3-2 | S | The health watcher samples from the new path | `health.py sample` from the new checkout | a journal line is written; its command names the new checkout | |
+| R-X3-3 | S | The new checkout leaves the old health job alone | record the checksum of `~/Library/LaunchAgents/com.research-vault.machine-health.plist`, then run a pipeline command from `~/Developer/research-assistant` | the plist's checksum is unchanged, `launchctl print gui/$(id -u)/com.research-vault.machine-health` still succeeds, and any job the new checkout loads is labelled `com.research-assistant.machine-health` | |
 
 ### P1
 

@@ -6,7 +6,7 @@ import unittest
 from _workflow_source import WORKFLOW, JsRuntime, WorkflowSource
 
 EXPORT_PREFIX = "export "
-COMMAND = "~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/ingest/scripts/ingest.py drive-batch"
+COMMAND = "~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/ingest/scripts/ingest.py drive-batch"
 LONG_REPLY = "The working directory is not the repository. " * 20
 
 

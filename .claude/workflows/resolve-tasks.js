@@ -12,7 +12,7 @@ export const meta = {
 }
 
 const PYTHON = '~/.research-vault/venv/bin/python'
-const NOTES = `${PYTHON} ~/Developer/research-tools/.claude/skills/take-notes/scripts/notes.py`
+const NOTES = `${PYTHON} ~/Developer/research-assistant/.claude/skills/take-notes/scripts/notes.py`
 const DEFAULT_LIMIT = 8
 const RELAY_ATTEMPTS = 2
 const WORKER_ATTEMPTS = 2

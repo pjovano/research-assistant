@@ -1,7 +1,7 @@
 ---
 name: gloss-bibliographies
 description: "Stage 5 — once a batch has placed its works, copy each work's description onto its listing on every bibliography as the listing's gloss, then have the bibliography introducer write each touched bibliography's introduction, a note on each of its groups, and the group of each unsorted work; a batch introduces the bibliographies it touched, and the user's instruction introduces one again."
-allowed-tools: Read, Glob, Grep, Agent, Write, Bash(~/.research-vault/venv/bin/python .claude/skills/classify-and-place/scripts/bibliographies.py:*), Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/ingest/scripts/ingest.py:*)
+allowed-tools: Read, Glob, Grep, Agent, Write, Bash(~/.research-vault/venv/bin/python .claude/skills/classify-and-place/scripts/bibliographies.py:*), Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/ingest/scripts/ingest.py:*)
 ---
 
 # gloss-bibliographies (Stage 5; a script copies, one worker judges)

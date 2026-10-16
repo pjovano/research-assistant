@@ -128,11 +128,11 @@ class TestACheckoutReadByGit(DirectoryCase):
 
 class TestTheWorkingDirectoryCheck(unittest.TestCase):
     def test_a_directory_under_the_worktrees_is_a_failure(self) -> None:
-        directory = Path("~/Developer/research-tools/.claude/worktrees/fix").expanduser()
+        directory = Path("~/Developer/research-assistant/.claude/worktrees/fix").expanduser()
         self.assertEqual(1, len(WorkingDirectoryReadiness(directory).failures()))
 
     def test_the_repository_root_passes(self) -> None:
-        directory = Path("~/Developer/research-tools").expanduser()
+        directory = Path("~/Developer/research-assistant").expanduser()
         self.assertEqual([], WorkingDirectoryReadiness(directory).failures())
 
 

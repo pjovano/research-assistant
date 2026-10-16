@@ -106,7 +106,7 @@ in its place.
 | Zotero record | the Zotero item that identifies one work; Zotero's own field names such as `itemType` stay as written | record (alone), entry, metadata, Zotero item |
 | derived corpus | `research vault/corpus/`, the directory of corpus files, one per PDF, each in the directory itself and never in its subfolder `talk transcripts/` | corpus text, text layer, extracted text, source index |
 | search stores | the primary's embeddings and full-text index, never synced | search index, vector store, embeddings (alone) |
-| control plane | `~/Developer/research-tools`, the repository: the contract, skills, worker instructions, and code | config, tooling, project |
+| control plane | `~/Developer/research-assistant`, the repository: the contract, skills, worker instructions, and code | config, tooling, project |
 | core | `core/` of the `agent-core` repository: the skills, workers, workflows, and code `agent-core` shares with every repository that vendors it | shared layer, framework, common library |
 | vendored core | `vendor/agent-core/`, the core as `git subtree` copies it from `agent-core`'s branch `core` | vendor copy, submodule, core checkout |
 | core unit | one skill, worker, or workflow of the core; a core skill, a core worker, and a core workflow are core units of those kinds | shared skill, imported skill, external skill |
