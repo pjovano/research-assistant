@@ -64,8 +64,15 @@ REWORDED = {
          "code or configuration identifier stays as written; quoting a banned term to state its ban is not a use.",
          "The code and configuration identifiers `vault-rag`, `rag.py`, `RAG_DIR`, `rag_dir`, and `itemType` stay "
          "as written."),
+    "Length alone NEVER forces a break, and NEVER merge two units to balance length.":
+        ("Unless §14's paragraph limit binds the paragraph, length alone NEVER forces a break.",
+         "NEVER merge two units to balance length."),
+    "An enumeration breaks between its items and NEVER inside one; if its items run about a line each, the list "
+    "stays one paragraph at any length.":
+        ("**An enumeration breaks between its items and NEVER inside one.**",
+         "If its items run about a line each, the list stays one paragraph at any length."),
     "Per Scope, this rule binds research content as well.":
-        ("Per Scope, this rule binds domain content as well.", DOMAIN_CONTENT_IS_RESEARCH_CONTENT),
+        ("Per Scope, §6's paragraph rules bind domain content as well.", DOMAIN_CONTENT_IS_RESEARCH_CONTENT),
     "Does not apply to research content: derived research notes, the substance of a research answer, or the user's "
     "own drafts.":
         ("Does not apply to domain content.", DOMAIN_CONTENT_IS_RESEARCH_CONTENT),
