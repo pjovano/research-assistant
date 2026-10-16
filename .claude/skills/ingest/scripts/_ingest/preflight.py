@@ -3,9 +3,12 @@ from __future__ import annotations
 import importlib
 import importlib.util
 from collections.abc import Callable
-from pathlib import Path
+from pathlib import Path, PurePath
 
+import vault
 from _drive.script import SkillScript
+from _ports.host import SyncedFolder
+from synced_folder import SyncedFolderUnavailable
 
 START_CLEAN = "clean"
 START_EXTRACT = "extract"
@@ -19,6 +22,27 @@ REPOSITORY_PARTS = 2
 PROBE_CITEKEY = "ingest-preflight-probe"
 ZOTERO_OFFLINE = "Zotero is not running: start Zotero"
 VISION_MISSING = "Apple Vision is not available on this machine: run the batch on a Mac"
+PLACEHOLDERS_FOUND = ("iCloud keeps these files' bytes off the disk, so a stage reading one would fail: turn Optimize "
+                      "Mac Storage off and wait until each is downloaded: {}")
+EVERY_FILE: tuple[str, ...] = ()
+BATCH_INBOX_FILES = (vault.PDF_SUFFIX, vault.NOTE_SUFFIX)
+
+
+class ReadPlace:
+    def __init__(self, directory: Path, kinds: tuple[str, ...] = EVERY_FILE) -> None:
+        self._directory = directory
+        self._kinds = kinds
+
+    def files(self) -> list[Path]:
+        if not self._directory.is_dir():
+            return []
+        return [path for path in sorted(self._directory.iterdir()) if not path.is_dir() and self._is_read(path)]
+
+    def _is_read(self, path: Path) -> bool:
+        if not self._kinds:
+            return True
+        suffixes = [suffix.lower() for suffix in PurePath(path.name).suffixes]
+        return any(kind in suffixes for kind in self._kinds)
 
 
 class ZoteroReadiness:
@@ -33,12 +57,7 @@ class ZoteroReadiness:
             return [f"`file.py doctor` failed: {run.tail}"]
         if not doctor.get("zotero_online"):
             return [ZOTERO_OFFLINE]
-        return self._conflict_copies(doctor) + self._better_bibtex()
-
-    @staticmethod
-    def _conflict_copies(doctor: dict) -> list[str]:
-        copies = doctor.get("conflict_copies") or []
-        return [f"iCloud left conflict copies; merge and delete each: {copies}"] if copies else []
+        return self._better_bibtex()
 
     def _better_bibtex(self) -> list[str]:
         try:
@@ -46,6 +65,39 @@ class ZoteroReadiness:
         except Exception as failure:
             return [f"Better BibTeX does not answer, so the duplicate check cannot run: {failure}"]
         return []
+
+
+class SyncedFolderReadiness:
+    def __init__(self, folder: Callable[[], SyncedFolder], conflict_directories: tuple[Path, ...],
+                 read_places: tuple[ReadPlace, ...]) -> None:
+        self._folder = folder
+        self._conflict_directories = conflict_directories
+        self._read_places = read_places
+
+    @classmethod
+    def for_start(cls, start: str, folder: Callable[[], SyncedFolder]) -> SyncedFolderReadiness:
+        library = (ReadPlace(vault.LIBRARY_DIR), ReadPlace(vault.VOLUMES_DIR))
+        if start == START_EXTRACT:
+            return cls(folder, (), library)
+        held_notes_and_library = (vault.CORPUS_DIR, vault.TRANSCRIPTS_DIR, vault.LIBRARY_DIR)
+        return cls(folder, held_notes_and_library, (*library, ReadPlace(vault.INBOX_DIR, BATCH_INBOX_FILES)))
+
+    def failures(self) -> list[str]:
+        try:
+            folder = self._folder()
+        except SyncedFolderUnavailable as unavailable:
+            return [str(unavailable)]
+        return self._conflict_copies(folder) + self._placeholders(folder)
+
+    def _conflict_copies(self, folder: SyncedFolder) -> list[str]:
+        copies = sorted(path.name for directory in self._conflict_directories
+                        for path in folder.conflict_copies(directory))
+        return [f"iCloud left conflict copies; merge and delete each: {copies}"] if copies else []
+
+    def _placeholders(self, folder: SyncedFolder) -> list[str]:
+        placeholders = [str(path) for place in self._read_places for path in place.files()
+                        if folder.not_downloaded(path)]
+        return [PLACEHOLDERS_FOUND.format(placeholders)] if placeholders else []
 
 
 class VisionReadiness:

@@ -304,8 +304,12 @@ of `placed` MAY be set aside: the run's report names each set-aside PDF.
 
 | `--from` | Checks |
 | --- | --- |
-| `extract`, a backfill, and `clean`, a batch | the run lock free, stale, or held by this session; no `engine-run.json` in the scratch directory, whereas a `prefetch` conversion, recorded in `engine-prefetch.json`, never halts it; no detached step whose `step.pid` names a running process, in a batch work directory or a backfill work directory; the control plane on `main` with no uncommitted change; the working directory not under `.claude/worktrees/`; every checkpoint the engine's settings name in the model caches |
-| `clean`, a batch, besides | `file.py doctor`: Zotero online and no conflict copy; Better BibTeX answering a search; Apple Vision installed |
+| `extract`, a backfill, and `clean`, a batch | the run lock free, stale, or held by this session; no `engine-run.json` in the scratch directory, whereas a `prefetch` conversion, recorded in `engine-prefetch.json`, never halts it; no detached step whose `step.pid` names a running process, in a batch work directory or a backfill work directory; the control plane on `main` with no uncommitted change; the working directory not under `.claude/worktrees/`; every checkpoint the engine's settings name in the model caches; an adapter this version provides for `providers.sync`; no file of `library/` or `library/volumes/` whose bytes are not on disk |
+| `clean`, a batch, besides | Zotero online, as `file.py doctor` reports it; Better BibTeX answering a search; Apple Vision installed; no conflict copy in the derived corpus, the talk transcripts, or the library; no PDF or draft card of the inbox whose bytes are not on disk |
+
+**`providers.sync` judges the conflict copies and the files whose bytes are
+not on disk.** `ingest.py synced-folder --from <from>` is read-only: it runs
+those checks of that `--from` alone and prints the same JSON line.
 
 If `engine-run.json` names a process that is not running, the check still
 fails, and its question says the process is not running: delete the file

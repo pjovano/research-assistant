@@ -48,7 +48,7 @@ VAULT_PUBLIC_NAMES = (
     "RESOLVED_PATH_NAMES", "ReplacementFile",
     "SCRATCH_DIR", "SOURCE_ROLES", "SOURCE_TYPES", "TRANSCRIPTS_DIR", "UNCITABLE_FIELD", "UNCITABLE_TOKEN",
     "ScratchEntries", "StoredNote", "VAULT_ROOT", "VOLUMES_DIR", "WIKILINK_RE", "WRITING_DIR", "basename_of",
-    "bibliography_conflict_copies", "body_after_pdf_link", "body_after_source_link",
+    "bibliography_conflict_copies", "bibliography_folders", "body_after_pdf_link", "body_after_source_link",
     "citekey", "citekey_year", "commentary_target", "conflict_copies", "creator_surnames", "ensure_dirs",
     "field_topics", "format_creator", "held_note_exists", "held_note_path", "is_bibliography_heading",
     "is_notes_heading", "join_note",

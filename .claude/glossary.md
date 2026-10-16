@@ -29,6 +29,7 @@ bind every row.
 | control plane | `~/Developer/research-assistant`, the repository: the contract, skills, worker instructions, and code | config, tooling, project |
 | primary | the one machine that holds the control plane and runs every operation, written "the primary"; the `source_role` value `primary` is another term | main machine, home machine, always-on machine, master |
 | secondary | any machine other than the primary, which holds the vault through iCloud and runs no operation, written "a secondary"; the `source_role` value `secondary` is another term | laptop (for a secondary), client machine, remote machine, second machine |
+| adapter | the code `lib/providers.py` chooses for one key of `providers` in `machine.json`, by that key's `adapter` field, from the adapters this version provides | backend, driver, plugin, implementation (for an adapter) |
 | `Defect-class:` trailer | the git trailer `Defect-class: <the defect class>` in the last paragraph of the message of a commit that fixes a defect | defect line, fix tag, defect note |
 | `Change-class:` trailer | the git trailer `Change-class: refactor — <what>` or `Change-class: feature — <what>` in the last paragraph of the message of a commit that fixes no defect | change line, change tag, kind trailer |
 | inbox | `~/Desktop/inbox/`, new PDFs awaiting ingest and Word files awaiting import | drop folder, queue |

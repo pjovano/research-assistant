@@ -17,6 +17,7 @@ from _support import PROJECT_ROOT, LiveTree
 LiveTree.activate()
 
 import providers
+from _adapters.host.icloud import ICloudFolder
 from _clean.ocr import VisionReader
 from agent_core._adapters.host.launchd import LaunchdScheduler
 from agent_core._adapters.host.macos_notifiers import DesktopNotifier, RemindersNotifier
@@ -43,6 +44,7 @@ TODAYS_CLASSES = {
     providers.SYSTEM_READINGS: MacosReadings,
     providers.ACCELERATOR: MetalAccess,
     providers.TRASH: Trash,
+    providers.SYNC: ICloudFolder,
     providers.EMBEDDER: OllamaEmbedder,
     providers.EMBEDDING_STORE: EmbeddingStore,
     providers.FULLTEXT_STORE: FullTextStore,
@@ -53,7 +55,7 @@ TODAYS_CLASSES = {
     providers.DIARIZER: PyannotePipeline,
     providers.CITATION_PARSER: CitationParser,
 }
-PORTS_WITHOUT_AN_ADAPTER_YET = {providers.SYNC: "icloud", providers.LOCATIONS: "macos"}
+PORTS_WITHOUT_AN_ADAPTER_YET = {providers.LOCATIONS: "macos"}
 TODAYS_MACHINES = {
     "no keys": {},
     "the empty vault of CI": {"vault_dir": "~/.research-vault/empty-vault"},
@@ -62,7 +64,7 @@ TODAYS_MACHINES = {
 }
 HEAVY_MODULES = ("torch", "ocrmac", "pyannote", "chromadb", "transformers", "marker", "surya")
 ADAPTER_MODULES = ("agent_core._adapters.host.launchd", "_rag.embedding", "_extract.engine", "_clean.ocr",
-                   "_transcribe.whispering", "_references.parsing", "_writing.conversion")
+                   "_transcribe.whispering", "_references.parsing", "_writing.conversion", "_adapters.host.icloud")
 PLACEHOLDER_KEY = "placeholder-value-of-the-test-key"
 OTHER_PLACEHOLDER = "placeholder-value-of-another-variable"
 KEY_VARIABLE = "EMBEDDING_API_KEY"
@@ -140,8 +142,8 @@ class TestTodaysMachineJsonResolvesToTodaysClasses(unittest.TestCase):
                     getattr(built, port)()
 
     def test_resolving_every_accessor_imports_no_heavy_dependency(self) -> None:
-        statements = ("[built.adapter(port) for port in providers.PORTS if port not in (providers.SYNC, "
-                      f"providers.LOCATIONS)]\nprint(json.dumps(sorted(set({HEAVY_MODULES!r}) & set(sys.modules))))")
+        statements = ("[built.adapter(port) for port in providers.PORTS if port != providers.LOCATIONS]\n"
+                      f"print(json.dumps(sorted(set({HEAVY_MODULES!r}) & set(sys.modules))))")
         self.assertEqual([], FreshInterpreter(statements).printed())
 
 
@@ -317,7 +319,8 @@ class TestTheReport(unittest.TestCase):
         self.assertEqual("_rag.embedding.OllamaEmbedder", ports[providers.EMBEDDER])
         self.assertEqual(["agent_core._adapters.host.macos_notifiers.DesktopNotifier",
                           "agent_core._adapters.host.macos_notifiers.RemindersNotifier"], ports[providers.NOTIFIER])
-        self.assertIn("'icloud'", ports[providers.SYNC]["unconfigured"])
+        self.assertEqual("_adapters.host.icloud.ICloudFolder", ports[providers.SYNC])
+        self.assertIn("'macos'", ports[providers.LOCATIONS]["unconfigured"])
 
     def test_the_script_prints_the_report_of_the_machine_json_it_is_given(self) -> None:
         self.machine_path.write_text(json.dumps({"profile": "linux-local"}), encoding="utf-8")

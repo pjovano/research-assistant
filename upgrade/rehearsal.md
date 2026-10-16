@@ -96,7 +96,7 @@ No Mac-only check.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-P6+M4-1 | S | No placeholder in the library or the inbox | the preflight's `SyncedFolder` check over the real library and inbox, read-only | no placeholder; if one is found, Optimize Mac Storage is on and the switch waits | |
+| R-P6+M4-1 | S | No placeholder in the library or the inbox | in a shell outside `cutover.py rehearse`, so `~` is the real home and the vault `~/Documents`: `~/.research-vault/venv/bin/python .claude/skills/ingest/scripts/ingest.py synced-folder --from clean` in the new checkout; read-only, over `~/Documents/library`, `~/Documents/library/volumes`, and the PDFs and draft cards of `~/Desktop/inbox` | `{"state": "ready"}`; a `halt` naming a file whose bytes are not on disk means Optimize Mac Storage is on, and the switch waits; a `halt` naming a conflict copy is merged by hand, then the line runs again | |
 
 R-P6+M4-2 and R-P6+M4-3 are retired: `Accelerator` and `Trash` are deferred.
 

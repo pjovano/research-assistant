@@ -18,6 +18,8 @@ import vault
 from _bibliographies.drive import BibliographiesScript, ClassifyDriver
 from _bibliography_fixtures import HEGEL, HOULGATE, PIPPIN_TALK, TemporaryVault
 from _drive.script import ScriptRun
+from _port_fakes import FakeSyncedFolder
+from synced_folder import ConfiguredSyncedFolder
 
 STAGE_ONE_FRONTMATTER = {"title": "The Opening of Hegel's Logic", "author": ["Houlgate"], "year": 2006,
                          "source_type": "", "source_role": "", "field": []}
@@ -44,11 +46,12 @@ class ClassifyCase(unittest.TestCase):
         self.vault.bibliography("Logic")
         self.vault.note(HOULGATE, **STAGE_ONE_FRONTMATTER)
         self.place = StubPlace()
+        self.synced_folder = None
 
     def classify(self, given: dict, basename: str = HOULGATE) -> dict:
         path = vault.BIBLIOGRAPHIES_DIR.parent / "answers.json"
         path.write_text(json.dumps(given), encoding="utf-8")
-        return ClassifyDriver(self.place).classify(basename, path)
+        return ClassifyDriver(self.place, synced_folder=self.synced_folder).classify(basename, path)
 
     def meta(self, basename: str = HOULGATE) -> dict:
         return vault.read_frontmatter(vault.held_note_path(basename))[0]
@@ -220,6 +223,29 @@ class TestConflictCopies(ClassifyCase):
     def test_a_conflict_copy_among_the_bibliographies_halts_the_batch(self) -> None:
         (vault.BIBLIOGRAPHIES_DIR / "Logic 2.md").write_text("---\n---\n", encoding="utf-8")
         self.assertEqual("halt", self.classify(answers())["state"])
+
+    def written(self, folder: str, name: str) -> None:
+        directory = vault.BIBLIOGRAPHIES_DIR / folder
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / name).write_text("---\n---\n", encoding="utf-8")
+
+    def test_a_conflict_copy_the_synced_folder_reports_in_a_subfolder_halts_naming_it(self) -> None:
+        self.synced_folder = FakeSyncedFolder
+        self.written("2 authors", "Hegel.md")
+        self.written("2 authors", "Hegel 2.md")
+        outcome = self.classify(answers())
+        self.assertEqual(("halt", True), (outcome["state"], "Hegel 2.md" in outcome["question"]))
+
+    def test_a_numbered_copy_among_the_reading_lists_is_never_asked_about(self) -> None:
+        self.synced_folder = FakeSyncedFolder
+        self.written(vault.READING_LISTS_FOLDER, "Logic - Reading list.md")
+        self.written(vault.READING_LISTS_FOLDER, "Logic - Reading list 2.md")
+        self.assertEqual("placed", self.classify(answers())["state"])
+
+    def test_an_unconfigured_sync_port_halts_naming_providers_sync(self) -> None:
+        self.synced_folder = ConfiguredSyncedFolder({"profile": "api-light"}, {}).built
+        outcome = self.classify(answers())
+        self.assertEqual(("halt", True), (outcome["state"], "providers.sync" in outcome["question"]))
 
 
 class CommandCase(unittest.TestCase):

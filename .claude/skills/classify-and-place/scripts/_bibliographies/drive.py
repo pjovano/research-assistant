@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import vault
+from synced_folder import ConfiguredSyncedFolder, SyncedFolderUnavailable
 
 from _drive.script import ScriptRun, SkillScript
 from _drive.steps import StepGuard
 from _drive.work import CLASSIFY_ANSWERS_NAME, Halt, IngestWorks, SetAside, Unwritten, WorkDirectory
+from _ports.host import SyncedFolder
 from _vault.frontmatter import FrontmatterFields
 from _vault.scratch import INGEST_ENTRY
 
@@ -184,6 +187,23 @@ class NominationLedger:
             return []
 
 
+class BibliographyConflicts:
+    def __init__(self, folder: Callable[[], SyncedFolder]) -> None:
+        self._folder = folder
+
+    def halt_on_any(self) -> None:
+        copies = self._copies()
+        if copies:
+            raise Halt(f"iCloud left conflict copies among the bibliographies; merge and delete each: {copies}")
+
+    def _copies(self) -> list[str]:
+        try:
+            folder = self._folder()
+        except SyncedFolderUnavailable as unavailable:
+            raise Halt(str(unavailable)) from unavailable
+        return [path.name for directory in vault.bibliography_folders() for path in folder.conflict_copies(directory)]
+
+
 class ClassifyStep:
     def __init__(self, basename: str, answers_path: Path, script: SkillScript, ledger: NominationLedger) -> None:
         self._basename = basename
@@ -193,9 +213,6 @@ class ClassifyStep:
 
     def run(self) -> dict:
         bibliographies = Bibliographies()
-        if bibliographies.conflict_copies():
-            raise Halt(f"iCloud left conflict copies among the bibliographies; merge and delete each: "
-                       f"{bibliographies.conflict_copies()}")
         work = Corpus().note(self._basename)
         field = MostSpecificField(AuthorCatalogue(bibliographies).maps_of(work), BibliographyTree(bibliographies.entries()))
         answers = ClassifierAnswers.read(self._answers_path, work, field)
@@ -230,10 +247,12 @@ class ClassifyStep:
 
 
 class ClassifyDriver:
-    def __init__(self, script: SkillScript | None = None, works_dir: Path | None = None) -> None:
+    def __init__(self, script: SkillScript | None = None, works_dir: Path | None = None,
+                 synced_folder: Callable[[], SyncedFolder] | None = None) -> None:
         self._script = script or BibliographiesScript()
         self._works_dir = works_dir or vault.SCRATCH_DIR / INGEST_ENTRY
         self._works = IngestWorks(self._works_dir)
+        self._conflicts = BibliographyConflicts(synced_folder or ConfiguredSyncedFolder.of_machine().built)
 
     def prepare(self, key: str) -> dict:
         return StepGuard("drive-classify").on_work(lambda: self._works.work(key), self._prepared)
@@ -247,4 +266,8 @@ class ClassifyDriver:
         ledger = NominationLedger(self._works_dir / NOMINATIONS_NAME)
         return StepGuard("drive-classify").on_work(
             lambda: self._works.work(key),
-            lambda work: ClassifyStep(vault.basename_of(Path(work.pdf)), answers_path, self._script, ledger).run())
+            lambda work: self._classified(work, answers_path, ledger))
+
+    def _classified(self, work: WorkDirectory, answers_path: Path, ledger: NominationLedger) -> dict:
+        self._conflicts.halt_on_any()
+        return ClassifyStep(vault.basename_of(Path(work.pdf)), answers_path, self._script, ledger).run()
