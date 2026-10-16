@@ -46,6 +46,8 @@ class FakeSyncedFolder:
         self._placeholders = placeholders
 
     def conflict_copies(self, directory: Path) -> list[Path]:
+        if not directory.is_dir():
+            return []
         return sorted(path for path in directory.iterdir() if FAKE_CONFLICT_COPY.search(path.name))
 
     def not_downloaded(self, path: Path) -> bool:

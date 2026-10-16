@@ -98,7 +98,7 @@ ADAPTERS = {
     SYSTEM_READINGS: {"macos": AdapterClass(f"{CORE_HOST_ADAPTERS}.macos_readings", "MacosReadings")},
     ACCELERATOR: {"metal": AdapterClass("engine_reach", "MetalAccess")},
     TRASH: {"trash-command": AdapterClass("_writing.conversion", "Trash")},
-    SYNC: {},
+    SYNC: {"icloud": AdapterClass("_adapters.host.icloud", "ICloudFolder")},
     LOCATIONS: {},
     EMBEDDER: {"ollama": AdapterClass("_rag.embedding", "OllamaEmbedder")},
     EMBEDDING_STORE: {"chroma": AdapterClass("_rag.chroma", "EmbeddingStore")},
