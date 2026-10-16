@@ -84,7 +84,7 @@ No Mac-only check.
 | --- | --- | --- | --- | --- | --- |
 | R-P5+M3-1 | S | A health sample on the ports | `health.py sample`, then `health.py report` | the sample's readings match the old setup's sample taken within the same minute, level by level | |
 | R-P5+M3-2 | S | The new health plist matches the installed one | `health.py install` (read-only form); diff its plist with `~/Library/LaunchAgents/<old health label>.plist` | they differ only in the label and the repository path | |
-| R-P5+M3-3 | S | `uninstall` names the new jobs only | `health.py uninstall` and the Remote Control job's `uninstall`, read-only forms | neither names an old plist | |
+| R-P5+M3-3 | S | `uninstall` names the new jobs only | `health.py uninstall` in `~/Developer/research-assistant` and `bin/remote_control.py uninstall` in `~/Developer/agent-core`, read-only forms | neither names an old plist | |
 | R-P5+M3-4 | W | The Remote Control job loads under launchd | `launchctl print gui/$(id -u)/<new label>` | state running; working directory `~/Developer/agent-core`; `caffeinate -i` in the command; no `--name` | |
 | R-P5+M3-5 | W | A session from a secondary opens in the dispatcher repo | open a session from the laptop or the phone | its working directory is `~/Developer/agent-core` | |
 | R-P5+M3-6 | W | One research question is answered through it | ask one library question in that session | the answer comes back with verified quotations | |
@@ -218,7 +218,7 @@ No Mac-only check.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-P15-1 | S | `doctor` is green on the primary | `setup.py doctor` | every line `ok`, the primary checks included; R-P5+M3's jobs report as not yet installed until §6 step 4.6 | |
+| R-P15-1 | S | `doctor` is green on the primary | `setup.py doctor` | every line `ok`, the primary checks included; the health job reports as not yet installed until §6 step 4.6 | |
 | R-P15-2 | S | `bootstrap --no-jobs` installs no job | `setup.py bootstrap --profile mac-local --no-jobs` in the staging home | no launch agent added | |
 
 ### P8

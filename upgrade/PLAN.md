@@ -98,7 +98,7 @@ cloud.
 | The Vocabulary table is both moved (assistant 1.3) and parsed in place (audit PR 3), and it is the most-churned text in the repo (75 commits in two weeks) | The move happens first (A1). The audit lint then parses the domain's `.claude/glossary.md`. |
 | Ports PR 22 deletes `relay`, which the audit's `audit.js` is built on | PR 22 is deferred (§3, W6). If it is ever done, `audit.js` moves to the same `WorkerRunner`. |
 | The README is restructured two ways at once: per OS (ports) and per role (machines) | One structure: "Install" per OS, for anyone; "Two machines: primary and secondaries"; "Retire a former full install". |
-| `lib/_health/launch_agent.py` and `installer.py` are edited by three plans; the health job's label and plist contents are hard-coded (`installer.py:40`, `launch_agent.py:32-42`), and there is no uninstall | One item (P5+M3) builds the `Scheduler` port. Its launchd adapter takes a label and contents and has `remove`. The health job and the Remote Control job are two jobs on it. |
+| `lib/_health/launch_agent.py` and `installer.py` are edited by three plans; the health job's label and plist contents are hard-coded (`installer.py:40`, `launch_agent.py:32-42`), and there is no uninstall | One item (P5+M3) builds the `Scheduler` port, in the core. Its launchd adapter takes a label and contents and has `remove`. The health job and the Remote Control job are two jobs on it. |
 | The iCloud placeholder check (machines 4) and the iCloud conflict pattern (ports PR 6) both touch `_ingest/preflight.py` | One port, `SyncedFolder`: `conflict_copies()` and `not_downloaded(path)`. Preflight halts on either. |
 
 ### New: folders in `~/Documents`, assigned to domains
@@ -127,11 +127,13 @@ Settled after W0. It replaces the assistant architecture plan's separate
 
 | Piece | Content |
 | --- | --- |
-| `agent-core` | one repo, two parts. `core/` holds what every domain shares: `skills/`, `agents/`, `workflows/`, `audit/`, `lib/` (the agent-host port), `templates/domain/`, `domain.py`. The root holds the dispatcher: its contract, its `domain.json`, its `.claude/settings.json`, and the skills `route`, `delegate`, `compose`, and `registry`. The tests sit at the root, outside `core/`. |
+| `agent-core` | one repo, two parts. `core/` holds what every domain shares: `skills/`, `agents/`, `workflows/`, `audit/`, `lib/` (the host ports for jobs and alerts, and the agent-host port), `templates/domain/`, `domain.py`. The root holds the dispatcher: its contract, its `domain.json`, its `.claude/settings.json`, and the skills `route`, `delegate`, `compose`, and `registry`. The tests sit at the root, outside `core/`. |
 | The front door | Remote Control runs in `~/Developer/agent-core`. The dispatcher hands each request to a session started in the owning domain's repo, so that domain's settings, sandbox, hooks, and MCP servers apply from its first turn. It never loads a domain's contract into its own session: an instruction file cannot change a session's sandbox or permissions, and one session holding every domain's permissions is the combination §5 of the assistant plan forbids. |
 | What a domain carries | `core/` alone, vendored at `vendor/agent-core/` with `git subtree` from the branch `core`, which `agent-core`'s CI writes with `git subtree split --prefix core` after every merge to `main`. The dispatcher's contract and skills never enter a domain. A domain symlinks the core skills, workers, and workflows it uses into `.claude/`; the dispatcher symlinks them from `core/` the same way. |
 | Why a copy | the copy needs no setup in the build's cloud sessions or in CI, and a domain moves to a newer core only when it pulls on purpose. A checkout of `agent-core` beside each domain would also work, at the cost of setup in every environment and of the pinning. |
 | Contracts | every repo's contract is `AGENTS.md`, a name other agent hosts read; `CLAUDE.md` holds the one line `@AGENTS.md`. The research contract moves in X2. |
+| Host ports in the core | `Scheduler`, `Notifier`, and `SystemReadings`, with `Job`, `Notice`, and `Level`, and their macOS and Linux adapters, live in the core, because every domain and the dispatcher run jobs and raise alerts on the primary. The ports plan put them in `research-assistant`, and P1 declared them there; P5+M3 moves them. The research domain keeps the health job: its detectors, its workloads, and its journals. The other host ports, `Accelerator`, `Trash`, `SyncedFolder`, and `Locations`, stay in `research-assistant`; moving them is a candidate for a later round. |
+| Core code | the core's Python is one package, `core/lib/agent_core/`, so that no core module shadows a domain module of the same name. A domain reaches it by adding `vendor/agent-core/lib` to its module path; the dispatcher adds `core/lib`. NEVER re-export a core name from a domain module: a re-export is a copy that drifts. |
 | State | `~/.agent-core/state/` on the primary: the ledger and the preferences file. |
 | `assistant` | created in X0.1, holding one commit with a README, and not used: you delete it, or archive it to keep the name reserved. |
 
@@ -253,9 +255,8 @@ Settled after W0. It replaces the assistant architecture plan's separate
     untouched and the rollback can reload them.
   - The job passes no `--name`, because the contract forbids naming a machine
     in the control plane.
-  - The job's code is built in `research-assistant`, where the `Scheduler` port
-    lives, even though the job serves the dispatcher. Moving the host ports
-    into the core is a candidate for a later round.
+  - The job's code is built at `agent-core`'s root, on the core's `Scheduler`
+    port, because the job serves the dispatcher. No domain carries it.
 - Item 4 (the iCloud placeholder check) is included, through `SyncedFolder`.
   No documented way to read the Optimize Mac Storage setting is known, so
   `doctor` infers it from placeholders in the library and the inbox.
@@ -303,14 +304,14 @@ that touch disjoint files.
 | | b | **P1** ports, `providers.py`, profiles; P2 is dropped (§1, "Hexagonal ports plan") | research-assistant | W0 |
 | | c | **A0** `agent-core` skeleton: `core/` and the root dispatcher's layout (§1), CI (suite and ruff; A2 adds the audit linter), the branch `core` written by CI, the `vendor` subtree of `core/` into research-assistant, the symlink layout | agent-core + research-assistant | W0 spike |
 | **W2** | a | **A1** `clean-code`/`clean-prose` split into the core's general text plus the research overlay `.claude/code-overlay.md` and `.claude/glossary.md` (diff check: no rule lost) → **U2** STE rules in the core's `clean-prose` | both | A0 |
-| | b | **P5+M3** `Scheduler`/`SystemReadings`/`Notifier`; launchd adapter with `remove`; health on the ports; the Remote Control job (code only, installed at the switch) → **P6+M4** `Accelerator`, `Trash` (send2trash, lock regenerated), `SyncedFolder` with the placeholder halt | research-assistant | P1 |
+| | b | **P5+M3** `Scheduler`/`SystemReadings`/`Notifier` moved into the core, with the launchd adapter and its `remove`; the health job on the core's ports; the Remote Control job at `agent-core`'s root (code only, installed at the switch) → **P6+M4** `Accelerator`, `Trash` (send2trash, lock regenerated), `SyncedFolder` with the placeholder halt | agent-core, then research-assistant | A0, P1 |
 | | c | **P3** search ports → **P4** API embedder and reranker | research-assistant | P1 |
 | | d | **P9** transcriber and diarizer ports → **P10** hosted transcription | research-assistant | P1 |
 | **W3** | a | **A2** audit engine to the core, as is; research checks in `audit/checks.py`; a thin `vault-audit` skill; hook, CI, tests, `extraction-fixer` repointed → **U1** bench → **U3** lint layer → **U4** units, closure, baseline v2 | both | A1, U2 |
 | | b | **P7a–f** `Vault` object, one slice per skill group → **P7h** test vaults | research-assistant | W2-b,c,d merged |
 | **W4** | a | **U5** audit workflow and workers → **U6** loop and fix (worktree) → **U7** Check 8 (plus stage timings in `ingest.py`) → **U8** Check 9, current practice | agent-core (+ research for timings) | U4 |
 | | b | **P7g** shim deleted, plus the path-constant lint rule → **P11** `LayoutEngine` port → **P12** Marker API + `calibrate` → **P13** `LineRecognizer` + Tesseract + `calibrate-ocr` | research-assistant | P7h, U3 |
-| | c | **G17** tiers → **G18** `HookIo` + git pre-commit (the X1 affected-module checks; the full suite runs pre-push and in CI) → **G19** worker specs + generator (the agent-host port at `lib/_ports/agent.py` and its adapters in `lib/_adapters/agent/`, in `agent-core`). Each repo commits the agent files the generator renders from its specs, and CI fails if they differ from a fresh render. A domain symlinks the core's rendered files, never its specs → **G20** research `domain.json` created with its `folders` and `policy`, the manifest reader, and one settings generator | agent-core + research-assistant | U3 |
+| | c | **G17** tiers → **G18** `HookIo` + git pre-commit (the X1 affected-module checks; the full suite runs pre-push and in CI) → **G19** worker specs + generator (the agent-host port at `core/lib/agent_core/_ports/agent.py` and its adapters in `core/lib/agent_core/_adapters/agent/`, in `agent-core`). Each repo commits the agent files the generator renders from its specs, and CI fails if they differ from a fresh render. A domain symlinks the core's rendered files, never its specs → **G20** research `domain.json` created with its `folders` and `policy`, the manifest reader, and one settings generator | agent-core + research-assistant | U3 |
 | **W5** | a | **P14** requirement extras and locks (the in-repo setup script `bin/cloud-setup.sh` is updated in the same PR) → **P15** `bootstrap`/`doctor`, with primary checks (Remote Control job; no iCloud placeholders in the library or the inbox, which stands in for Optimize Mac Storage off). `bootstrap --no-jobs` skips the jobs: the switch uses it, and so does every test install → **P8**, **P16** contract and README per OS; a clean-runner Linux install job; optional WSL job. Linux is checked in CI on a clean runner: the install and the suite; no pipeline run happens off the Mac | research-assistant | W4-b |
 | | b | **A5** domain template + `new-domain`, with the folder step (folders in `~/Documents`, access, optional Obsidian vault) → **A3** dispatcher at `agent-core`'s root: contract, registry, `route`, `delegate`, `compose`, `registry`; the core skills `approvals` and `dispatch` (plain names: vendored skills have no plugin namespace); research `domain.json` completed with `handles`, `entry_skills`, `exposure`, and `unattended` → **A4** `personal-assistant` made by `new-domain`, no skills and no folders yet | agent-core, research-assistant, personal-assistant | G20 |
 | | c | **U2b** the > 40-word sentence cleanup → **G21** capability names in the prose (about 25 instruction files, in slices by skill); the capability names are core terms, defined in the core's `clean-prose`, not in a domain glossary | research-assistant | U3, G19 |
@@ -340,6 +341,18 @@ that touch disjoint files.
   to the glossary.
 - **The capability prose pass (G21) comes last**, because it rewrites the most
   instruction files, and every earlier item edits some of them.
+
+**A core pull.** An item that changes the core opens the core's PR first; its
+domain PR runs `git subtree pull --prefix vendor/agent-core` after the core's
+PR merges, and names that PR.
+
+- A domain PR's pull MAY carry another lane's merged core change. The change
+  stays inert until that lane's own domain PR links or imports it.
+- If another lane's pull merges into the domain's `main` first, and the PR
+  then conflicts under `vendor/agent-core/`, rerun the pull on the new `main`
+  and drop the earlier pull commit. NEVER resolve a conflict under
+  `vendor/agent-core/` by hand: the vendored core changes only by
+  `git subtree pull`.
 
 ## 4. Running it in the cloud
 
@@ -484,9 +497,11 @@ each wave's end.
       Open one session by hand in `~/Developer/research-assistant` too, and
       trust its folder: a delegated session in an untrusted folder ignores
       the project's allow rules (`spikes.md` item 2).
-   6. Install the health and Remote Control jobs through `Scheduler`, under
-      their new labels, with Remote Control working in
-      `~/Developer/agent-core`.
+   6. Install the health and Remote Control jobs through the core's
+      `Scheduler`, under their new labels: the health job with `health.py
+      install --apply` in `~/Developer/research-assistant`, the Remote Control
+      job with `bin/remote_control.py install --apply` in
+      `~/Developer/agent-core`, its working directory.
    7. **Check what the staging home can't rehearse:** from the laptop or the
       phone, open a session through Remote Control, ask one research question,
       and start a dry-run batch through the dispatcher. If any of these fails,
