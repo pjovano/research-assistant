@@ -298,7 +298,7 @@ function scopePrompt() {
     'You are the Scope reader. NEVER edit a file, commit, or push.',
     '',
     '1. Read `upgrade/items/' + item + '.md` whole, `upgrade/PLAN.md` §1 to §5, and the Summary of `upgrade/spikes.md`.',
-    '2. If the item file\'s Status is `deferred`, return status `deferred`.',
+    '2. If the item file\'s Status is `deferred` or `dropped`, return status `deferred`.',
     '3. For each item its "Depends on" row names, run `git fetch origin main` in the repository that item builds in,',
     '   then search `git log origin/main --format=%B` for the trailer `Upgrade-item: <dependency>`.',
     '   If a dependency has no such commit on `main`, return status `blocked` naming it.',

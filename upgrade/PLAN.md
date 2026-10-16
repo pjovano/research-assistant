@@ -233,7 +233,9 @@ Settled after W0. It replaces the assistant architecture plan's separate
     suite. The ports plan's end-to-end Linux check in a cloud VM is dropped:
     no pipeline runs in the cloud.
   - **WSL2:** documented in the README; an optional Windows CI job.
-  - **macOS:** a `macos-latest` job on every PR, free on a public repo.
+  - **macOS:** no CI job; every CI job runs on Linux, so that PRs stay
+    fast. P2 is dropped, and the rehearsal runs the full suite on the
+    primary's macOS (R-P2-1).
 - **API adapters are built against the providers' documented APIs, with
   hand-built fixtures**, and the README and `doctor` mark them experimental.
   `calibrate` and `calibrate-ocr` ship without numbers. Recording live
@@ -298,7 +300,7 @@ that touch disjoint files.
 | --- | --- | --- | --- | --- |
 | **W0 setup** | — | X0.0–X0.5 (§4; there is no X0.3) | all | plan approved |
 | **W1 foundations** | a | **X1** fast post-edit hook (affected modules; full suite in CI and pre-push; §5 text) → **X2** contract: trailers, primary/secondary roles (M §1), "both machines" narrowed, the contract moved to `AGENTS.md` with `CLAUDE.md` importing it (§1) → **X3** the repo's own name: the 26 lines in 12 files that name `research-tools` now name `research-assistant` (the two plists outside git change at the switch) | research-assistant | W0 |
-| | b | **P1** ports, `providers.py`, profiles → **P2** macOS CI job on every PR, `requires_platform` | research-assistant | W0 |
+| | b | **P1** ports, `providers.py`, profiles; P2 is dropped (§1, "Hexagonal ports plan") | research-assistant | W0 |
 | | c | **A0** `agent-core` skeleton: `core/` and the root dispatcher's layout (§1), CI (suite and ruff; A2 adds the audit linter), the branch `core` written by CI, the `vendor` subtree of `core/` into research-assistant, the symlink layout | agent-core + research-assistant | W0 spike |
 | **W2** | a | **A1** `clean-code`/`clean-prose` split into the core's general text plus the research overlay `.claude/code-overlay.md` and `.claude/glossary.md` (diff check: no rule lost) → **U2** STE rules in the core's `clean-prose` | both | A0 |
 | | b | **P5+M3** `Scheduler`/`SystemReadings`/`Notifier`; launchd adapter with `remove`; health on the ports; the Remote Control job (code only, installed at the switch) → **P6+M4** `Accelerator`, `Trash` (send2trash, lock regenerated), `SyncedFolder` with the placeholder halt | research-assistant | P1 |
@@ -418,7 +420,7 @@ For each item:
 When the last item has merged, report the PRs and the rehearsal lines added.
 ```
 
-W1 starts three lanes: a (X1, X2, X3), b (P1, P2), and c (A0, with
+W1 starts three lanes: a (X1, X2, X3), b (P1), and c (A0, with
 `agent-core` attached).
 
 ## 5. Merge gate in the new repos

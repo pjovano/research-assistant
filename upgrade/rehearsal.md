@@ -60,7 +60,7 @@ No Mac-only check.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-P2-1 | S | The suite passes on the primary's own macOS, beside the `macos-latest` job | R-all-1 | R-all-1 passes | |
+| R-P2-1 | S | The full suite passes on the primary's own macOS, which no CI job runs | R-all-1 | R-all-1 passes | |
 
 ### A0
 
