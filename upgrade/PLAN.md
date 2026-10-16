@@ -55,8 +55,9 @@ sessions write and test the code: they read fixtures only, never a library
 PDF, a corpus file, or a note, and every fixture carries no work's text (the
 publish-guard checks it). That an operation runs in the cloud is never an aim.
 A cloud check counts only as the build's own tooling (the item workflow, the
-audit) or as a stand-in Linux machine for the ports plan's other installers
-(P15, P16). The acceptance that matters for your use is the rehearsal on the
+audit, the environment the build sessions run in). The other OSes the ports
+plan supports are checked in CI, never by running the pipeline in a cloud
+session. The acceptance that matters for your use is the rehearsal on the
 primary (§6).
 
 **The backfill and the build don't meet.** The backfill writes only vault
@@ -227,9 +228,10 @@ Settled after W0. It replaces the assistant architecture plan's separate
     node.
   - PR 7 is bigger than planned. Each slice merges promptly, so the other
     lanes rebase onto it quickly.
-- **Testing you won't do yourself moves to CI and the cloud.**
-  - **Linux:** the cloud VM is Ubuntu 24.04, and a CI job installs `api-light`
-    on a clean runner.
+- **Testing you won't do yourself moves to CI.**
+  - **Linux:** a CI job installs `api-light` on a clean runner and runs the
+    suite. The ports plan's end-to-end Linux check in a cloud VM is dropped:
+    no pipeline runs in the cloud.
   - **WSL2:** documented in the README; an optional Windows CI job.
   - **macOS:** a `macos-latest` job on every PR, free on a public repo.
 - **API adapters are built against the providers' documented APIs, with
@@ -307,7 +309,7 @@ that touch disjoint files.
 | **W4** | a | **U5** audit workflow and workers → **U6** loop and fix (worktree) → **U7** Check 8 (plus stage timings in `ingest.py`) → **U8** Check 9, current practice | agent-core (+ research for timings) | U4 |
 | | b | **P7g** shim deleted, plus the path-constant lint rule → **P11** `LayoutEngine` port → **P12** Marker API + `calibrate` → **P13** `LineRecognizer` + Tesseract + `calibrate-ocr` | research-assistant | P7h, U3 |
 | | c | **G17** tiers → **G18** `HookIo` + git pre-commit (the X1 affected-module checks; the full suite runs pre-push and in CI) → **G19** worker specs + generator (the agent-host port at `lib/_ports/agent.py` and its adapters in `lib/_adapters/agent/`, in `agent-core`). Each repo commits the agent files the generator renders from its specs, and CI fails if they differ from a fresh render. A domain symlinks the core's rendered files, never its specs → **G20** research `domain.json` created with its `folders` and `policy`, the manifest reader, and one settings generator | agent-core + research-assistant | U3 |
-| **W5** | a | **P14** requirement extras and locks (the in-repo setup script `bin/cloud-setup.sh` is updated in the same PR) → **P15** `bootstrap`/`doctor`, with primary checks (Remote Control job; no iCloud placeholders in the library or the inbox, which stands in for Optimize Mac Storage off). `bootstrap --no-jobs` skips the jobs: the switch uses it, and so does every test install → **P8**, **P16** contract and README per OS; a clean-runner Linux install job; optional WSL job. The end-to-end Linux check: in the cloud VM under `linux-local` (Marker on CPU, Ollama installed in the VM), a small fixture PDF goes from Stage 2 to Stage 6. Stages 0 and 1 need Zotero and stay untested off the Mac | research-assistant | W4-b |
+| **W5** | a | **P14** requirement extras and locks (the in-repo setup script `bin/cloud-setup.sh` is updated in the same PR) → **P15** `bootstrap`/`doctor`, with primary checks (Remote Control job; no iCloud placeholders in the library or the inbox, which stands in for Optimize Mac Storage off). `bootstrap --no-jobs` skips the jobs: the switch uses it, and so does every test install → **P8**, **P16** contract and README per OS; a clean-runner Linux install job; optional WSL job. Linux is checked in CI on a clean runner: the install and the suite; no pipeline run happens off the Mac | research-assistant | W4-b |
 | | b | **A5** domain template + `new-domain`, with the folder step (folders in `~/Documents`, access, optional Obsidian vault) → **A3** dispatcher at `agent-core`'s root: contract, registry, `route`, `delegate`, `compose`, `registry`; the core skills `approvals` and `dispatch` (plain names: vendored skills have no plugin namespace); research `domain.json` completed with `handles`, `entry_skills`, `exposure`, and `unattended` → **A4** `personal-assistant` made by `new-domain`, no skills and no folders yet | agent-core, research-assistant, personal-assistant | G20 |
 | | c | **U2b** the > 40-word sentence cleanup → **G21** capability names in the prose (about 25 instruction files, in slices by skill); the capability names are core terms, defined in the core's `clean-prose`, not in a domain glossary | research-assistant | U3, G19 |
 | **W6** | — | **P22** Python batch driver: **not in this round** unless you say so | — | — |
