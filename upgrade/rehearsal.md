@@ -29,7 +29,6 @@ This file holds every acceptance check that needs the primary Mac. §6 of
 | R-all-1 | S | The full suite on macOS | `~/.research-vault/venv/bin/python -m unittest discover -s tests` in `~/Developer/research-assistant` | every test passes or skips for a named absent tool | |
 | R-all-2 | S | ruff and the audit linter on macOS | `~/.research-vault/venv/bin/ruff check .`; `… audit.py lint` (the core's path after A2) | no finding; `works` 0 | |
 | R-all-3 | S | A Stage 2 → 6 backfill of three works runs as before | the `ingest` workflow from Stage 2 over three works in the staging vault, old and new | the same corpus file bodies, classifications, and bibliography listings | |
-| R-all-4 | S | A library question is answered | from a local session in the staging research checkout: "what does my library say about X?" | the answer comes back with verified quotations | |
 
 ## W1
 
@@ -87,10 +86,10 @@ No Mac-only check.
 | R-P5+M3-1 | S | A health sample on the ports | `health.py sample`, then `health.py report` | the sample's readings match the old setup's sample taken within the same minute, level by level | |
 | R-P5+M3-2 | S | The new health plist matches the installed one | `health.py install` (read-only form); diff its plist with `~/Library/LaunchAgents/<old health label>.plist` | they differ only in the label and the repository path | |
 | R-P5+M3-3 | S | `uninstall` names the new jobs only | `health.py uninstall` in `~/Developer/research-assistant` and `bin/remote_control.py uninstall` in `~/Developer/agent-core`, read-only forms | neither names an old plist | |
-| R-P5+M3-4 | W | The Remote Control job loads under launchd | `launchctl print gui/$(id -u)/<new label>` | state running; working directory `~/Developer/research-assistant`; `caffeinate -i` in the command; no `--name` | |
-| R-P5+M3-5 | W | A session from a secondary opens in the research checkout | open a session from the laptop or the phone | its working directory is `~/Developer/research-assistant` | |
+| R-P5+M3-4 | W | The Remote Control job loads under launchd | `launchctl print gui/$(id -u)/<new label>` | state running; working directory `~/Developer/agent-core`; `caffeinate -i` in the command; no `--name` | |
+| R-P5+M3-5 | W | A session from a secondary opens in the dispatcher repo | open a session from the laptop or the phone | its working directory is `~/Developer/agent-core` | |
 | R-P5+M3-6 | W | One research question is answered through it | ask one library question in that session | the answer comes back with verified quotations | |
-| R-P5+M3-7 | W | A dry-run batch runs in the research main checkout | ask that session for a dry-run batch | the batch runs in `~/Developer/research-assistant`, not a worktree | |
+| R-P5+M3-7 | W | A handed-off dry-run batch runs in the research main checkout | ask that session for a dry-run batch | the batch runs in `~/Developer/research-assistant`, not a worktree | |
 
 ### P6+M4
 
@@ -147,6 +146,15 @@ No Mac-only check.
 | --- | --- | --- | --- | --- | --- |
 | R-A5-1 | S | The folder step creates a folder and an Obsidian vault | `new-domain`'s folder step in the staging home, with a new folder and the vault offer accepted | the folder exists under the staged `~/Documents` with the default `.obsidian/` config | |
 
+### A3
+
+| ID | Phase | Check | Command or action | Passes when | Result |
+| --- | --- | --- | --- | --- | --- |
+| R-A3-1 | S | A library question routes to research | from a local session in `~/Developer/agent-core`: "what does my library say about X?" | a `research-assistant` session answers with verified quotations | |
+| R-A3-2 | S | A batch starts in the background in the research main checkout | "start a batch" (dry run) from the dispatcher | the batch runs in `~/Developer/research-assistant`; the dispatcher reports once, at the end | |
+| R-A3-3 | S | A request matching no domain is asked about | a request no `handles` entry covers | the dispatcher asks; it delegates nothing | |
+| R-A3-4 | S | A delegated session applies the project's allow rules (spike item 2) | inspect the delegated session's startup for "Ignoring … permissions.allow entries" | no such line; the research checkout is a trusted workspace | |
+
 ### A4
 
 No Mac-only check.
@@ -173,11 +181,19 @@ No Mac-only check.
 
 No Mac-only check.
 
+### P15
+
+| ID | Phase | Check | Command or action | Passes when | Result |
+| --- | --- | --- | --- | --- | --- |
+| R-P15-1 | S | `doctor` is green on the primary | `setup.py doctor` | every line `ok`, the primary checks included; the health job reports as not yet installed until §6 step 4.6 | |
+| R-P15-2 | S | `bootstrap --no-jobs` installs no job | `setup.py bootstrap --profile mac-local --no-jobs` in the staging home | no launch agent added | |
+
 ### P16
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
 | R-P16-1 | R | The laptop's former install retires by the README | follow "Retire a former full install" on the laptop | no launch agent of the old setup loaded; `~/.research-vault` gone; the vault still opens in Obsidian | |
+| R-P16-2 | S | A new install reaches `doctor` green by the README alone | in the staging home, follow the README's Install section from the clone step, with the apps already on the Mac counted as installed | every step runs as written; `doctor` is green, the health job reported as not yet installed | |
 
 ## W6: deferred
 
@@ -200,13 +216,9 @@ Deferred (`PLAN.md` §3). R-P7a-1 retired.
 
 Deferred (`PLAN.md` §3). R-P11-1 and R-P13-1 retired; R-P11-2 moved to R-all-3.
 
-### P8, P14, P15
+### P8, P14
 
-Deferred (`PLAN.md` §3). R-P14-1, R-P15-1, and R-P15-2 retired.
-
-### A3
-
-Deferred (`PLAN.md` §3). R-A3-1 to R-A3-4 retired; R-A3-1's question moved to R-all-4.
+Deferred (`PLAN.md` §3). R-P14-1 retired.
 
 ## W7
 

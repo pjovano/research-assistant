@@ -21,22 +21,26 @@ cloud while the current setup keeps running on your Mac. At the end you pull
 the new setup down, and it replaces the old one under the new name
 `research-assistant`. Your answers set the scope:
 
-- **This round builds for your own use, never for users who don't exist
-  yet.** From the ports plan it builds what the primary Mac uses (the host
-  ports for the health and Remote Control jobs, and the iCloud placeholder
-  halt) and the agent-host track, so that the setup can move off Claude Code
+- **This round builds for a Mac install, yours or anyone's with a capable
+  Mac, Obsidian, and Zotero.** From the ports plan it builds what a Mac
+  install uses (the host ports for the health and Remote Control jobs, the
+  iCloud placeholder halt, and `bootstrap` and `doctor`) and the agent-host
+  track, so that the setup can move off Claude Code
   or off Claude's models: workers name a model tier, hooks and workers are
   rendered from host-neutral specs, and the instructions name capabilities,
   never one host's tool names (G17–G21). Support for other OSes and hosted
-  APIs waits for a real need (§3, "Deferred").
+  APIs waits for a real need (§3, "Deferred"). Running the setup on another
+  agent host, such as OpenAI's Codex, stays possible in principle: that host's
+  renderer and the Python batch driver (P22) wait until someone wants it.
 - **The personal assistant is a skeleton only**: an empty domain repo, made
-  from the domain template, where you add skills soon after the switch. Its
-  first skills are plain skills of its own; the dispatcher waits until they
-  show what the domains share (§3, "Deferred").
+  from the domain template, where you add skills soon after the switch. The
+  dispatcher at `agent-core`'s root is built in this round, so the personal
+  skills are reached through it beside the research ones.
 - **The audit upgrade is in full, and it makes the instructions lighter.** On
-  top of the measured, multi-worker audit, the instruction text only shrinks:
-  a word ratchet in CI, cuts as the audit's first output, and a cut target
-  for the closing audit run (§1, "New: the instruction text only shrinks").
+  top of the measured, multi-worker audit, the instruction text never grows
+  without a stated reason: a word ratchet in CI, and cuts as the audit's first
+  output, each keeping every rule (§1, "New: the instruction text only
+  shrinks").
 - **No answer-quality benchmark.** An answer surfaces passages, and every
   quotation is already verified in the PDF.
 - **One switch at the end** to the new multi-repo setup, with the rename part
@@ -59,7 +63,7 @@ running the backfill ingest with it, and its code doesn't change.
 | --- | --- | --- |
 | `research-tools` | frozen; runs the backfill on the Mac | archived, read-only, kept for rollback |
 | `research-assistant` | new; starts as a snapshot of `research-tools` taken in W0; every research-side upgrade lands here | the research domain |
-| `agent-core` | new; `core/`: the shared standards, the audit engine, the host ports, the agent-host layer, the domain template; its root: the Remote Control job, and later the dispatcher | `core/` is what every domain carries; the root holds the Remote Control job, and becomes the front door when the dispatcher is built |
+| `agent-core` | new; `core/`: the shared standards, the audit engine, the host ports, the agent-host layer, the domain template; its root: the dispatcher | `core/` is what every domain carries; the root is the front door, reached from any machine through Remote Control |
 | `personal-assistant` | new; made from the domain template; no skills yet | the place for your personal skills |
 | `assistant` | created in X0.1 with only a README, then superseded by `agent-core`'s root (§1) | deleted or archived |
 
@@ -105,11 +109,11 @@ cloud.
 | Three plans assume two full machines ("both machines", "clone on both", "rebuild both environments") | The primary/secondary plan replaces that assumption everywhere. Only the primary has the control plane, so every "both machines" becomes "the primary", and the dispatcher's state lives on the primary's own disk (`~/.agent-core/state/`), not in iCloud or git. That settles the assistant plan's open decisions 4 and 5. |
 | The rename moves the checkout and the launch agents, and would break the running setup mid-build | No GitHub rename. `research-assistant` is a new repo, and the switch is the rename. |
 | Two generators for the same `settings.json` sandbox block (ports PR 20 `policy.json`; assistant 3.4 `domain.json`) | One generator in `agent-core`. `domain.json` carries a `policy` section; `domain.py settings` reads it. |
-| "Capabilities" means two things: tool classes (ports) and the three risks of private data, untrusted content, and sending out (assistant) | The ports plan keeps **capabilities** for tool classes. The three risks become **exposure**, and `registry` checks each skill's declared exposure against its generated tool capabilities: a skill with `web` must declare untrusted content. Capabilities come with the worker generator (G19); exposure and `registry` wait with the dispatcher (§3, "Deferred"). |
+| "Capabilities" means two things: tool classes (ports) and the three risks of private data, untrusted content, and sending out (assistant) | The ports plan keeps **capabilities** for tool classes. The three risks become **exposure**, and `registry` checks each skill's declared exposure against its generated tool capabilities: a skill with `web` must declare untrusted content. |
 | Commit trailers: the audit wants `Defect-class:` on every commit, but a refactor has no defect class | `Defect-class:` for a fix, `Change-class: refactor\|feature — <what>` for everything else. The audit's sign 6 accepts either. This is settled in W1, because every upgrade commit needs it. |
 | The Vocabulary table is both moved (assistant 1.3) and parsed in place (audit PR 3), and it is the most-churned text in the repo (75 commits in two weeks) | The move happens first (A1). The audit lint then parses the domain's `.claude/glossary.md`. |
 | Ports PR 22 deletes `relay`, which the audit's `audit.js` is built on | PR 22 is deferred (§3, W6). If it is ever done, `audit.js` moves to the same `WorkerRunner`. |
-| The README is restructured two ways at once: per OS (ports) and per role (machines) | Per role only, for the primary: "Install" on macOS; "Two machines: primary and secondaries"; "Retire a former full install". The per-OS install waits with the other OSes (§3, "Deferred"). |
+| The README is restructured two ways at once: per OS (ports) and per role (machines) | macOS only: "Install", for anyone with a capable Mac, Obsidian, and Zotero; "Two machines: primary and secondaries"; "Retire a former full install". The install for other OSes waits with them (§3, "Deferred"). |
 | `lib/_health/launch_agent.py` and `installer.py` are edited by three plans; the health job's label and plist contents are hard-coded (`installer.py:40`, `launch_agent.py:32-42`), and there is no uninstall | One item (P5+M3) builds the `Scheduler` port, in the core. Its launchd adapter takes a label and contents and has `remove`. The health job and the Remote Control job are two jobs on it. |
 | The iCloud placeholder check (machines 4) and the iCloud conflict pattern (ports PR 6) both touch `_ingest/preflight.py` | One port, `SyncedFolder`: `conflict_copies()` and `not_downloaded(path)`. Preflight halts on either. |
 
@@ -127,7 +131,7 @@ choices are independent:
 | --- | --- |
 | `domain.json` | `folders`: the folders under `~/Documents` the domain works on, each with `read` or `write` access. A folder can carry `sensitive: true`, which keeps every domain that doesn't list it from reading it. |
 | research domain | lists today's `library` (write) and `research vault` (write). Nothing moves: invariant 2 holds, and the contract's `vault_dir` rule is unchanged. A CI check confirms `domain.json`, the vault paths `_vault/paths.py` names, and the generated sandbox all name the same folders. |
-| settings generator (G20) | gives each domain write access to exactly the folders it lists as `write`. G20 ships its own manifest reader, `domain.py manifests`, which reads every `~/Developer/*/domain.json` on the primary, or the manifests named on the command line. From those manifests the generator denies reads of any `sensitive` folder the domain doesn't list, so a research session never sees `taxes` or `medical`. The sandbox's `denyRead` blocks a sandboxed Bash read and not the Read tool (`spikes.md` item 7), so for each such folder the generator writes both a `sandbox.filesystem.denyRead` entry and a `Read(...)` rule in `permissions.deny`. A cloud session enforces no sandbox (`spikes.md` item 1), so the rehearsal checks the guard on the primary, against Bash, Read, Grep, and Glob (R-G20-2, R-G20-3). The dispatcher's `registry`, when it is built, reads the same manifests. Tests of the reader and the generator use fixture manifests, since `~/Developer` exists only on the primary. |
+| settings generator (G20) | gives each domain write access to exactly the folders it lists as `write`. G20 ships its own manifest reader, `domain.py manifests`, which reads every `~/Developer/*/domain.json` on the primary, or the manifests named on the command line. From those manifests the generator denies reads of any `sensitive` folder the domain doesn't list, so a research session never sees `taxes` or `medical`. The sandbox's `denyRead` blocks a sandboxed Bash read and not the Read tool (`spikes.md` item 7), so for each such folder the generator writes both a `sandbox.filesystem.denyRead` entry and a `Read(...)` rule in `permissions.deny`. A cloud session enforces no sandbox (`spikes.md` item 1), so the rehearsal checks the guard on the primary, against Bash, Read, Grep, and Glob (R-G20-2, R-G20-3). A3's `registry` builds on the same reader. The dispatcher lists no folders. Tests of the reader, the generator, and `registry` use fixture manifests, since `~/Developer` exists only on the primary. |
 | template and `new-domain` (A5) | asks which folders in `~/Documents` the new domain works on, existing or new, and with what access. For a new folder, it offers to make it an Obsidian vault by copying a default `.obsidian/` config (today's `graph.json` pattern, made general). Folders are created on the Mac at the switch, not in the cloud. |
 | `personal-assistant` (A4) | lists no folders yet. You add them with `new-domain`'s folder step when you build it out. |
 
@@ -139,14 +143,14 @@ Settled after W0. It replaces the assistant architecture plan's separate
 
 | Piece | Content |
 | --- | --- |
-| `agent-core` | one repo, two parts. `core/` holds what every domain shares: `skills/`, `agents/`, `workflows/`, `audit/`, `lib/` (the host ports for jobs and alerts, and the agent-host port), `templates/domain/`, `domain.py`. The root holds the Remote Control job and the root contract; the dispatcher's `domain.json`, its `.claude/settings.json`, and the skills `route`, `delegate`, `compose`, and `registry` join it when the dispatcher is built (§3, "Deferred"). The tests sit at the root, outside `core/`. |
-| The front door | Until the dispatcher is built, Remote Control runs in `~/Developer/research-assistant`, the only domain with skills, and a remote session is a research session. When the dispatcher is built, Remote Control moves to `~/Developer/agent-core`, and the dispatcher hands each request to a session started in the owning domain's repo, so that domain's settings, sandbox, hooks, and MCP servers apply from its first turn. The dispatcher never loads a domain's contract into its own session: an instruction file cannot change a session's sandbox or permissions, and one session holding every domain's permissions is the combination §5 of the assistant plan forbids. |
+| `agent-core` | one repo, two parts. `core/` holds what every domain shares: `skills/`, `agents/`, `workflows/`, `audit/`, `lib/` (the host ports for jobs and alerts, and the agent-host port), `templates/domain/`, `domain.py`. The root holds the dispatcher: its contract, its `domain.json`, its `.claude/settings.json`, the skills `route`, `delegate`, `compose`, and `registry`, and the Remote Control job. The tests sit at the root, outside `core/`. |
+| The front door | Remote Control runs in `~/Developer/agent-core`. The dispatcher hands each request to a session started in the owning domain's repo, so that domain's settings, sandbox, hooks, and MCP servers apply from its first turn. The dispatcher never loads a domain's contract into its own session: an instruction file cannot change a session's sandbox or permissions, and one session holding every domain's permissions is the combination §5 of the assistant plan forbids. |
 | What a domain carries | `core/` alone, vendored at `vendor/agent-core/` with `git subtree` from the branch `core`, which `agent-core`'s CI writes with `git subtree split --prefix core` after every merge to `main`. The dispatcher's contract and skills never enter a domain. A domain symlinks the core skills, workers, and workflows it uses into `.claude/`; the dispatcher symlinks them from `core/` the same way. |
 | Why a copy | the copy needs no setup in the build's cloud sessions or in CI, and a domain moves to a newer core only when it pulls on purpose. A checkout of `agent-core` beside each domain would also work, at the cost of setup in every environment and of the pinning. |
 | Contracts | every repo's contract is `AGENTS.md`, a name other agent hosts read; `CLAUDE.md` holds the one line `@AGENTS.md`. The research contract moves in X2. |
 | Host ports in the core | `Scheduler`, `Notifier`, and `SystemReadings`, with `Job`, `Notice`, and `Level`, and their macOS adapters, live in the core, because every domain runs jobs and raises alerts on the primary. The ports plan put them in `research-assistant`, and P1 declared them there; P5+M3 moves them. The research domain keeps the health job: its detectors, its workloads, and its journals. `SyncedFolder` stays in `research-assistant` with its iCloud adapter (P6+M4). The Linux adapters, `Accelerator`, `Trash`, and `Locations` wait with the other OSes (§3, "Deferred"). |
 | Core code | the core's Python is one package, `core/lib/agent_core/`, so that no core module shadows a domain module of the same name. A domain reaches it by adding `vendor/agent-core/lib` to its module path; the dispatcher adds `core/lib`. NEVER re-export a core name from a domain module: a re-export is a copy that drifts. |
-| State | `~/.agent-core/state/` on the primary: the dispatcher's ledger and preferences file, made when the dispatcher is built. |
+| State | `~/.agent-core/state/` on the primary: the ledger and the preferences file. |
 | `assistant` | created in X0.1, holding one commit with a README, and not used: you delete it, or archive it to keep the name reserved. |
 
 ### Assistant architecture plan
@@ -181,12 +185,12 @@ Settled after W0. It replaces the assistant architecture plan's separate
   `local.claude-remote-control.plist` with `--spawn worktree` and no
   `caffeinate` is loaded. In worktree mode no remote session can run a batch,
   because preflight refuses a worktree (`_ingest/checkout.py:56-59`). Fix: the
-  Remote Control job runs in `~/Developer/research-assistant`, the main
-  checkout, in `same-dir` mode, so a remote session can run a batch.
-- **The personal domain is a skeleton.** This round builds the domain
-  template, `new-domain`, and `personal-assistant` from them (A5, A4). The
-  dispatcher (A3) and its `inbox` and `schedule` skills wait until the
-  personal domain's own skills show what the two domains share.
+  Remote Control job runs in `~/Developer/agent-core` in `same-dir` mode, and the
+  dispatcher hands batches to a background session in the research repo's main
+  checkout.
+- **The personal domain is a skeleton**, and the `inbox` and `schedule`
+  dispatcher skills wait for it. This round builds `route`, `delegate`,
+  `compose`, and `registry`.
 
 ### Audit upgrade plan
 
@@ -234,9 +238,13 @@ Settled after W0. It replaces the assistant architecture plan's separate
 
 ### New: the instruction text only shrinks
 
-The existing audit already cuts instruction text (Check 2, redundancy; Check
-2b, prose). The upgraded audit makes the cuts binding, so that no item, fix,
-or practice grows the text a session loads.
+**The goal: the least instruction text that keeps every function, and the
+quality and safety of the work.** Every audit run pursues it; no run has a
+percentage target. A cut that drops a rule, a failure branch, a guarding
+reason (`clean-prose` §8), or a rule restated for a worker is no cut. The
+existing audit already cuts (Check 2, redundancy; Check 2b, prose). The
+upgraded audit makes the goal binding, so that no item, fix, or practice
+grows the text a session loads without a stated reason.
 
 | Piece | Item | Content |
 | --- | --- | --- |
@@ -246,14 +254,15 @@ or practice grows the text a session loads.
 | Redundancy gates | U3, U5 | `redundancy` rows fail CI once the bench measures their precision at 0.9 or higher |
 | No rule lost | U6 | The fix loop applies a cut only with A1's diff check: every rule of the old text maps to a sentence of the new. A cut that drops a rule is reverted and reported |
 | No growth | U2b, U8, G21 | U2b's splits, Check 9's practices, and G21's capability names grow no file's word count |
-| Cut target | X7.1 | The closing audit run cuts the whole instruction text by at least 20% of its words, the contract first. If the target cannot be met without dropping a rule, the run reports the shortfall and drops no rule |
+| No percentage target | every run, X7.1 | A run cuts what `clean-prose` §7 calls decoration and §8 does not protect, and reports the words saved. Once the text holds only what keeps function, quality, and safety, a run finds no cut, and that is a pass |
 
 ### Hexagonal ports plan
 
 - **This round builds only what the primary uses.** P1 (merged) declared the
   ports and the `mac-local` profile. P5+M3 builds the host ports' macOS
   adapters and the two jobs; P6+M4 builds `SyncedFolder` with its iCloud
-  adapter and the placeholder halt. The agent-host track (G17–G21) is built
+  adapter and the placeholder halt; P15 builds `bootstrap` and `doctor` for
+  macOS. The agent-host track (G17–G21) is built
   in full. Every other item of the ports plan serves another OS or a hosted
   API, and waits (§3, "Deferred").
 - **Counts, for the deferred `Vault` refactor (P7).**
@@ -271,20 +280,18 @@ or practice grows the text a session loads.
 ### Primary/secondary plan
 
 - Its item 3 becomes "codify and fix the existing service": a `Scheduler` job,
-  `caffeinate -i`, `KeepAlive`, `~/Developer/research-assistant` as its
-  working directory until the dispatcher is built, and `same-dir` spawning.
+  `caffeinate -i`, `KeepAlive`, `~/Developer/agent-core` as its working directory,
+  and `same-dir` spawning.
   - The new jobs take labels of their own, so the old hand-written plists stay
     untouched and the rollback can reload them.
   - The job passes no `--name`, because the contract forbids naming a machine
     in the control plane.
   - The job's code is built at `agent-core`'s root, on the core's `Scheduler`
-    port, because the job serves the machine, never one domain. No domain
-    carries it. Its working directory is an argument, so the dispatcher
-    moves it to `~/Developer/agent-core` with no code change.
+    port, because the job serves the dispatcher. No domain carries it.
 - Item 4 (the iCloud placeholder check) is included, through `SyncedFolder`.
   No documented way to read the Optimize Mac Storage setting is known, so
-  preflight infers it from placeholders in the library and the inbox, and
-  the rehearsal checks for none (R-P6+M4-1).
+  preflight halts on a placeholder in the library or the inbox, and `doctor`
+  reports one (P15).
 - Item 5 (retiring the laptop install) is the last step of the switch. It is
   done by hand: `launchctl bootout` and deleting the plists. The laptop keeps
   only the frozen checkout, which has no `uninstall`; `Scheduler.remove`
@@ -332,12 +339,12 @@ that touch disjoint files.
 | **W3** | a | **A2** audit engine to the core, as is; research checks in `audit/checks.py`; a thin `vault-audit` skill; hook, CI, tests, `extraction-fixer` repointed → **U1** bench → **U3** lint layer, with the `weight` row and the word ratchet → **U4** units, closure, baseline v2 | both | A1, U2 |
 | | b | **G20** research `domain.json` created with its `folders` and `policy`, the manifest reader, and one settings generator, with the sensitive-folder read guard | agent-core + research-assistant | A1 |
 | **W4** | a | **U5** audit workflow and workers, its report opening with the cuts → **U6** loop and fix (worktree), no rule lost → **U7** Check 8 (plus stage timings in `ingest.py`) → **U8** Check 9, current practice, with no growth | agent-core (+ research for timings) | U4 |
-| | b | **A5** domain template + `new-domain`, with the folder step (folders in `~/Documents`, access, optional Obsidian vault) → **A4** `personal-assistant` made by `new-domain`, no skills and no folders yet | agent-core, personal-assistant | G20 |
+| | b | **A5** domain template + `new-domain`, with the folder step (folders in `~/Documents`, access, optional Obsidian vault) → **A3** dispatcher at `agent-core`'s root: contract, registry, `route`, `delegate`, `compose`, `registry`; the core skills `approvals` and `dispatch` (plain names: vendored skills have no plugin namespace); research `domain.json` completed with `handles`, `entry_skills`, `exposure`, and `unattended` → **A4** `personal-assistant` made by `new-domain`, no skills and no folders yet | agent-core, research-assistant, personal-assistant | G20 |
 | | c | **G17** tiers → **G18** `HookIo` + git pre-commit (the X1 affected-module checks; the full suite runs pre-push and in CI) → **G19** worker specs + generator (the agent-host port at `core/lib/agent_core/_ports/agent.py` and its adapters in `core/lib/agent_core/_adapters/agent/`, in `agent-core`). Each repo commits the agent files the generator renders from its specs, and CI fails if they differ from a fresh render. A domain symlinks the core's rendered files, never its specs | agent-core + research-assistant | U3 |
 | **W5** | a | **U2b** the > 40-word sentence cleanup → **G21** capability names in the prose (about 25 instruction files, in slices by skill); the capability names are core terms, defined in the core's `clean-prose`, not in a domain glossary; neither grows a file's word count | research-assistant | U3, U8, G19 |
-| | b | **P16** the README per role, for the primary: install on macOS; "Two machines: primary and secondaries"; "Retire a former full install" | research-assistant | X2, P5+M3 |
+| | b | **P15** `bootstrap` and `doctor` for macOS and `mac-local`, with the primary checks (the health job; no iCloud placeholder in the library or the inbox, which stands in for Optimize Mac Storage off); `bootstrap --no-jobs` skips the jobs: the switch uses it, and so does every test install → **P16** the README: install on a Mac for anyone with Obsidian and Zotero; "Two machines: primary and secondaries"; "Retire a former full install" | research-assistant | X3, P6+M4 |
 | **W6** | — | **Deferred: not in this round** (below) | — | — |
-| **W7 hardening** | — | **X7.1** the upgraded audit in `all` mode with the fix loop, on every repo, toward the 20% cut target → **X7.2** a completeness critic: every acceptance row of the items this round builds has a CI test or a line in `rehearsal.md` → **X7.3** `cutover.py rehearse \| switch \| rollback` (read-only form first) and the switch runbook | all | W5 |
+| **W7 hardening** | — | **X7.1** the upgraded audit in `all` mode with the fix loop, on every repo → **X7.2** a completeness critic: every acceptance row of the items this round builds has a CI test or a line in `rehearsal.md` → **X7.3** `cutover.py rehearse \| switch \| rollback` (read-only form first) and the switch runbook | all | W5 |
 | **W8** | — | rehearsal and switch on the Mac, with you (§6) | — | W7 |
 
 **Deferred.** Each item below has the status `deferred` in its item file,
@@ -350,10 +357,9 @@ until you name that need, nothing of it is built.
 | P9, P10 | transcriber and diarizer ports; hosted transcription | a hosted transcription provider you want to use |
 | P7a–P7h | the `Vault` object and `Locations` over 65 modules; test vaults | a second OS, or a vault outside `~/Documents` |
 | P11, P12, P13 | `LayoutEngine` port; Marker API and `calibrate`; `LineRecognizer`, Tesseract, and `calibrate-ocr` | a second layout engine or OCR engine you want to use |
-| P8, P14, P15 | the contract per OS; requirement extras and locks; `bootstrap` and `doctor` | a second OS, or a second user's install |
+| P8, P14 | the contract per OS; requirement extras and locks | a second OS, or an install with hosted APIs in place of local models |
 | P5+M3's and P6+M4's other-OS parts | systemd, the Linux readings, `notify-send`, ntfy; `Accelerator`; `Trash` | a second OS |
-| A3 | the dispatcher at `agent-core`'s root: `route`, `delegate`, `compose`, `registry`, `approvals`, `dispatch`; `handles`, `entry_skills`, `exposure`, `unattended` | the personal domain's own skills, which show what the domains share |
-| P22 | the Python batch driver | a second agent host |
+| P22, and a second host's renderer | the Python batch driver; the worker renderer for a host other than Claude Code | someone running the setup on another agent host |
 
 **Why this order:**
 
@@ -363,8 +369,9 @@ until you name that need, nothing of it is built.
 - **The core split (A1) comes before the audit (A2, U*) and before G20**,
   because the audit parses the glossary and lives in the core, and G20's
   `domain.py` lives in the core.
-- **The domain template (A5) comes after the single settings generator
-  (G20)**, because `new-domain` prints the settings block G20 generates.
+- **The domain template (A5) and the dispatcher (A3) come after the single
+  settings generator (G20)**, because `new-domain` prints the settings block
+  G20 generates, and `registry` reads G20's manifests.
 - **A settings change after G20 goes through `domain.json`.** Once G20 has
   merged, an item that changes `.claude/settings.json` (U3's
   `excludedCommands`, U8's hosts) edits the `policy` of `domain.json` and
@@ -503,7 +510,7 @@ each wave's end.
    repos into `~/Developer/` beside the old checkout.
 2. **Rehearse in a staging home.** `cutover.py rehearse` sets `HOME` to
    `~/.staging-home`, so every `~` path is staged, and builds:
-   - a venv from `requirements.lock`;
+   - a venv, with `bootstrap --no-jobs`;
    - a staging vault: copies of a sample of reviewed works, their PDFs, and the
      bibliographies.
 
@@ -517,8 +524,9 @@ each wave's end.
    - no iCloud placeholder in the library or the inbox;
    - an `ingest` dry run;
    - a Stage 2 → 6 backfill of three works in the staging vault;
-   - one research question answered from a local session in the research
-     checkout; Remote Control is checked after the switch, in step 4.7;
+   - `doctor` green;
+   - one research question answered through the dispatcher, from a local
+     session; Remote Control is checked after the switch, in step 4.7;
    - the symlinked core skills, workers, and workflows loading on macOS
      (A0; the spike tested Linux only);
    - the sandbox's write limits and the sensitive-folder read guard against
@@ -529,22 +537,21 @@ each wave's end.
    2. Move the old venv aside.
    3. Apply `~/.claude/settings.json`. No settings patches exist: the item
       PRs edit `.claude/settings.json` themselves (`spikes.md` item 2).
-   4. Build the venv from `requirements.lock` with the contract's `uv pip
-      sync` command, and set `core.hooksPath` to `.githooks` in each new
-      checkout. The jobs wait for step 6.
-   5. Run `claude remote-control` once by hand in
-      `~/Developer/research-assistant`, to answer its enable and folder-trust
-      prompts. A job can't answer them.
+   4. Bootstrap for real, with `bootstrap --no-jobs`: the jobs wait for step 6.
+   5. Run `claude remote-control` once by hand in `~/Developer/agent-core`, to
+      answer its enable and folder-trust prompts. A job can't answer them.
+      Open one session by hand in `~/Developer/research-assistant` too, and
+      trust its folder: a delegated session in an untrusted folder ignores
+      the project's allow rules (`spikes.md` item 2).
    6. Install the health and Remote Control jobs through the core's
       `Scheduler`, under their new labels: the health job with `health.py
       install --apply` in `~/Developer/research-assistant`, the Remote Control
       job with `bin/remote_control.py install --apply` in
-      `~/Developer/agent-core`, its working directory
-      `~/Developer/research-assistant`.
+      `~/Developer/agent-core`, its working directory.
    7. **Check what the staging home can't rehearse:** from the laptop or the
       phone, open a session through Remote Control, ask one research question,
-      and start a dry-run batch in that session. If any of these fails, roll
-      back.
+      and start a dry-run batch through the dispatcher. If any of these fails,
+      roll back.
 5. **Rollback** (`cutover.py rollback`): reload the old jobs, restore the old
    venv, and work from `~/Developer/research-tools`. Keep the rollback ready for
    two weeks, then archive `research-tools` on GitHub.
@@ -553,19 +560,14 @@ each wave's end.
 
 ## 7. Defaults I chose (say so before W0 if you disagree)
 
-1. The dispatcher, when it is built, lives at `agent-core`'s root (§1);
-   `assistant` is deleted or archived.
+1. The dispatcher lives at `agent-core`'s root (§1); `assistant` is deleted or archived.
 2. `research-assistant` and `agent-core` are public from W0, after the
    pre-publish scan; `personal-assistant` is private. The old
    `research-tools` stays private, and its CI keeps using your quota until the
    switch.
 3. PRs in the new repos merge on the gate in §5, through auto-merge, without
    asking for each one.
-4. Until the dispatcher is built, Remote Control works in
-   `~/Developer/research-assistant`.
-5. The closing audit run's cut target is 20% of the instruction text's words
-   (§1, "New: the instruction text only shrinks").
-6. The items §3 lists as deferred are not in this round.
+4. The items §3 lists as deferred are not in this round.
 
 ## 8. Verification
 
