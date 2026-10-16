@@ -28,6 +28,7 @@ This file holds every acceptance check that needs the primary Mac. §6 of
 | --- | --- | --- | --- | --- | --- |
 | R-all-1 | S | The full suite on macOS | `~/.research-vault/venv/bin/python -m unittest discover -s tests` in `~/Developer/research-assistant` | every test passes or skips for a named absent tool | |
 | R-all-2 | S | ruff and the audit linter on macOS | `~/.research-vault/venv/bin/ruff check .`; `… audit.py lint` (the core's path after A2) | no finding; `works` 0 | |
+| R-all-3 | S | A Stage 2 → 6 backfill of three works runs as before | the `ingest` workflow from Stage 2 over three works in the staging vault, old and new | the same corpus file bodies, classifications, and bibliography listings | |
 
 ## W1
 
@@ -48,13 +49,6 @@ No Mac-only check.
 | --- | --- | --- | --- | --- | --- |
 | R-X3-1 | S | An `ingest` dry run resolves every script path | the `ingest` skill's dry run from `~/Developer/research-assistant` | every script path resolves under the new checkout; no path names `research-tools` | |
 | R-X3-2 | S | The health watcher samples from the new path | `health.py sample` from the new checkout | a journal line is written; its command names the new checkout | |
-
-### P1
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P1-1 | S | The primary's real `machine.json` resolves to today's classes | print each `Providers` accessor's class from a copy of the primary's `machine.json` | every accessor returns the class the old setup constructs | |
-| R-P1-2 | S | The old setup still reads a `machine.json` carrying `profile` and `providers` | run the frozen setup's `health.py report` with the two keys added to the staged `machine.json` | it runs as without the keys | |
 
 ### P2
 
@@ -82,7 +76,7 @@ No Mac-only check.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-P5+M3-1 | S | A health sample on the ports | `health.py sample`, then `health.py report` | the sample's readings match the old setup's sample taken within the same minute, level by level | |
+| R-P5+M3-1 | S | A health sample under the new job | `health.py sample`, then `health.py report` | the sample's readings match the old setup's sample taken within the same minute, level by level | |
 | R-P5+M3-2 | S | The new health plist matches the installed one | `health.py install` (read-only form); diff its plist with `~/Library/LaunchAgents/<old health label>.plist` | they differ only in the label and the repository path | |
 | R-P5+M3-3 | S | `uninstall` names the new jobs only | `health.py uninstall` and the Remote Control job's `uninstall`, read-only forms | neither names an old plist | |
 | R-P5+M3-4 | W | The Remote Control job loads under launchd | `launchctl print gui/$(id -u)/<new label>` | state running; working directory `~/Developer/agent-core`; `caffeinate -i` in the command; no `--name` | |
@@ -95,28 +89,19 @@ No Mac-only check.
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
 | R-P6+M4-1 | S | No placeholder in the library or the inbox | the preflight's `SyncedFolder` check over the real library and inbox, read-only | no placeholder; if one is found, Optimize Mac Storage is on and the switch waits | |
-| R-P6+M4-2 | S | The accelerator is Metal | print `Accelerator.device()` and `reachable()` | `mps`; `reachable()` returns no cause | |
-| R-P6+M4-3 | S | `Trash.discard` uses the macOS Trash | discard a scratch file through the port | the file is in the Trash and recoverable | |
 
-### P3
+### P15
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-P3-1 | S | Search answers identically | a fixed query set through `search.py` under the old and the new setup, on the same search stores | the hits, their order, and their scores are identical | |
+| R-P15-1 | S | `doctor` is green on the primary | `setup.py doctor` | every line `ok`, the primary checks included; R-P5+M3's jobs report as not yet installed until §6 step 4.6 | |
+| R-P15-2 | S | `bootstrap --no-jobs` installs no job | `setup.py bootstrap --profile mac-local --no-jobs` in the staging home | no launch agent added | |
 
-### P4
-
-No Mac-only check: R-P3-1 covers `mac-local` search.
-
-### P9
+### P16
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-P9-1 | S | A talk's raw transcript is unchanged | transcribe one short recording to its raw transcript under the old and the new setup; first run the old setup twice to see whether its output varies | the new raw transcript equals the old; if the old varies between its own runs, the speakers and the utterance order agree | |
-
-### P10
-
-No Mac-only check.
+| R-P16-1 | R | The laptop's former install retires by the README | follow "Retire a former full install" on the laptop | no launch agent of the old setup loaded; `~/.research-vault` gone; the vault still opens in Obsidian | |
 
 ## W3
 
@@ -131,16 +116,6 @@ No Mac-only check.
 
 No Mac-only check.
 
-### P7a
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P7a-1 | S | Every path resolves as before | print every path the old `vault` constants name and every field of the new `Vault`, from the same `machine.json` | identical | |
-
-### P7b–P7f, P7h
-
-No Mac-only check: R-X3-1 and R-P11-2 run the moved code.
-
 ## W4
 
 ### U5, U6
@@ -151,7 +126,7 @@ No Mac-only check.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-U7-1 | S | Stage timings are recorded on a real backfill | the backfill of R-P11-2, then `audit.py costs` | each stage's duration and each lock wait appear; no vault file changed format | |
+| R-U7-1 | S | Stage timings are recorded on a real backfill | the backfill of R-all-3, then `audit.py costs` | each stage's duration and each lock wait appear; no vault file changed format | |
 | R-U7-2 | S | The health-journal measures are read | `audit.py costs` on the primary | the machine measures report from the health journals | |
 
 ### U8
@@ -159,27 +134,6 @@ No Mac-only check.
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
 | R-U8-1 | S | The scout reads only the allowlisted hosts | dispatch the scout with a fixture source list naming one host outside the allowlist | the outside host is refused; the three allowlisted hosts are read | |
-
-### P7g
-
-No Mac-only check: R-X3-1 runs after the shim is gone.
-
-### P11
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P11-1 | S | `regress` records are byte-identical | `extract.py regress` under the old and the new setup, on the same sample | every extraction record byte-identical | |
-| R-P11-2 | S | A Stage 2 → 6 backfill of three works runs as before | the `ingest` workflow from Stage 2 over three works in the staging vault, old and new | the same corpus file bodies, classifications, and bibliography listings | |
-
-### P12
-
-No Mac-only check.
-
-### P13
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P13-1 | S | The pixel check's verdicts are unchanged under Vision | `fonts scan` over a sample of filed PDFs, old and new | the same verdicts | |
 
 ### G17
 
@@ -207,29 +161,6 @@ No Mac-only check.
 | R-G20-4 | S | The manifest reader reads every domain on the primary | `domain.py manifests` | every `~/Developer/*/domain.json` listed | |
 
 ## W5
-
-### P14
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P14-1 | S | The venv builds from the new locks on macOS | the `mac-local` locks synced into the staging venv | the build succeeds; R-all-1 passes on it | |
-
-### P15
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P15-1 | S | `doctor` is green on the primary | `setup.py doctor` | every line `ok`, the primary checks included; R-P5+M3's jobs report as not yet installed until §6 step 4.6 | |
-| R-P15-2 | S | `bootstrap --no-jobs` installs no job | `setup.py bootstrap --profile mac-local --no-jobs` in the staging home | no launch agent added | |
-
-### P8
-
-No Mac-only check.
-
-### P16
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P16-1 | R | The laptop's former install retires by the README | follow "Retire a former full install" on the laptop | no launch agent of the old setup loaded; `~/.research-vault` gone; the vault still opens in Obsidian | |
 
 ### A5
 
@@ -263,3 +194,7 @@ No Mac-only check.
 | R-X7.3-1 | S | `rehearse` builds the staging home | `cutover.py rehearse`, read-only form, then `--apply` | the read-only form changes nothing; the writing form builds the venv and the staging vault | |
 | R-X7.3-2 | S | `switch` lists §6 step 4 in order | `cutover.py switch`, read-only form | every step of §6 step 4, in order, and nothing else | |
 | R-X7.3-3 | S | `rollback` lists the old jobs, the old venv, and the old checkout | `cutover.py rollback`, read-only form | each old plist, the moved venv, and `~/Developer/research-tools` named | |
+
+## Deferred items
+
+P1, P3, P4, P7a–h, P8, P9–P14, and P22 are deferred (`PLAN.md` §1, "Hexagonal ports plan"). Their lines left this file with them; a later round adds them back from the item files.

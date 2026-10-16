@@ -2,12 +2,14 @@
 
 | Field | Value |
 | --- | --- |
-| Status | planned |
-| Wave, lane | W3-b: P7a → … → P7f → **P7h** |
+| Status | deferred |
+| Wave, lane | W6: not in this round |
 | Repo | `research-assistant` |
 | Depends on | P7f |
 | Detail | `sources/hexagonal-ports-plan.md` §4 PR 7 step 7h, §5 row P7; `PLAN.md` §1 "Hexagonal ports plan" (92 test files patch the constants) |
 | Trailer | `Change-class: refactor — <what>` |
+
+**Deferred after W0.** The ports plan is cut to the Mac's part (`PLAN.md` §1, "Hexagonal ports plan"). The item workflow MUST NOT build this item; the text below is kept for a later round and predates the cut.
 
 ## Builds
 

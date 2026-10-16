@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| Status | planned |
-| Wave, lane | W4-b: **P7g** → P11 → P12 → P13 |
+| Status | deferred |
+| Wave, lane | W6: not in this round |
 | Repo | `research-assistant` |
 | Depends on | P7h, U3 |
 | Detail | `sources/hexagonal-ports-plan.md` §4 PR 7 step 7g, §5 row P7 |
@@ -11,6 +11,8 @@
 
 `PLAN.md` §3 names P7f and U3. P7h, the last slice of W3-b, also precedes this
 item: the shim's deletion breaks every test that still patches a constant.
+
+**Deferred after W0.** The ports plan is cut to the Mac's part (`PLAN.md` §1, "Hexagonal ports plan"). The item workflow MUST NOT build this item; the text below is kept for a later round and predates the cut.
 
 ## Builds
 
