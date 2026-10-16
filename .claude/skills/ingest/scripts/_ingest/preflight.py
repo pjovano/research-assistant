@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 import importlib.util
 from collections.abc import Callable
-from pathlib import Path
+from pathlib import Path, PurePath
 
 import vault
 from _drive.script import SkillScript
@@ -24,6 +24,25 @@ ZOTERO_OFFLINE = "Zotero is not running: start Zotero"
 VISION_MISSING = "Apple Vision is not available on this machine: run the batch on a Mac"
 PLACEHOLDERS_FOUND = ("iCloud keeps these files' bytes off the disk, so a stage reading one would fail: turn Optimize "
                       "Mac Storage off and wait until each is downloaded: {}")
+EVERY_FILE: tuple[str, ...] = ()
+BATCH_INBOX_FILES = (vault.PDF_SUFFIX, vault.NOTE_SUFFIX)
+
+
+class ReadPlace:
+    def __init__(self, directory: Path, kinds: tuple[str, ...] = EVERY_FILE) -> None:
+        self._directory = directory
+        self._kinds = kinds
+
+    def files(self) -> list[Path]:
+        if not self._directory.is_dir():
+            return []
+        return [path for path in sorted(self._directory.iterdir()) if not path.is_dir() and self._is_read(path)]
+
+    def _is_read(self, path: Path) -> bool:
+        if not self._kinds:
+            return True
+        suffixes = [suffix.lower() for suffix in PurePath(path.name).suffixes]
+        return any(kind in suffixes for kind in self._kinds)
 
 
 class ZoteroReadiness:
@@ -50,18 +69,18 @@ class ZoteroReadiness:
 
 class SyncedFolderReadiness:
     def __init__(self, folder: Callable[[], SyncedFolder], conflict_directories: tuple[Path, ...],
-                 read_directories: tuple[Path, ...]) -> None:
+                 read_places: tuple[ReadPlace, ...]) -> None:
         self._folder = folder
         self._conflict_directories = conflict_directories
-        self._read_directories = read_directories
+        self._read_places = read_places
 
     @classmethod
     def for_start(cls, start: str, folder: Callable[[], SyncedFolder]) -> SyncedFolderReadiness:
-        library = (vault.LIBRARY_DIR, vault.VOLUMES_DIR)
+        library = (ReadPlace(vault.LIBRARY_DIR), ReadPlace(vault.VOLUMES_DIR))
         if start == START_EXTRACT:
             return cls(folder, (), library)
         held_notes_and_library = (vault.CORPUS_DIR, vault.TRANSCRIPTS_DIR, vault.LIBRARY_DIR)
-        return cls(folder, held_notes_and_library, (*library, vault.INBOX_DIR))
+        return cls(folder, held_notes_and_library, (*library, ReadPlace(vault.INBOX_DIR, BATCH_INBOX_FILES)))
 
     def failures(self) -> list[str]:
         try:
@@ -76,12 +95,9 @@ class SyncedFolderReadiness:
         return [f"iCloud left conflict copies; merge and delete each: {copies}"] if copies else []
 
     def _placeholders(self, folder: SyncedFolder) -> list[str]:
-        placeholders = [str(path) for path in self._read_files() if folder.not_downloaded(path)]
+        placeholders = [str(path) for place in self._read_places for path in place.files()
+                        if folder.not_downloaded(path)]
         return [PLACEHOLDERS_FOUND.format(placeholders)] if placeholders else []
-
-    def _read_files(self) -> list[Path]:
-        return [path for directory in self._read_directories if directory.is_dir()
-                for path in sorted(directory.iterdir()) if not path.is_dir()]
 
 
 class VisionReadiness:

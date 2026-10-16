@@ -124,6 +124,20 @@ class TestPreflightHaltsOnAPlaceholder(SyncedFolderCase):
         stub = self.held("inbox", f".{WORK}.pdf.icloud")
         self.assert_halts_naming(self.outcome(START_CLEAN, ICloudFolder()), stub)
 
+    def test_a_placeholder_draft_card_in_the_inbox_halts_naming_it(self) -> None:
+        card = self.held("inbox", f"{WORK}.md")
+        self.assert_halts_naming(self.outcome(START_CLEAN, FakeSyncedFolder(frozenset({card}))), card)
+
+
+class TestPreflightLeavesTheInboxFilesABatchNeverReads(SyncedFolderCase):
+    def test_a_placeholder_word_file_in_the_inbox_is_ready(self) -> None:
+        word_file = self.held("inbox", f"{WORK}.docx")
+        self.assertEqual({"state": "ready"}, self.outcome(START_CLEAN, FakeSyncedFolder(frozenset({word_file}))))
+
+    def test_an_icloud_stub_of_a_word_file_in_the_inbox_is_ready(self) -> None:
+        self.held("inbox", f".{WORK}.docx.icloud")
+        self.assertEqual({"state": "ready"}, self.outcome(START_CLEAN, ICloudFolder()))
+
 
 class TestPreflightHaltsOnAConflictCopy(SyncedFolderCase):
     def test_a_conflict_copy_halts_naming_it(self) -> None:
