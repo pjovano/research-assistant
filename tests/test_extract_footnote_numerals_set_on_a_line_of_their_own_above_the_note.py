@@ -15,7 +15,7 @@ from _extract.blocks import FOOTNOTE_KIND, TEXT_KIND, PageBlocks
 from _extract.elements import Paragraph
 
 NUMERAL = "5"
-NOTE = "The pre-Kantian tradition took it for granted that semantic explanation begins with concepts."
+NOTE = "Before Kant, semantic theory assumed that its explanations had to start out from concepts."
 
 
 @dataclass(frozen=True)

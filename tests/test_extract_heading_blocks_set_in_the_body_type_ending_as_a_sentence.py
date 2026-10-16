@@ -29,9 +29,9 @@ FIRST_BASELINE = 80.0
 LINE_PITCH = 40.0
 LINE_HALF_HEIGHT = 6.0
 BOOK_TITLE = "Book IX"
-OPENING = "ATHENIAN: Next will come the legal proceedings that arise out of all the occupations we have mentioned."
+OPENING = "ATHENIAN: Next we turn to the suits that arise between the members of the several trades we have named."
 REPLY = "CLINIAS: That's right."
-CLOSING = "ATHENIAN: The very composition of all these laws we are on the point of framing is, in a way, a disgrace."
+CLOSING = "ATHENIAN: To write laws of this kind at all is, when one reflects on it, something of a reproach to a city."
 BODY_TYPE_HEADING = "The Proceedings of the Courts"
 BOLD_SENTENCE_HEADING = "The courts are to be feared."
 

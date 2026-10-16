@@ -33,7 +33,7 @@ FOLIO = "1"
 CHAPTER_HEADING = f"{FOLIO} Introduction"
 RUNNING_HEAD = "Introduction 2"
 RUNNING_HEAD_SHAPE = "introduction"
-SENTENCE = "That certain kinds of marks and noises have meanings is a very striking fact."
+SENTENCE = "That sounds and inscriptions can carry meaning is a fact worth some surprise."
 DESTINATION_NEAR_THE_FOOT = 700.0
 
 
