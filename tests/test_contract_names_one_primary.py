@@ -13,7 +13,8 @@ PEER_PHRASES = ("on each machine", "each machine's", "either machine", "both mac
 KEPT_SENTENCES = ("two machines editing the same corpus file through iCloud at once",
                   "when two machines change it at once")
 WHITESPACE_RUN = re.compile(r"\s+")
-IMPORT_LINE = "@AGENTS.md"
+IMPORT_LINES = ["@AGENTS.md", "@vendor/agent-core/SOUL.md", "@USER.md"]
+VENDORED_SOUL_FILE = PROJECT_ROOT / "vendor" / "agent-core" / "SOUL.md"
 VOCABULARY_FILE = PROJECT_ROOT / ".claude" / "glossary.md"
 ROLE_AND_TRAILER_TERMS = ("primary", "secondary", "`Defect-class:` trailer", "`Change-class:` trailer")
 TABLE_CELL_SEPARATOR = "|"
@@ -77,8 +78,11 @@ class NoInstructionFileNamesTwoMachinesAsPeers(unittest.TestCase):
 
 
 class ClaudeMdImportsTheContract(unittest.TestCase):
-    def test_claude_md_holds_only_the_import_line(self) -> None:
-        self.assertEqual(IMPORT_LINE, (PROJECT_ROOT / "CLAUDE.md").read_text(encoding="utf-8").strip())
+    def test_claude_md_imports_the_contract_then_the_soul_file_then_the_user_file(self) -> None:
+        self.assertEqual(IMPORT_LINES, (PROJECT_ROOT / "CLAUDE.md").read_text(encoding="utf-8").splitlines())
+
+    def test_the_imported_soul_file_exists_in_the_vendored_core(self) -> None:
+        self.assertTrue(VENDORED_SOUL_FILE.is_file())
 
     def test_the_imported_contract_exists_at_the_repository_root(self) -> None:
         self.assertTrue((PROJECT_ROOT / "AGENTS.md").is_file())

@@ -77,12 +77,20 @@ every note lives in it.
 | writing | `research vault/writing/` | the user's writing, a Zettelkasten in four flat folders the `take-notes`, `projects`, and `edit-drafts` skills state: `1 notes/`, one atomic note per idea of the user's, its one to three claims with their explications and their relations to other atomic notes, the verified quotations behind them, and their tasks; `2 projects/`, one project file per project, an Excalidraw board: its parents and children in its frontmatter, a card for each atomic note of the project and an arrow for each relation between two of them, and its research question, abstract, drafts, and project reading list shown on the board from its Markdown side, and no task; `3 drafts/`, every version of every draft; `4 published/`, the finished pieces; the research assistant writes there on the user's instruction, marks each line it writes in an atomic note for review, and NEVER changes the prose of a draft or a published piece unless the user asks | yes |
 | reading lists | `research vault/bibliographies/4 reading lists/` | one project reading list per project, `<Project> - Reading list.md`, the questions it was searched for, the works that bear on its questions as wanted or held, and a discover task for each neighbouring subject, written by the `manage-projects` skill, each wanted entry moved under `# Held` by a batch once its work is placed; and the reading lists the user keeps from Discover, written there by Discover on the user's instruction; a note of this folder is NEVER a bibliography and no part of the retrieval layer | yes |
 | inbox | `~/Desktop/inbox/` | new PDFs awaiting ingest; Stage 0 rewrites each in place, and Stage 1 keeps its draft card beside it until the PDF is filed; and Word files awaiting import by the `edit-drafts` skill, which a batch never reads | yes |
-| control plane | `~/Developer/research-assistant`, the repository this contract loads from | this contract, `AGENTS.md`, which `CLAUDE.md` imports by its one line `@AGENTS.md`; `.claude/settings.json`; `.claude/skills/`, each with its `scripts/`; `.claude/agents/`, the worker instructions; `.claude/workflows/`, the saved workflows; `vendor/agent-core/`, the vendored core, each core unit of which `.claude/` uses by a symlink; `lib/`, the shared code; `tests/`; a skill's `reference/`, the files it loads; `.mcp.json`, which registers the `vault-rag` server; `pyproject.toml`, the ruff configuration; `obsidian/graph.json`, the default graph view; `.gitleaks.toml`, the secret scan's configuration; `.githooks/`, the pre-push hook; and `.github/`, the CI workflow and the composite action that points the vault at an empty directory | no; git |
+| control plane | `~/Developer/research-assistant`, the repository this contract loads from | this contract, `AGENTS.md`, which `CLAUDE.md` imports by its first line, `@AGENTS.md`, before the soul file, `@vendor/agent-core/SOUL.md`, and the user file, `@USER.md`; `.claude/settings.json`; `.claude/skills/`, each with its `scripts/`; `.claude/agents/`, the worker instructions; `.claude/workflows/`, the saved workflows; `vendor/agent-core/`, the vendored core, each core unit of which `.claude/` uses by a symlink; `lib/`, the shared code; `tests/`; a skill's `reference/`, the files it loads; `.mcp.json`, which registers the `vault-rag` server; `pyproject.toml`, the ruff configuration; `obsidian/graph.json`, the default graph view; `.gitleaks.toml`, the secret scan's configuration; `.githooks/`, the pre-push hook; and `.github/`, the CI workflow and the composite action that points the vault at an empty directory | no; git |
+| user file | `USER.md` at the control plane's root | what is true of the user now: the user's work, priorities, goals, and current interests under `## Standing`, each recent fact a dated entry under `## Recent`, and the user's few personal preferences, kept by the `remember` skill; never a rule | no; never versioned, and on the primary alone: `.gitignore` names it, and a test fails if git tracks it |
 | search stores | the path named in `machine.json` | the embedding store, the full-text store, the citation parser's cache, and the graph store, built over the corpus | no; rebuilt from what they are built over |
 | health journals | `~/.research-vault/cache/health/` | the samples and the health alerts the health watcher writes | no; on the primary, pruned after the retention |
 
 **The retrieval layer is the derived corpus, the transcripts, and the
 bibliographies.**
+
+**The soul file and the user file bind every session.** The soul file,
+`vendor/agent-core/SOUL.md`, states the conduct every session keeps; the user
+file, `USER.md`, states what is true of the user now. `CLAUDE.md` imports
+both after this contract. If a host reads only this contract, read the soul
+file whole after it, then the user file if it exists. A cloud session and CI
+have no user file, and a session starts without it.
 
 **`~/Documents` holds folders side by side.** `library/` and `research
 vault/` are two of them. Each folder is assigned to the repositories whose
@@ -205,8 +213,8 @@ output, and talks to the user; nothing else talks to the user. **A worker** is a
 subagent that runs from its own worker instructions. Every rule a worker must
 obey MUST be in its worker instructions or its prompt: a worker inherits
 nothing. Every worker but `pdf-filer` runs with `omitClaudeMd`, so it never
-loads this contract; `pdf-filer` still loads it, through the import
-`CLAUDE.md` holds. **Delegate judgment over a
+loads this contract, the soul file, or the user file; `pdf-filer` still
+loads all three, through the imports `CLAUDE.md` holds. **Delegate judgment over a
 high token volume to a worker; run a deterministic script inline.** Inside
 the `ingest` workflow, the `relay` worker runs each script step. The
 orchestrator reads a corpus file's frontmatter and opening, never a whole
@@ -528,14 +536,16 @@ there.
 **Writing notes.** Every note carries LF line endings. The frontmatter carries
 only what something reads: NEVER add a field without a reader.
 
-**Never.** NEVER write to the session memory store; anything durable belongs
-in this contract or a skill. `.claude/settings.json` turns auto memory off.
+**Never.** NEVER write to the session memory store; a rule belongs in this
+contract or a skill, and what is true of the user now belongs in `USER.md`,
+which the `remember` skill keeps. `.claude/settings.json` turns auto memory off.
 NEVER delete or overwrite a file the agent did not create without asking; the
 authorized overwrites are Stage 0's rewrite of the inbox PDF in place, Stage
 0's font repair of a filed PDF on the user's instruction, the outline
 `pdf-bookmarker` writes into a filed PDF Stage 2 finds without one, Stage 2's write of
 an accepted body's folios into its library PDF as page labels by
-`labels --apply`, and the write of an entry into the identity table by
-`fonts learn` and `fonts learn-reader`, and the fold's rewrite of an atomic note's or a
-project file's `field:`; the authorized deletion is the reshaping's fold,
+`labels --apply`, the write of an entry into the identity table by
+`fonts learn` and `fonts learn-reader`, the fold's rewrite of an atomic note's or a
+project file's `field:`, and the `remember` skill's rewrite and pruning of
+`USER.md`; the authorized deletion is the reshaping's fold,
 which deletes the folded bibliography.

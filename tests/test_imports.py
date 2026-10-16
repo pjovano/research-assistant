@@ -30,6 +30,7 @@ ENTRY_SCRIPTS = (
     "machine-health/scripts/health.py",
     "manage-projects/scripts/projects.py",
     "answer-questions/scripts/verify.py",
+    "remember/scripts/check_user_file.py",
     "search/scripts/search.py",
     "search/server.py",
     "take-notes/scripts/notes.py",
