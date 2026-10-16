@@ -5,6 +5,7 @@ import contextlib
 import io
 import json
 import logging
+import re
 import subprocess
 import sys
 import tempfile
@@ -28,7 +29,7 @@ from _rag.reranking import LlamaReranker
 from _references.parsing import CitationParser
 from _transcribe.diarizing import PyannotePipeline
 from _transcribe.whispering import WhisperRun
-from _vault.machine import DEFAULT_PROFILE, PROFILES_DIR, ProviderChoices, UnknownProfile
+from _vault.machine import DEFAULT_PROFILE, PROFILES_DIR, MalformedProviders, ProviderChoices, UnknownProfile
 from _writing.conversion import Trash
 from engine_reach import MetalAccess
 from providers import ApiKey, ProviderNotConfigured, ProviderReport, Providers
@@ -67,6 +68,8 @@ OTHER_PLACEHOLDER = "placeholder-value-of-another-variable"
 KEY_VARIABLE = "EMBEDDING_API_KEY"
 API_EMBEDDER = {"adapter": "openai-compatible", "url": "https://embeddings.invalid/v1", "model": "placeholder",
                 "key_env": KEY_VARIABLE}
+GIVEN_MACHINE = Path("copies") / "machine.json"
+GIVEN_MACHINE_PATTERN = re.escape(str(GIVEN_MACHINE))
 
 
 def profile_entries(name: str) -> dict:
@@ -179,9 +182,34 @@ class TestTheProfile(unittest.TestCase):
         with self.assertRaisesRegex(UnknownProfile, r"'gpu-farm'.*api-light, linux-local, mac-local"):
             ProviderChoices({"profile": "gpu-farm"}).entries()
 
-    def test_providers_that_are_not_an_object_are_refused(self) -> None:
-        with self.assertRaisesRegex(UnknownProfile, r"providers must be an object"):
+    def test_providers_that_are_not_an_object_are_refused_as_malformed_providers(self) -> None:
+        with self.assertRaisesRegex(MalformedProviders, r"providers must be an object"):
             ProviderChoices({"providers": ["embedder"]}).entries()
+
+    def test_malformed_providers_are_not_reported_as_an_unknown_profile(self) -> None:
+        with self.assertRaises(MalformedProviders) as raised:
+            ProviderChoices({"providers": ["embedder"]}).entries()
+        self.assertNotIsInstance(raised.exception, UnknownProfile)
+
+
+class TestAConfigurationErrorNamesTheFileItCameFrom(unittest.TestCase):
+    def test_an_unknown_profile_names_the_file(self) -> None:
+        with self.assertRaisesRegex(UnknownProfile, rf"^{GIVEN_MACHINE_PATTERN} names the profile"):
+            ProviderChoices({"profile": "gpu-farm"}, GIVEN_MACHINE).entries()
+
+    def test_malformed_providers_name_the_file(self) -> None:
+        with self.assertRaisesRegex(MalformedProviders, rf"^{GIVEN_MACHINE_PATTERN}'s providers"):
+            ProviderChoices({"providers": ["embedder"]}, GIVEN_MACHINE).entries()
+
+    def test_an_unset_adapter_names_the_file(self) -> None:
+        built = Providers.from_machine({"providers": {providers.EMBEDDER: {}}}, {}, GIVEN_MACHINE)
+        with self.assertRaisesRegex(ProviderNotConfigured, rf"under providers\.embedder in {GIVEN_MACHINE_PATTERN},"):
+            built.embedder()
+
+    def test_an_entry_that_is_not_an_object_names_the_file(self) -> None:
+        built = Providers.from_machine({"providers": {providers.EMBEDDER: "ollama"}}, {}, GIVEN_MACHINE)
+        with self.assertRaisesRegex(ProviderNotConfigured, rf"providers\.embedder in {GIVEN_MACHINE_PATTERN} must"):
+            built.embedder()
 
 
 class TestAnOverride(unittest.TestCase):
@@ -215,8 +243,8 @@ class TestAMissingKey(unittest.TestCase):
         with self.assertRaisesRegex(ProviderNotConfigured, r"providers\.embedder\.adapter is not set"):
             Providers({providers.EMBEDDER: {"model": "placeholder"}}, {}).embedder()
 
-    def test_an_entry_that_is_not_an_object_is_refused_naming_the_port(self) -> None:
-        with self.assertRaisesRegex(ProviderNotConfigured, r"providers\.embedder must be an object"):
+    def test_an_entry_that_is_not_an_object_is_refused_naming_the_port_and_the_file(self) -> None:
+        with self.assertRaisesRegex(ProviderNotConfigured, r"providers\.embedder in .* must be an object"):
             Providers({providers.EMBEDDER: "ollama"}, {}).embedder()
 
 
@@ -299,6 +327,17 @@ class TestTheReport(unittest.TestCase):
         report = json.loads(printed.getvalue())
         self.assertEqual(("linux-local", "_extract.engine.MarkerEngine"),
                          (report["profile"], report["ports"][providers.LAYOUT_ENGINE]))
+
+    def test_the_script_exits_naming_the_machine_json_it_is_given_when_its_profile_is_unknown(self) -> None:
+        self.machine_path.write_text(json.dumps({"profile": "gpu-farm"}), encoding="utf-8")
+        with self.assertRaises(SystemExit) as raised:
+            providers.main(["--machine", str(self.machine_path)])
+        self.assertTrue(str(raised.exception.code).startswith(f"{self.machine_path} names the profile 'gpu-farm'"))
+
+    def test_the_report_names_the_machine_json_it_is_given_for_an_unset_adapter(self) -> None:
+        self.machine_path.write_text(json.dumps({"providers": {providers.EMBEDDER: {}}}), encoding="utf-8")
+        report = ProviderReport.of_machine_file(self.machine_path, {}).as_dict()
+        self.assertIn(f"in {self.machine_path},", report["ports"][providers.EMBEDDER]["unconfigured"])
 
 
 class TestThePortsImportOnlyTheStandardLibrary(unittest.TestCase):

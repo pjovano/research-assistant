@@ -12,7 +12,15 @@ PROFILE_SUFFIX = ".json"
 _ENCODING = "utf-8"
 
 
-class UnknownProfile(ValueError):
+class MachineConfigError(ValueError):
+    pass
+
+
+class UnknownProfile(MachineConfigError):
+    pass
+
+
+class MalformedProviders(MachineConfigError):
     pass
 
 
@@ -35,8 +43,9 @@ class MachineConfig:
 
 
 class ProviderChoices:
-    def __init__(self, machine: dict, profiles_dir: Path = PROFILES_DIR) -> None:
+    def __init__(self, machine: dict, source: Path = MACHINE_CONFIG_PATH, profiles_dir: Path = PROFILES_DIR) -> None:
         self._machine = machine
+        self._source = source
         self._profiles_dir = profiles_dir
 
     @property
@@ -49,13 +58,13 @@ class ProviderChoices:
     def _overrides(self) -> dict[str, dict]:
         overrides = self._machine.get(PROVIDERS_KEY) or {}
         if not isinstance(overrides, dict):
-            raise UnknownProfile(f"{MACHINE_CONFIG_PATH}'s {PROVIDERS_KEY} must be an object of provider entries, "
+            raise MalformedProviders(f"{self._source}'s {PROVIDERS_KEY} must be an object of provider entries, "
                                  f"not {type(overrides).__name__}")
         return overrides
 
     def _profile_entries(self) -> dict[str, dict]:
         if self.profile not in self.available():
-            raise UnknownProfile(f"{MACHINE_CONFIG_PATH} names the profile {self.profile!r} under {PROFILE_KEY}; "
+            raise UnknownProfile(f"{self._source} names the profile {self.profile!r} under {PROFILE_KEY}; "
                                  f"the profiles are {', '.join(self.available())}")
         path = self._profiles_dir / f"{self.profile}{PROFILE_SUFFIX}"
         return json.loads(path.read_text(encoding=_ENCODING))[PROVIDERS_KEY]

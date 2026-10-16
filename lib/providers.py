@@ -8,7 +8,7 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
-from _vault.machine import MACHINE_CONFIG_PATH, MachineConfig, ProviderChoices
+from _vault.machine import MACHINE_CONFIG_PATH, MachineConfig, MachineConfigError, ProviderChoices
 
 ADAPTER_FIELD = "adapter"
 KEY_ENV_FIELD = "key_env"
@@ -108,15 +108,17 @@ ADAPTERS = {
 
 
 class Providers:
-    def __init__(self, entries: Mapping[str, Mapping], environ: Mapping[str, str], adapters: dict = ADAPTERS) -> None:
+    def __init__(self, entries: Mapping[str, Mapping], environ: Mapping[str, str], adapters: dict = ADAPTERS,
+                 source: Path = MACHINE_CONFIG_PATH) -> None:
         self._entries = entries
         self._environ = environ
         self._adapters = adapters
+        self._source = source
         self._loaded: dict[str, object] = {}
 
     @classmethod
-    def from_machine(cls, machine: dict, environ: Mapping[str, str]) -> Providers:
-        return cls(ProviderChoices(machine).entries(), environ)
+    def from_machine(cls, machine: dict, environ: Mapping[str, str], source: Path = MACHINE_CONFIG_PATH) -> Providers:
+        return cls(ProviderChoices(machine, source).entries(), environ, source=source)
 
     def scheduler(self) -> type:
         return self.adapter(SCHEDULER)
@@ -190,13 +192,14 @@ class Providers:
         value = self._entry(port).get(field)
         if not value:
             raise ProviderNotConfigured(f"providers.{port}.{field} is not set: name it under providers.{port} in "
-                                        f"{MACHINE_CONFIG_PATH}, or choose a profile that sets it")
+                                        f"{self._source}, or choose a profile that sets it")
         return str(value)
 
     def _entry(self, port: str) -> Mapping:
         entry = self._entries.get(port) or {}
         if not isinstance(entry, Mapping):
-            raise ProviderNotConfigured(f"providers.{port} must be an object, not {type(entry).__name__}")
+            raise ProviderNotConfigured(f"providers.{port} in {self._source} must be an object, "
+                                        f"not {type(entry).__name__}")
         return entry
 
 
@@ -204,6 +207,11 @@ class ProviderReport:
     def __init__(self, providers: Providers, profile: str) -> None:
         self._providers = providers
         self._profile = profile
+
+    @classmethod
+    def of_machine_file(cls, path: Path, environ: Mapping[str, str]) -> ProviderReport:
+        machine = MachineConfig(path).loaded()
+        return cls(Providers.from_machine(machine, environ, path), ProviderChoices(machine, path).profile)
 
     def as_dict(self) -> dict:
         return {"profile": self._profile, "ports": {port: self._resolved(port) for port in PORTS}}
@@ -225,8 +233,10 @@ class ProviderReport:
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="providers.py")
     parser.add_argument("--machine", type=Path, default=MACHINE_CONFIG_PATH)
-    machine = MachineConfig(parser.parse_args(argv).machine).loaded()
-    report = ProviderReport(Providers.from_machine(machine, os.environ), ProviderChoices(machine).profile)
+    try:
+        report = ProviderReport.of_machine_file(parser.parse_args(argv).machine, os.environ)
+    except MachineConfigError as error:
+        raise SystemExit(str(error)) from error
     print(json.dumps(report.as_dict(), indent=2, ensure_ascii=False))
     return 0
 
