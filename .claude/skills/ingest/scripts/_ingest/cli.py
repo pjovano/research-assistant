@@ -7,6 +7,7 @@ from pathlib import Path
 
 import vault
 from surya_servers import RUN_PATH
+from synced_folder import ConfiguredSyncedFolder
 
 from _drive.detached import StepHost
 from _drive.script import REPOSITORY_ROOT
@@ -34,6 +35,7 @@ from _ingest.preflight import (
     EngineReadiness,
     InstalledEngine,
     Preflight,
+    SyncedFolderReadiness,
     VisionReadiness,
     ZoteroReadiness,
 )
@@ -46,12 +48,20 @@ class Commands:
     def preflight(self, args: argparse.Namespace) -> int:
         return self._emit("preflight", lambda: Preflight(self._checks(args.start)).outcome())
 
+    def synced_folder(self, args: argparse.Namespace) -> int:
+        return self._emit("synced-folder", lambda: Preflight([self._synced_folder_check(args.start)]).outcome())
+
     def _checks(self, start: str) -> list:
         machine = [*self._exclusive_checks(), CheckoutReadiness(Checkout(REPOSITORY_ROOT)),
-                   WorkingDirectoryReadiness(Path.cwd()), EngineReadiness(InstalledEngine.models)]
+                   WorkingDirectoryReadiness(Path.cwd()), EngineReadiness(InstalledEngine.models),
+                   self._synced_folder_check(start)]
         if start == START_EXTRACT:
             return machine
         return [*machine, ZoteroReadiness(SiblingScripts.file(), BetterBibtexProbe.run), VisionReadiness()]
+
+    @staticmethod
+    def _synced_folder_check(start: str) -> SyncedFolderReadiness:
+        return SyncedFolderReadiness.for_start(start, ConfiguredSyncedFolder.of_machine().built)
 
     @staticmethod
     def _exclusive_checks() -> list:
@@ -195,8 +205,12 @@ class CommandLine:
         subparsers = parser.add_subparsers(dest="command", required=True)
         preflight = subparsers.add_parser("preflight", help="check the machine before a batch's first PDF; one JSON "
                                                             "line, ready or halt")
-        preflight.add_argument("--from", dest="start", choices=(START_CLEAN, START_EXTRACT), default=START_CLEAN,
-                               help="the stage the batch starts from (default clean)")
+        synced = subparsers.add_parser("synced-folder", help="read-only: preflight's synced-folder check alone, the "
+                                                             "conflict copies and the files whose bytes are not on "
+                                                             "disk; one JSON line, ready or halt")
+        for starting in (preflight, synced):
+            starting.add_argument("--from", dest="start", choices=(START_CLEAN, START_EXTRACT), default=START_CLEAN,
+                                  help="the stage the batch starts from (default clean)")
         for name, does in DRIVE_STEPS.items():
             subparsers.add_parser(name, help=f"{does}; one JSON line")
         self._add_drive_cite(subparsers)
