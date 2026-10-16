@@ -71,6 +71,18 @@
     "HF_HUB_OFFLINE": "1"
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/bin/cloud-session-start.sh",
+            "timeout": 1200,
+            "statusMessage": "Building the vault's Python environment in the cloud"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",

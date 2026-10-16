@@ -455,11 +455,15 @@ there.
   edit to a Markdown file, the audit linter's `works` check alone. CI fails a
   pull request that fails the suite, the linter, or the audit linter's
   `works` check.
+* **A cloud session builds its own environment.** If `CLAUDE_CODE_REMOTE`
+  is `true`, the SessionStart hook in `.claude/settings.json` runs
+  `bin/cloud-session-start.sh`, which runs `bin/cloud-setup.sh` until the
+  environment is built: a cloud environment's setup script has no network.
 * Run a script's read-only form and read its output before its writing form.
   A hook in `.claude/settings.json` turns `--replace`, `sync --rebuild`,
   `drop-page`, `toc clear`, `revise`, `capture_goldens.py --apply`,
   `sweep --apply`, and `labels --apply` into a permission prompt; every hook
-  runs `lib/harness_hooks.py`.
+  but the SessionStart hook runs `lib/harness_hooks.py`.
 * **Run a command `excludedCommands` in `.claude/settings.json` names as a
   Bash call of its own, from the working directory.** The sandbox exempts a
   call only when its whole command line matches a pattern, and inside the
