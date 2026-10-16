@@ -6,7 +6,7 @@ allowed-tools: Read, Glob, Grep, Bash(~/.research-vault/venv/bin/python .claude/
 
 # vault-audit (Vault Maintenance, run inline by the orchestrator)
 
-Audits the control plane — `CLAUDE.md`, `.claude/settings.json`,
+Audits the control plane — `AGENTS.md`, the `CLAUDE.md` that imports it, `.claude/settings.json`,
 `.mcp.json`, `pyproject.toml`, the CI workflow and composite action under
 `.github/`, the skills, the worker instructions, the reference files, the
 code, and the test fixtures — against itself and against the disk. The audit changes nothing but the
@@ -81,7 +81,7 @@ it.
 
 ## Check 1 — Contract drift
 
-- For each rule in `CLAUDE.md`, locate the code or config that
+- For each rule in `AGENTS.md`, locate the code or config that
   enforces it, or mark it UNENFORCED — a missing guardrail or dead prose,
   each a finding with a different fix. Priority: the filename convention and
   the join key (§3), the classification vocabularies (§3), the citation
@@ -104,7 +104,7 @@ handoff. For each duplicate, name the single home:
 
 | Home | Holds |
 | --- | --- |
-| `CLAUDE.md` | what is true across all stages and needed in every session |
+| `AGENTS.md` | what is true across all stages and needed in every session |
 | a SKILL.md | what is true only while that stage runs |
 | a script's `--help` | its own invocation detail |
 
@@ -258,7 +258,7 @@ command fails, report sign 6 as unaudited and continue.
 | 3 | a condition only one PDF could meet: a literal file page, page count, exact string, or exact font name, alone or conjoined | the code in the audit set |
 | 4 | a threshold changed since the last accepted audit with no test pinning a built PDF on each side of the new value | the log, then `tests/` |
 | 5 | a rule carrying more than two exceptions; an enumeration or a chain of branches that gained an entry in each of two or more commits | the audit set, then the log |
-| 6 | a commit changing code or instruction text whose message states no defect class, or names only a work | the log |
+| 6 | a commit other than a merge commit, changing code or instruction text, whose message carries neither a `Defect-class:` trailer nor a `Change-class:` trailer, or whose `Defect-class:` trailer names only a work | the log |
 | 7 | a test added since the last accepted audit that pins a fix and either reads a library PDF or is named for a work, where the contract requires the defect class built in a PDF of its own | the log, then `tests/` |
 
 Three things are not special cases. Data that parameterizes a rule (a list of

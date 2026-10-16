@@ -245,7 +245,7 @@ continue; Stage 2 checks such a page like any other.
 Dingbats rule flags, read-only and without the pixel check. Repairing a filed PDF is the same procedure on the library
 file, and it runs only on the user's instruction, one PDF or one named batch
 at a time: a filed PDF is not the inbox file, and its rewrite is the
-authorized overwrite `CLAUDE.md` §5 names. A Stage 2 backfill the user
+authorized overwrite `AGENTS.md` §5 names. A Stage 2 backfill the user
 starts is that instruction for each work it converts: the `ingest` workflow
 repairs the work's fonts before `drive-prep` converts it, as the
 `extract-corpus` skill states. NEVER repair a filed PDF
@@ -311,7 +311,7 @@ page and no division. The workflow then runs step 6 of the procedure on the libr
    `book` for a `type:` of `book` or `thesis`, `article` for any other type,
    which the worker bookmarks from its section headings; if the line carries
    `pixels_only` true, the prompt says the text layer cannot be trusted. The
-   outline is the authorized overwrite `CLAUDE.md` §5 names, and no other
+   outline is the authorized overwrite `AGENTS.md` §5 names, and no other
    write touches the filed PDF.
 2. If the report's `outcome` is `kept`, `pruned`, or `built`, run `drive-prep`
    again.

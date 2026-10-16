@@ -5,12 +5,14 @@ Zotero records that identify them, a derived corpus of Markdown text built
 from them, and a retrieval layer that answers research questions from that
 corpus with every quotation verified against the page it was printed on.
 
-The vault itself lives outside this repository, in `~/Documents`, and is
-synced between two Macs through iCloud. This repository holds everything
-that operates on it: the contract, the skills, the worker instructions, the
-shared code, and the tests. It is run by Claude Code, which reads
-`CLAUDE.md` as its standing instructions and each skill as the procedure for
-one operation.
+The vault itself lives outside this repository, in `~/Documents`. iCloud
+syncs it between the primary, the one Mac that holds this repository and
+runs every operation, and any secondary, which holds the vault alone. This
+repository holds everything that operates on it: the contract, the skills,
+the worker instructions, the shared code, and the tests. It is run by Claude
+Code, which reads `CLAUDE.md`, and through its import the contract in
+`AGENTS.md`, as its standing instructions, and each skill as the procedure
+for one operation.
 
 ## What the vault holds
 
@@ -111,7 +113,8 @@ heading tree and frontmatter, and walks the citation graph.
 
 | Path | Holds |
 | --- | --- |
-| `CLAUDE.md` | the contract: the mandate, the architecture, the conventions, the operations, and the standards |
+| `AGENTS.md` | the contract: the mandate, the architecture, the conventions, the operations, and the standards |
+| `CLAUDE.md` | the one line `@AGENTS.md`, which imports the contract into every Claude Code session |
 | `.claude/settings.json` | permissions and hooks; one hook runs the checks after every edit to a Python or Markdown file, the affected test modules among them, another turns every destructive command into a permission prompt |
 | `.githooks/` | the pre-push hook, which runs the test suite, the linter, and the audit linter before every push |
 | `.claude/skills/<skill>/` | one skill per operation: `SKILL.md`, its `scripts/`, and any `reference/` files it loads |
@@ -119,7 +122,7 @@ heading tree and frontmatter, and walks the citation graph.
 | `.claude/workflows/` | the saved workflows: `ingest.js`, which runs a batch |
 | `lib/` | the shared code: `vault.py` resolves the vault's paths; `pagetext.py` reads pages; `references.py` parses citations; `rag.py` builds and queries the search stores; `annotate.py` writes annotations; `zotero.py` talks to Zotero |
 | `tests/` | the suite, run with `python -m unittest discover -s tests` under the vault's own Python environment |
-| `requirements.txt`, `requirements.lock` | the dependencies and the exact versions both machines run |
+| `requirements.txt`, `requirements.lock` | the dependencies and the exact versions the primary, CI, and the cloud sessions run |
 | `pyproject.toml` | the ruff configuration |
 | `.github/` | the CI workflow, a lint job, an audit job, a publish-guard job, and a test job, all on Ubuntu, on every pull request and push to `main`; and the composite action that points the vault at an empty directory |
 | `.gitleaks.toml` | the publish guard's secret scan: gitleaks's default rules, less the citation keys and the audit baseline's digests |
@@ -133,13 +136,15 @@ and are invoked before any edit.
 
 Per-machine values, such as where the search stores live, sit outside the
 repository in `~/.research-vault/machine.json`, and the models the engines
-run on live in each machine's own caches. Nothing in the repository names a
-machine or an absolute path.
+run on live in the primary's own caches. Nothing in the repository names a
+machine or an absolute path, so a secondary can later become the primary.
 
 ## Running it
 
-The tools run on a Mac with Claude Code, and `~/Developer/research-tools`
-opened as the project folder.
+The tools run on the primary, a Mac with Claude Code, and
+`~/Developer/research-tools` opened as the project folder. A secondary needs
+none of the steps below: it holds the vault through iCloud, and its sessions
+run on the primary.
 
 1. Clone the repository to `~/Developer/research-tools`.
 2. Write `~/.research-vault/machine.json`. Every key is optional: `vault_dir`
@@ -147,7 +152,7 @@ opened as the project folder.
    `crossref_mailto` for the identifier lookups, `batch_update_minutes` for
    the interval of the batch update (default 30), and the reranker's
    `reranker_model`, `reranker_pooling`, and `llama_server`.
-3. Build the Python environment from the lock, so both machines run the
+3. Build the Python environment from the lock, so the primary runs the
    versions the suite passed on:
 
        uv venv --python 3.12 ~/.research-vault/venv

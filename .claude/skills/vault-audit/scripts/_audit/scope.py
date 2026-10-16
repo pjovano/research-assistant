@@ -5,7 +5,7 @@ from pathlib import Path
 import vault
 
 REPOSITORY_ROOT = Path(vault.__file__).resolve().parents[1]
-ROOT_FILES = ("CLAUDE.md", ".mcp.json", "requirements.txt", "requirements.lock")
+ROOT_FILES = ("AGENTS.md", "CLAUDE.md", ".mcp.json", "requirements.txt", "requirements.lock")
 ENCODING = "utf-8"
 GROUP_PATTERNS = {
     "contract": ROOT_FILES + (".claude/settings.json",),

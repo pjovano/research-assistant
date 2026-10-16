@@ -12,7 +12,7 @@ their reference lists for the works they cite that the library lacks, and
 looks those works up outside the vault. It harvests from the held works the
 term list, the vocabulary of the debate, combines the terms into queries, and
 runs every query concurrently through scouts, one per query cluster. The
-reading list it delivers is built under the rules of `CLAUDE.md` §1: every
+reading list it delivers is built under the rules of `AGENTS.md` §1: every
 comment reports and never evaluates, the list lives outside the vault, and
 nothing is claimed that no page showed.
 

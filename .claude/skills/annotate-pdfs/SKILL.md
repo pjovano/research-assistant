@@ -105,7 +105,7 @@ dispatch it once more; if it fails again, stop and tell the user.
 Dispatch the `pdf-annotator` worker on the citing work, as under Whole work,
 in trace mode with the cited work's basename; it returns, per cited passage,
 what the citing work says about it: every whole-work read goes to a worker
-(`CLAUDE.md` §4). Land those passages in the cited work's PDF. If the
+(`AGENTS.md` §4). Land those passages in the cited work's PDF. If the
 worker returns no citable passage, report that and stop.
 
 - **If the citing paper quotes a different translation or edition**, the
@@ -156,7 +156,7 @@ NEVER modify or delete an annotation outside the described set: the
 user's own highlights are indistinguishable by design, and there is no
 rollback. ALWAYS list the annotations a delete would remove and get the
 user's yes before running `revise --apply` with a `delete`
-(`CLAUDE.md` §5). If the described set is unclear, list the
+(`AGENTS.md` §5). If the described set is unclear, list the
 candidates and ask. Report what was changed and what was left alone.
 
 ## Writing
@@ -183,7 +183,7 @@ Spec file, then dry run, then apply:
 
 - `plan` writes nothing and prints, per proposal, the exact text to be
   highlighted and the note. ALWAYS run `plan` and read its output before
-  `apply` (`CLAUDE.md` §5).
+  `apply` (`AGENTS.md` §5).
 - `page` is the file page.
 - `further` marks a joint highlight: a list of `[start, end]` word spans of
   `page`, written with the entry's own span as one highlight. An entry with
@@ -266,7 +266,7 @@ stacks.
   note.
 - Length follows the difficulty of the idea; NEVER pad, NEVER compress a
   hard idea into a fragment. Front-load the claim.
-- Report the argument, never judge it (`CLAUDE.md` §1); attribute
+- Report the argument, never judge it (`AGENTS.md` §1); attribute
   every claim.
 - The note MUST evoke the context and the argument: a reader meeting the
   highlight months later must know why it is marked.

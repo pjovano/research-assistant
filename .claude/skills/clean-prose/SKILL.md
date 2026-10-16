@@ -1,6 +1,6 @@
 ---
 name: clean-prose
-description: Enforces the vault's prose standard on instruction text, which is CLAUDE.md, SKILL.md files, worker instructions, and any reference file a skill loads. Use this skill before adding or editing any instruction prose, including a one-sentence change; it also governs how the orchestrator explains its own work in chat. Not for research content.
+description: Enforces the vault's prose standard on instruction text, which is AGENTS.md, SKILL.md files, worker instructions, and any reference file a skill loads. Use this skill before adding or editing any instruction prose, including a one-sentence change; it also governs how the orchestrator explains its own work in chat. Not for research content.
 ---
 
 # Clean Prose
@@ -105,12 +105,16 @@ in its place.
 | Obsidian vault | `research vault/`, the directory holding every note | notes folder, notebook |
 | Zotero record | the Zotero item that identifies one work; Zotero's own field names such as `itemType` stay as written | record (alone), entry, metadata, Zotero item |
 | derived corpus | `research vault/corpus/`, the directory of corpus files, one per PDF, each in the directory itself and never in its subfolder `talk transcripts/` | corpus text, text layer, extracted text, source index |
-| search stores | the per-machine embeddings and full-text index | search index, vector store, embeddings (alone) |
+| search stores | the primary's embeddings and full-text index, never synced | search index, vector store, embeddings (alone) |
 | control plane | `~/Developer/research-tools`, the repository: the contract, skills, worker instructions, and code | config, tooling, project |
 | core | `core/` of the `agent-core` repository: the skills, workers, workflows, and code `agent-core` shares with every repository that vendors it | shared layer, framework, common library |
 | vendored core | `vendor/agent-core/`, the core as `git subtree` copies it from `agent-core`'s branch `core` | vendor copy, submodule, core checkout |
 | core unit | one skill, worker, or workflow of the core; a core skill, a core worker, and a core workflow are core units of those kinds | shared skill, imported skill, external skill |
 | symlink | a relative symbolic link under `.claude/` that resolves to a core unit inside the vendored core | link (for a symlink), alias, shortcut |
+| primary | the one machine that holds the control plane and runs every operation, written "the primary"; the `source_role` value `primary` is another term | main machine, home machine, always-on machine, master |
+| secondary | any machine other than the primary, which holds the vault through iCloud and runs no operation, written "a secondary"; the `source_role` value `secondary` is another term | laptop (for a secondary), client machine, remote machine, second machine |
+| `Defect-class:` trailer | the git trailer `Defect-class: <the defect class>` closing the message of a commit that fixes a defect | defect line, fix tag, defect note |
+| `Change-class:` trailer | the git trailer `Change-class: refactor — <what>` or `Change-class: feature — <what>` closing the message of a commit that fixes no defect | change line, change tag, kind trailer |
 | inbox | `~/Desktop/inbox/`, new PDFs awaiting ingest and Word files awaiting import | drop folder, queue |
 | batch | the inbox's contents when ingest starts, each filed work an earlier batch left short of Stage 4, and each corpus file whose body is written and whose classification is not | run, ingest set, pass |
 | set-aside PDF | a PDF of a batch whose stage reached `stop and ask the user`: left as it is, its question kept for the batch's one report | held PDF, skipped PDF, blocked PDF, parked PDF |
@@ -320,7 +324,7 @@ in its place.
 | talk card | `card.json` in a talk entry: the `title`, `presenters`, `year`, `meeting`, and `dropped` the transcript reviewer records before the Zotero record exists | draft card (for a talk), metadata card, sidecar |
 | transcript reviewer | the `transcript-reviewer` worker, one dispatch per talk, that writes the reviewed parts and the talk card | reviewer (alone), editor, cleaner |
 | check | `transcribe.py review-check`, which passes or fails a review by its parts and its talk card | validation, verdict (for the command), gate |
-| health watcher | the `machine-health` skill's `health.py sample`, which launchd runs once a minute on each machine | monitor, watchdog, daemon |
+| health watcher | the `machine-health` skill's `health.py sample`, which launchd runs once a minute on the primary | monitor, watchdog, daemon |
 | health journals | `~/.research-vault/cache/health/`, the samples and the health alerts, one JSON-lines file per day | health log, metrics, telemetry |
 | health alert | one detector's finding about the machine: critical memory pressure, or a serious or critical thermal state | warning, alarm, incident |
 | project | one piece of the user's writing in progress, named by its project file's basename | paper (for a project), piece, essay (for a project) |
@@ -476,7 +480,7 @@ from noise.
 
 ## 10. Priority
 
-Weight a finding by how often the text is loaded. `CLAUDE.md`, every skill
+Weight a finding by how often the text is loaded. `AGENTS.md`, every skill
 `description`, and every agent `description` are paid on every session; a skill
 body costs nothing until invoked. Fix the always-loaded text first.
 

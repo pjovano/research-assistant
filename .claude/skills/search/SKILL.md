@@ -91,15 +91,15 @@ in `rag_dir`; `sync --rebuild` regenerates them from the corpus.
 | embedding | `qwen3-embedding:4b` | Ollama, at `ollama_url`, held in memory for `ollama_keep_alive` after each call | `embedding_model`, `ollama_url`, `ollama_keep_alive` | `qwen3-embedding:4b`, `http://localhost:11434`, `5m` |
 | reranking | `bge-reranker-v2-m3` as a GGUF file | `llama-server --reranking --pooling <reranker_pooling>`, on `127.0.0.1:8790`: `search.py query` starts it per query and stops it after; `server.py` holds it for its lifetime | `reranker_model` (the file's path), `reranker_pooling` (the pooling llama-server runs the model under), `llama_server` (the binary) | none; `rank`; `llama-server` on the PATH |
 
-The models live outside the vault, in each machine's own caches. Installing
-them is the user's step, once per machine: pull `qwen3-embedding:4b` into Ollama, and
+The models live outside the vault, in the primary's own caches. Installing
+them is the user's step, once, on the primary: pull `qwen3-embedding:4b` into Ollama, and
 place the reranker GGUF at the path `reranker_model` names. If
 `reranker_model` is absent or names no file, search runs without the
 reranker and says so in every result.
 
 **The chunker counts tokens with tiktoken's `cl100k_base` encoding**, cached
-under `~/.research-vault/tiktoken`. Fetching it is the user's step, once per
-machine, from a terminal: the sandbox denies its host.
+under `~/.research-vault/tiktoken`. Fetching it is the user's step, once, on
+the primary, from a terminal: the sandbox denies its host.
 
     TIKTOKEN_CACHE_DIR=~/.research-vault/tiktoken ~/.research-vault/venv/bin/python -c "import tiktoken; tiktoken.get_encoding('cl100k_base')"
 
@@ -122,7 +122,7 @@ documentation names and query again; if it fails under every pooling, leave
 ## Procedure
 
 **Precondition: in a batch, Stages 3 and 4 have run on every corpus file in it.** In
-a backfill, Stage 6 MAY run before Stages 3 and 4, as `CLAUDE.md` §4 states:
+a backfill, Stage 6 MAY run before Stages 3 and 4, as `AGENTS.md` §4 states:
 a later classification or wikilink costs one re-chunk and no embedding call.
 
 **Precondition: Ollama is running with `qwen3-embedding:4b` pulled.** If it is not,

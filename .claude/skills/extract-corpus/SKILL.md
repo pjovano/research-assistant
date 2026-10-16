@@ -318,7 +318,7 @@ one.
      writes it.
 3. **Extract.** Run `extract <pdf> --trial` with the scope step 2 settled and
    the flags step 1 chose, and pass the same scope to every later `extract`
-   on the work. Run one PDF at a time, as `CLAUDE.md` §4 requires.
+   on the work. Run one PDF at a time, as `AGENTS.md` §4 requires.
    - If it exits 1 naming a point, dispatch the worker again once, with the
      refusal in the prompt; if `extract` refuses a point of the second
      verdicts file, stop and tell the user.
@@ -357,7 +357,7 @@ one.
    NEVER read the trial whole: it is a book.
 5. **Accept.** Run `accept <pdf>`. NEVER hold a trial the page checks
    passed for a review or a code fix: the page checks keep garbled text out,
-   and `CLAUDE.md` §1's quotation rule guards every citation against a
+   and `AGENTS.md` §1's quotation rule guards every citation against a
    layout the extraction got wrong. If `accept` exits 1 naming an existing
    body, stop and tell the user, and re-run with `--replace` only if the user
    asks for the rebuild.
@@ -588,7 +588,7 @@ batch.** A batch accepts every trial the page checks pass; a defect the user
 finds in a corpus file, or names from a batch report's notes, goes to the
 extraction fixer when the user asks.
 
-1. State the defect's defect class by `CLAUDE.md` §5. If no defect class can
+1. State the defect's defect class by `AGENTS.md` §5. If no defect class can
    be stated, change nothing and tell the user.
 2. Write the defects to a defects file in the scratch directory, as a JSON
    list, each with its `kind`, `file_page`, `observed`, `expected`, and
@@ -638,7 +638,7 @@ extraction fix on `main`: CI and the review below gate every fix.
   regression diff lose, duplicate, or garble text, or move it out of place.
   A regression is a change in a diff that leaves the rebuilt body further
   from the page than the corpus file.
-- **NEVER merge a pull request whose CI has not passed**, as `CLAUDE.md` §4
+- **NEVER merge a pull request whose CI has not passed**, as `AGENTS.md` §4
   requires: if GitHub reports CI's jobs as not started, by a billing or
   runner failure, the pull request takes the Otherwise branch below.
 - **If CI passes and the review finds no regression and no special case**,

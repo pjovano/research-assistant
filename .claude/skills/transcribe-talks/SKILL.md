@@ -23,16 +23,16 @@ and the recording stays at its URL.
 
 **A talk batch is the URLs the user gives in one message, or the new talks
 of the playlist when the user asks for a check of it.** The batch rules
-of `CLAUDE.md` §4 bind a talk batch: NEVER end a turn while a talk of the
+of `AGENTS.md` §4 bind a talk batch: NEVER end a turn while a talk of the
 batch has a step left; a talk whose step reaches `set the talk aside` keeps
 its scratch entry as it is and its question for the one report; a failure
 that would recur on every talk stops the batch.
 
-## Setup, once per machine
+## Setup, once, on the primary
 
 | Tool | Install | `machine.json` key |
 | --- | --- | --- |
-| `yt-dlp` and `ffmpeg` | `brew install yt-dlp ffmpeg` | `yt_dlp`, when the binary is not `yt-dlp` on `PATH`; `talks_playlist`, the URL of the playlist the user keeps, on each machine |
+| `yt-dlp` and `ffmpeg` | `brew install yt-dlp ffmpeg` | `yt_dlp`, when the binary is not `yt-dlp` on `PATH`; `talks_playlist`, the URL of the playlist the user keeps |
 | whisper.cpp | `brew install whisper-cpp`, then download `ggml-large-v3-turbo.bin` from the `ggerganov/whisper.cpp` repository on Hugging Face into `~/.research-vault/models/` | `whisper_model`, the model file's path, required; `whisper_cli`, when the binary is not `whisper-cli` on `PATH` |
 | pyannote.audio | pinned in `requirements.lock`; accept the terms of `pyannote/speaker-diarization-community-1` on Hugging Face, run `hf auth login`, then download the model once from a terminal with `HF_HUB_OFFLINE` unset: `~/.research-vault/venv/bin/python -c "from pyannote.audio import Pipeline; Pipeline.from_pretrained('pyannote/speaker-diarization-community-1')"` | `diarization_model`, when another model is wanted |
 
@@ -149,7 +149,7 @@ talk with its question.
 | frontmatter | `title`, `author` (the presenters' surnames), `year`, `type: presentation`, `citekey`, `meeting`, then `source_type`, `source_role`, and `field:` for Stage 4; the recording's URL stands on the first line alone |
 | headings | `## Talk` opens the talk, `## Discussion` the questions and answers; the transcript reviewer's instructions state the rest |
 | paragraph | a time marker on its own line, then `**<Speaker>:** <text>`; a paragraph the reviewer split from another carries no marker; a time marker NEVER falls inside one speaker's sentence: `file` moves the fragment a marker cuts back into the paragraph before it |
-| basename | `<FirstCreator> - <Year> - <Title>` by the rule of `CLAUDE.md` §3, the presenters as the creators, the year the talk was given, the talk's main title |
+| basename | `<FirstCreator> - <Year> - <Title>` by the rule of `AGENTS.md` §3, the presenters as the creators, the year the talk was given, the talk's main title |
 
 **A transcript is written once, in two parts.** `file` writes the
 frontmatter and the body; Stage 4 writes the classification. After Stage 4,

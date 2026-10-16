@@ -16,7 +16,7 @@ bibliographies of each one's subject in its own field.
 
 **Write in `writing/` only on the user's instruction.** NEVER change the
 prose of a draft or a published piece unless the user asks. The rules of
-`CLAUDE.md` §1 bind every line written: report each author's argument as the
+`AGENTS.md` §1 bind every line written: report each author's argument as the
 text presents it, NEVER evaluate it, and NEVER write a quotation that was not
 verified in the PDF.
 
@@ -347,7 +347,7 @@ bibliography lists only works, and the field lives in the frontmatter alone.
    `get_frontmatter`, and the bibliography tree with
    `bibliographies.py tree`.
 3. Choose the most specific bibliography the note's subject belongs to on
-   each line of descent, under the rule of `CLAUDE.md` §4 that places a work.
+   each line of descent, under the rule of `AGENTS.md` §4 that places a work.
    A reading note takes the field of its work unless its claims treat a
    narrower subject.
 4. If the `take-notes` skill researches or reviews the note, run `classify`

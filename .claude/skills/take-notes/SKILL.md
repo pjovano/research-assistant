@@ -241,7 +241,7 @@ subject says it twice.
 **A `Cf.` to another work carries a sentence, NEVER a word or two in
 parentheses:** a reader of the page MUST learn from the line what the other
 work claims about the passage that the passage does not say. Write the
-sentence from the passage of that work that was read, per `CLAUDE.md` §1.
+sentence from the passage of that work that was read, per `AGENTS.md` §1.
 NEVER write a `Cf.` sentence that restates the passage: if the other work
 only quotes or restates it, name the work under `Discussed in:`.
 

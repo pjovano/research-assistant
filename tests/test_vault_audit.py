@@ -45,7 +45,7 @@ NAMED_WORK_CONSTANT = f'SKIPPED = "{NAMED_WORK}"\n'
 BASENAME_PATTERN_RULE = "Name the PDF `<FirstCreator> - <Year> - <Title>.pdf`.\n"
 PRESENT_PATH_NOTE = f"Run `{PRESENT_PATH}` first.\n"
 REPOSITORY_FILES = {
-    "contract": ("CLAUDE.md", ".mcp.json", "requirements.txt", ".claude/settings.json"),
+    "contract": ("AGENTS.md", "CLAUDE.md", ".mcp.json", "requirements.txt", ".claude/settings.json"),
     "skills": (".claude/skills/one/SKILL.md", ".claude/skills/one/reference/table.md"),
     "workers": (".claude/agents/worker.md",),
     "code": ("lib/vault.py", "lib/_vault/notes.py", ".claude/skills/one/scripts/run.py",
@@ -243,6 +243,11 @@ class TestNamedPath(unittest.TestCase):
         self.files.written("CLAUDE.md", "")
         self.assertFalse(NamedPath("CLAUDE.md", self.files.root).is_missing())
 
+    def test_the_bare_contract_file_names_a_path(self) -> None:
+        self.assertTrue(NamedPath("AGENTS.md", self.files.root).is_missing())
+        self.files.written("AGENTS.md", "")
+        self.assertFalse(NamedPath("AGENTS.md", self.files.root).is_missing())
+
 
 class TestControlPlaneFiles(unittest.TestCase):
     def setUp(self) -> None:
@@ -256,6 +261,11 @@ class TestControlPlaneFiles(unittest.TestCase):
         expected = {group: sorted(self.files.root / name for name in names)
                     for group, names in REPOSITORY_FILES.items()}
         self.assertEqual(expected, self.control_plane.by_group())
+
+    def test_the_contract_and_the_file_importing_it_are_contract_files(self) -> None:
+        contract_group = self.control_plane.by_group()["contract"]
+        self.assertIn(self.files.root / "AGENTS.md", contract_group)
+        self.assertIn(self.files.root / "CLAUDE.md", contract_group)
 
     def test_a_file_outside_the_patterns_is_in_no_group(self) -> None:
         strays = {self.files.root / name for name in STRAY_FILES}
@@ -319,7 +329,7 @@ class TestAuditSet(unittest.TestCase):
 
     def test_counts_name_the_three_totals(self) -> None:
         counts = AuditSet.of_changes(self.control_plane, self.baseline_path).counts()
-        self.assertEqual({"instructions": 7, "code": 6, "control_plane": 19}, counts)
+        self.assertEqual({"instructions": 8, "code": 6, "control_plane": 20}, counts)
 
 
 class TestRelatedFiles(unittest.TestCase):

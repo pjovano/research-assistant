@@ -7,7 +7,7 @@ allowed-tools: Bash(~/.research-vault/venv/bin/python .claude/skills/machine-hea
 # machine-health (run inline)
 
 **The health watcher is a deterministic script.** launchd runs it once a
-minute on each machine; the orchestrator runs its other commands inline.
+minute on the primary; the orchestrator runs its other commands inline.
 NEVER dispatch it to a worker.
 
 ## Parts
@@ -16,7 +16,7 @@ NEVER dispatch it to a worker.
 | --- | --- | --- |
 | `scripts/health.py` | the CLI, whose commands are tabled below | launchd for `sample`; the orchestrator for the rest |
 | `lib/machine_health.py` | the facade over `lib/_health/` | `health.py` |
-| health journals | `~/.research-vault/cache/health/samples/` and `alerts/`, one JSON-lines file per day; per machine, never synced | written by `sample` |
+| health journals | `~/.research-vault/cache/health/samples/` and `alerts/`, one JSON-lines file per day; on the primary, never synced | written by `sample` |
 | launch agent | `~/Library/LaunchAgents/com.research-vault.machine-health.plist`, naming `health.py` in `~/Developer/research-tools`, never in a worktree | launchd |
 | `ensure-health-watcher` | the `lib/harness_hooks.py` subcommand a PreToolUse hook runs before every Bash command | the harness |
 
