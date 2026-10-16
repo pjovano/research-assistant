@@ -2,6 +2,7 @@
 name: pdf-filer
 description: Stage 1 worker — records the fields of one cleaned PDF's Zotero record on its draft card and stops before the record is created. Dispatched by the ingest workflow, or by the orchestrator under the file-pdfs skill, never directly.
 model: claude-sonnet-5
+omitClaudeMd: true
 experimental:
   cacheTtl: 1h
 tools: Read, Bash, Glob, Grep, WebFetch

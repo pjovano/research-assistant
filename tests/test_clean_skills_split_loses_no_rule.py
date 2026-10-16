@@ -114,8 +114,7 @@ REWORDED = {
 CONTRACT_REWORDED = {
     "Every worker but `pdf-filer` runs with `omitClaudeMd`, so it never loads this contract; `pdf-filer` still loads "
     "it, through the import `CLAUDE.md` holds.":
-        ("Every worker but `pdf-filer` runs with `omitClaudeMd`, so it never loads this contract, the soul file, or "
-         "the user file; `pdf-filer` still loads all three, through the imports `CLAUDE.md` holds.",),
+        ("Every worker runs with `omitClaudeMd`, so it never loads this contract, the soul file, or the user file.",),
     "**Never.** NEVER write to the session memory store; anything durable belongs in this contract or a skill.":
         ("**Never.** NEVER write to the session memory store; a rule belongs in this contract or a skill, and what is "
          "true of the user now belongs in `USER.md`, which the `remember` skill keeps.",),

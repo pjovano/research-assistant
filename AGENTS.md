@@ -211,9 +211,8 @@ one wikilink to a line; a root bibliography is one no bibliography lists.
 output, and talks to the user; nothing else talks to the user. **A worker** is a
 subagent that runs from its own worker instructions. Every rule a worker must
 obey MUST be in its worker instructions or its prompt: a worker inherits
-nothing. Every worker but `pdf-filer` runs with `omitClaudeMd`, so it never
-loads this contract, the soul file, or the user file; `pdf-filer` still
-loads all three, through the imports `CLAUDE.md` holds. **Delegate judgment over a
+nothing. Every worker runs with `omitClaudeMd`, so it never loads this
+contract, the soul file, or the user file. **Delegate judgment over a
 high token volume to a worker; run a deterministic script inline.** Inside
 the `ingest` workflow, the `relay` worker runs each script step. The
 orchestrator reads a corpus file's frontmatter and opening, never a whole
