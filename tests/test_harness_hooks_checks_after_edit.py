@@ -31,7 +31,7 @@ RUFF_REINSTALL = "uv pip sync --reinstall-package ruff --python ~/.research-vaul
 
 class TestEditedProjectFile(unittest.TestCase):
     def setUp(self):
-        self.root = Path(tempfile.mkdtemp())
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
 
     def _check_labels(self, path: Path | None) -> list[str]:
         return [check.LABEL for check in harness_hooks.EditedProjectFile(path, self.root).checks()]

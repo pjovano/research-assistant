@@ -36,7 +36,7 @@ class TestBashGuard(unittest.TestCase):
 
 class TestWriteGuard(unittest.TestCase):
     def setUp(self):
-        self.vault = Path(tempfile.mkdtemp())
+        self.vault = Path(self.enterContext(tempfile.TemporaryDirectory()))
         self.corpus_dir = self.vault / "research vault" / "corpus"
 
     def _decision(self, path: Path | None) -> dict | None:
@@ -109,7 +109,7 @@ class TestHookCli(unittest.TestCase):
         self.assertEqual(json.loads(out.getvalue())["hookSpecificOutput"]["permissionDecision"], "ask")
 
     def test_the_write_guard_denies_a_file_under_the_vault_corpus_directory(self):
-        corpus_dir = Path(tempfile.mkdtemp())
+        corpus_dir = Path(self.enterContext(tempfile.TemporaryDirectory()))
         event = harness_hooks.HookEvent({"tool_input": {"file_path": str(corpus_dir / "Doe - 2020 - A Work.md")}})
         out = io.StringIO()
         with mock.patch.object(harness_hooks, "corpus_directory", return_value=corpus_dir), redirect_stdout(out):
@@ -118,7 +118,8 @@ class TestHookCli(unittest.TestCase):
         self.assertEqual(json.loads(out.getvalue())["hookSpecificOutput"]["permissionDecision"], "deny")
 
     def test_a_write_outside_the_corpus_emits_no_decision(self):
-        event = harness_hooks.HookEvent({"tool_input": {"file_path": str(Path(tempfile.mkdtemp()) / "x.md")}})
+        outside = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        event = harness_hooks.HookEvent({"tool_input": {"file_path": str(outside / "x.md")}})
         out = io.StringIO()
         with redirect_stdout(out):
             code = harness_hooks.HookCli(Path.cwd()).run("guard-write", event)
