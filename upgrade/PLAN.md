@@ -153,6 +153,19 @@ Settled after W0. It replaces the assistant architecture plan's separate
 | State | `~/.agent-core/state/` on the primary: the ledger and the preferences file. |
 | `assistant` | created in X0.1, holding one commit with a README, and not used: you delete it, or archive it to keep the name reserved. |
 
+### New: one soul in the core; one user file per domain, kept local
+
+Settled after W1. A6 builds it.
+
+| Piece | Content |
+| --- | --- |
+| `core/SOUL.md` | the standard of a professional assistant, the same in every domain and generic to anyone who vendors the core: honesty and truth-seeking, calibrated uncertainty, no sycophancy, rigour, faithful reporting, and a neutral, explanatory, professional voice. It takes the generic rules of `clean-prose`'s chat register. Its builder researches current best practice first and cites each source in the PR |
+| `USER.md` | one per domain, at its root: what is true of the user now in that domain, the user's work, priorities, goals, and current interests, and the user's few personal preferences. It is the domain's memory, since auto memory stays off. It is never versioned: `.gitignore` names it and a test fails if git tracks it. It lives on the primary alone; a cloud session and CI have none |
+| The boundary | `USER.md` holds facts about the user, never a rule. Anything that would still hold for another person using the domain, a convention, a decision about the control plane, or a way of working, goes into the contract, a skill, the plan, or `SOUL.md`, through a PR |
+| `remember` | the core skill the orchestrator invokes before writing `USER.md`: it sorts each learned item by the boundary, dates each recent entry, prunes entries older than 30 days, and holds the file under its cap |
+| Loading | each `CLAUDE.md` imports `SOUL.md`, and a domain's `CLAUDE.md` imports `USER.md` too. An output style was weighed and not used: the docs do not list output styles among what a cloud session loads, a custom style drops Claude Code's coding instructions unless a flag keeps them, and a symlinked style file is undocumented |
+| Dispatcher | `agent-core`'s root imports `SOUL.md` and keeps no `USER.md`: the domain sessions hold the living context |
+
 ### Assistant architecture plan
 
 - **The core is vendored, not installed as a plugin.** The docs say cloud
@@ -335,7 +348,7 @@ that touch disjoint files.
 | **W1 foundations** | a | **X1** fast post-edit hook (affected modules; full suite in CI and pre-push; §5 text) → **X2** contract: trailers, primary/secondary roles (M §1), "both machines" narrowed, the contract moved to `AGENTS.md` with `CLAUDE.md` importing it (§1) → **X3** the repo's own name: the 26 lines in 12 files that name `research-tools` now name `research-assistant` (the two plists outside git change at the switch) | research-assistant | W0 |
 | | b | **P1** ports, `providers.py`, profiles; P2 is dropped (§1, "Hexagonal ports plan") | research-assistant | W0 |
 | | c | **A0** `agent-core` skeleton: `core/` and the root dispatcher's layout (§1), CI (suite and ruff; A2 adds the audit linter), the branch `core` written by CI, the `vendor` subtree of `core/` into research-assistant, the symlink layout | agent-core + research-assistant | W0 spike |
-| **W2** | a | **A1** `clean-code`/`clean-prose` split into the core's general text plus the research overlay `.claude/code-overlay.md` and `.claude/glossary.md` (diff check: no rule lost) → **U2** STE rules in the core's `clean-prose` | both | A0 |
+| **W2** | a | **A1** `clean-code`/`clean-prose` split into the core's general text plus the research overlay `.claude/code-overlay.md` and `.claude/glossary.md` (diff check: no rule lost) → **A6** `SOUL.md` in the core, built on researched best practice and taking the chat register's generic rules; a local, never-versioned `USER.md` per domain; the core skill `remember` → **U2** STE rules in the core's `clean-prose` | both | A0 |
 | | b | **P5+M3** `Scheduler`/`SystemReadings`/`Notifier` moved into the core, with the launchd adapter and its `remove` and the macOS readings and notifiers; the health job on the core's ports; the Remote Control job at `agent-core`'s root, working in `~/Developer/research-assistant` (code only, installed at the switch) → **P6+M4** `SyncedFolder` with its iCloud adapter, and the preflight halt on a placeholder | agent-core, then research-assistant | A0, P1 |
 | **W3** | a | **A2** audit engine to the core, as is; research checks in `audit/checks.py`; a thin `vault-audit` skill; hook, CI, tests, `extraction-fixer` repointed → **U1** bench → **U3** lint layer, with the `weight` row and the word ratchet → **U4** units, closure, baseline v2 | both | A1, U2 |
 | | b | **G20** research `domain.json` created with its `folders` and `policy`, the manifest reader, and one settings generator, with the sensitive-folder read guard | agent-core + research-assistant | A1 |
@@ -367,6 +380,8 @@ until you name that need, nothing of it is built.
 - **X1 goes first** because it makes every later edit cheap.
 - **The contract trailers and roles go next**, because every later commit and
   item cites them.
+- **A6 comes between A1 and U2**, because it moves the chat register out of
+  the core `clean-prose` that A1 creates and U2 extends.
 - **The core split (A1) comes before the audit (A2, U*) and before G20**,
   because the audit parses the glossary and lives in the core, and G20's
   `domain.py` lives in the core.
