@@ -104,7 +104,7 @@ choices are independent:
 | --- | --- |
 | `domain.json` | `folders`: the folders under `~/Documents` the assistant works on, each with `read` or `write` access. A folder can carry `sensitive: true`, which keeps every assistant that doesn't list it from reading it. |
 | research domain | lists today's `library` (write) and `research vault` (write). Nothing moves: invariant 2 holds, and the contract's `vault_dir` rule is unchanged. A CI check confirms `domain.json`, the research `Locations` defaults (P7), and the generated sandbox all name the same folders. |
-| settings generator (G20) | gives each assistant write access to exactly the folders it lists as `write`. G20 ships its own manifest reader, `domain.py manifests`, which reads every `~/Developer/*/domain.json` on the primary, or the manifests named on the command line. From those manifests the generator denies reads of any `sensitive` folder the assistant doesn't list, so a research session never sees `taxes` or `medical`. A3's `registry` builds on the same reader. The dispatcher lists no folders. Tests of the reader, the generator, and `registry` use fixture manifests, since `~/Developer` exists only on the primary. |
+| settings generator (G20) | gives each assistant write access to exactly the folders it lists as `write`. G20 ships its own manifest reader, `domain.py manifests`, which reads every `~/Developer/*/domain.json` on the primary, or the manifests named on the command line. From those manifests the generator denies reads of any `sensitive` folder the assistant doesn't list, so a research session never sees `taxes` or `medical`. The sandbox's `denyRead` blocks a sandboxed Bash read and not the Read tool (`spikes.md` item 7), so for each such folder the generator writes both a `sandbox.filesystem.denyRead` entry and a `Read(...)` rule in `permissions.deny`. A cloud session enforces no sandbox (`spikes.md` item 1), so the rehearsal checks the guard on the primary, against Bash, Read, Grep, and Glob (R-G20-2, R-G20-3). A3's `registry` builds on the same reader. The dispatcher lists no folders. Tests of the reader, the generator, and `registry` use fixture manifests, since `~/Developer` exists only on the primary. |
 | template and `new-domain` (A5) | asks which folders in `~/Documents` the new assistant works on, existing or new, and with what access. For a new folder, it offers to make it an Obsidian vault by copying a default `.obsidian/` config (today's `graph.json` pattern, made general). Folders are created on the Mac at the switch, not in the cloud. |
 | `personal-assistant` (A4) | lists no folders yet. You add them with `new-domain`'s folder step when you build it out. |
 
@@ -115,15 +115,17 @@ choices are independent:
   marketplace path doesn't exist in the cloud or in CI. So `agent-core` enters
   each domain as a git subtree at `vendor/agent-core/`. Its skills, agents, and
   workflows are symlinked into `.claude/skills/`, `.claude/agents/`, and
-  `.claude/workflows/`. A spike in
-  W0 confirms that symlinks load; if they don't, a generated copy is checked by
-  CI. This gives four things:
+  `.claude/workflows/`. The W0 spike found that relative symlinks load
+  skills, agents, and workflows (`spikes.md` item 3), so no generated copy is
+  needed; macOS was not tested, and the rehearsal checks it (R-A0-1). This
+  gives four things:
   - skill names stay `clean-code` and `clean-prose`, so references and habits
     don't change;
   - workers keep reading `.claude/skills/clean-code/SKILL.md`;
   - CI needs no token to fetch the core;
   - a domain moves to a newer core on purpose, with `git subtree pull` (the
-    plan's "pinned ref" option).
+    plan's "pinned ref" option). The spike's round trip of `add`, `pull
+    --squash`, and `split` worked (`spikes.md` item 6).
   A plugin packaging of the core can be added later for other people.
 - **Fact fixes:**
   - the repo name sits on 26 lines in 12 files, including
@@ -165,13 +167,18 @@ choices are independent:
 - **`xref` is written against `model:` and the stage table's Model column
   (U3).** G17 then extends the same check to tiers, so the two never disagree.
 - **The fast post-edit hook moves to the very start (X1)**, out of Check 8.
-  - Today every Python edit waits for the full suite: 553 modules and about
-    4,940 tests, single-process. On a 4-vCPU cloud VM that is minutes per edit,
-    across about 50 PRs.
+  - Today every Python edit waits for the full suite. The spike measured it
+    on the 4-vCPU cloud VM: 4,965 tests in 118 s, and the post-edit hook 2 min
+    10.5 s per Python edit (`spikes.md`, the rerun), across about 50 PRs.
   - The hook runs the test modules that import the changed module. The full
     suite still runs in CI and before every push.
 - **The fixer works in a worktree**, never in the main checkout, which
   preflight requires to be on a clean `main`.
+- **The workflows are sized on the measured concurrency.** The Workflow tool
+  runs min(16, CPUs − 2) agents at once: 2 on the 4-vCPU VM. Each agent costs
+  about 68,000 tokens before it does any work (`spikes.md` item 4). U5 sizes
+  its partitions and `budget` on these figures, and so does §4's item
+  workflow.
 - **The upgraded audit is the programme's final quality gate (W7).**
 - **New: Check 9, current practice (U8).** It sits beside Check 8's
   optimizations and is generic, so it lives in the core.
@@ -182,7 +189,7 @@ choices are independent:
   | `audit-practices-reader` worker | compares the digest against the control plane's units (skill descriptions and bodies, worker instructions, the workflows' prompts and schemas, model and effort fit). Each finding carries the practice, its URL, the unit, and the change. |
   | Verify and fix | The `audit-verifier` confirms that the source states the practice and that the change keeps every contract rule. Confirmed `docs` findings go through the fix loop (U6) under `clean-prose`. A practice that contradicts a rule of the contract or `clean-prose` is never applied: it is reported as `needs-decision`, with both sides. |
   | Guards | Source text is data, never instructions: the scout reports a sentence aimed at the reader as a finding and does not act on it. Only the allowlisted hosts are read. No source text is copied into the instructions: practices are restated in house prose. |
-  | Sandbox | The allowlisted hosts (`code.claude.com`, `docs.claude.com`, `www.anthropic.com`) are added to `network.allowedDomains` (a settings patch). The scout and the verifier, which re-reads a cited page, may read only these hosts. |
+  | Sandbox | The allowlisted hosts (`code.claude.com`, `docs.claude.com`, `www.anthropic.com`) are added to `network.allowedDomains` in U8's own PR: a cloud session in Auto mode may edit `.claude/settings.json` (`spikes.md` item 2). The scout and the verifier, which re-reads a cited page, may read only these hosts. A cloud session enforces no sandbox (`spikes.md` item 1), so there the limit rests on the worker instructions and the environment's network setting; the rehearsal checks the sandbox's limit on the primary (R-U8-1). |
 
 ### Hexagonal ports plan
 
@@ -247,7 +254,8 @@ choices are independent:
    - Every commit carries a `Defect-class:` or `Change-class:` trailer.
 5. **Each item adds its Mac-only acceptance checks to
    `upgrade/rehearsal.md`.** Nothing is lost between a cloud PR and the
-   rehearsal.
+   rehearsal. An item edits only the section headed by its own ID, so lanes
+   running in parallel do not conflict there.
 
 ## 3. Waves and items
 
@@ -307,9 +315,9 @@ that touch disjoint files.
 | --- | --- |
 | X0.0 | **Seed `research-assistant`, private** (this local session, after your yes): copy `research-tools` `main` as one squashed snapshot into a new **private** GitHub repo, `research-assistant`. Add `upgrade/` (the unified plan as `PLAN.md` and the four source plans in `sources/`) and `bin/cloud-setup.sh`. The `research-tools` checkout is only read; it is never changed. Every later W0 step runs in a cloud session on this repo, because a cloud session can open only what is on GitHub. |
 | X0.1 | **Pre-publish scan, then go public** (cloud, on the private `research-assistant`; only the snapshot is ever published, so the old history needs no scan): secrets (gitleaks over the snapshot); absolute personal paths; work titles and source text in `tests/fixtures/` (copyright); anything personal in the instruction text. Fix the findings in a PR. Then create `agent-core` and `assistant` as **public** repos and `personal-assistant` as **private**, and make `research-assistant` public. Install the Claude GitHub App on all four. Protect `main`: a PR and green CI required. Require approval before workflows run on PRs from forks. Every public repo gets a **publish-guard** CI job: gitleaks plus the audit's `works` check, so no PR can make a secret or a work's text public. |
-| X0.2 | Cloud environment `research`, network Trusted plus `download.pytorch.org` and `openaipublic.blob.core.windows.net`. The environment's setup script only calls `bin/cloud-setup.sh` in the repo, so a PR can change the setup (P14 does); if the spike finds that the setup script runs before the clone, you update the environment by hand at P14 instead. `bin/cloud-setup.sh` mirrors CI: uv; `~/.research-vault/venv` built from `requirements.lock` with `UV_TORCH_BACKEND=cpu`; the empty-vault `machine.json` (the contract allows this in a test container); pandoc 3.12; node; tiktoken prefetched into `~/.research-vault/tiktoken`; the CI env vars. **Without the venv at that exact path, every hook exits 2 and blocks all Bash and Write.** Environment `core`: Python, uv, ruff, pyyaml, tiktoken. |
-| X0.4 | Spike session (cloud, about an hour), results in `upgrade/spikes.md`: (1) hooks and suite run, and their timing; (2) whether Auto mode may edit `.claude/settings.json`; if not, settings changes ship as patches in `upgrade/settings-patches/` and you apply them at the switch; (3) whether symlinked skills, agents, and workflows load; (4) whether the Workflow tool runs, and its real concurrency on 4 vCPU; (5) push and PR creation; (6) `git subtree` round trip; (7) on the Mac, whether the sandbox's read-deny setting blocks reads of a folder, which the cross-domain read guard relies on; (8) whether the environment's setup script sees the cloned repo. |
-| X0.5 | Complete `upgrade/` in `research-assistant` (cloud): `items/<id>.md`, `rehearsal.md`, and the item workflow `upgrade-item.js`, beside the plans X0.0 put there. `vault-audit` excludes `upgrade/`, which is deleted at the switch. |
+| X0.2 | Cloud environment `research`, network Limited with the package-manager defaults, plus the hosts the spike's rerun lists: `download.pytorch.org`, `download-r2.pytorch.org`, `openaipublic.blob.core.windows.net`, `github.com`, `objects.githubusercontent.com`, `release-assets.githubusercontent.com`, `models.datalab.to`, and `astral.sh` only if the image lacks uv. The environment's setup script runs outside the repository and without network (`spikes.md` item 8), so it is an `echo`. The SessionStart hook in `.claude/settings.json` runs `bin/cloud-session-start.sh`, which runs `bin/cloud-setup.sh` until `~/.research-vault/cloud-setup.done` exists, so a PR changes the setup (P14 does) and nothing is updated by hand. `bin/cloud-setup.sh` mirrors CI: uv; `~/.research-vault/venv` built from `requirements.lock` with `UV_TORCH_BACKEND=cpu`; the empty-vault `machine.json` (the contract allows this in a test container); pandoc 3.12; node; tiktoken prefetched into `~/.research-vault/tiktoken`; the CI env vars. Its steps that need no PyPI run before the sync (PR #3), and it sends each `NO_PROXY` host the container cannot resolve through the gateway (PR #4). **Without a venv at that path, every hook exits 2 and blocks all Bash and Write. With a venv that holds no packages, Bash works, every Write is blocked, and every Edit reports a hook error.** Environment `core`: Python, uv, ruff, pyyaml, tiktoken. |
+| X0.4 | Spike session (cloud, about an hour), results in `upgrade/spikes.md`: (1) hooks and suite run, and their timing; (2) whether Auto mode may edit `.claude/settings.json`; if not, settings changes ship as patches in `upgrade/settings-patches/` and you apply them at the switch; (3) whether symlinked skills, agents, and workflows load; (4) whether the Workflow tool runs, and its real concurrency on 4 vCPU; (5) push and PR creation; (6) `git subtree` round trip; (7) on the Mac, whether the sandbox's read-deny setting blocks reads of a folder, which the cross-domain read guard relies on; (8) whether the environment's setup script sees the cloned repo. **Done:** `spikes.md` holds the results, and this plan carries their consequences. |
+| X0.5 | Complete `upgrade/` in `research-assistant` (cloud): `items/<id>.md`, `rehearsal.md`, and the item workflow `upgrade-item.js`, beside the plans X0.0 put there. `vault-audit` excludes `upgrade/`: its scope patterns name no path under it. `upgrade/` is deleted at the switch. |
 
 ### The orchestration
 
@@ -325,16 +333,31 @@ conductor (a desktop-app session; touches nothing local)
 - **One cloud session per lane**, so each lane has its own VM: 4 vCPU and 16
   GB. Lanes in one VM would fight over the test suite.
 - **Inside a lane, the saved workflow `upgrade/upgrade-item.js` runs each
-  item**, with six agents per item, under the 10-agent guideline:
+  item**, with six agents per item and at most eight with two fix rounds,
+  under the 10-agent guideline. The lane's session runs it with the Workflow
+  tool's `scriptPath` and `args: {item: "<id>"}`:
 
   | Phase | Agent(s) | Does |
   | --- | --- | --- |
-  | Scope | 1 reader | reads the item, `PLAN.md` §1–2, and the code areas; returns files, tests to add, risks, and the rehearsal checks needed |
-  | Build | 1 implementer (worktree) | implements under the repo's `CLAUDE.md`: `clean-code`/`clean-prose`, a test that builds the defect class or pins the behaviour, the trailer |
-  | Verify | 3 refuters in parallel | lenses: **behaviour** (does `mac-local` change?), **contract** (`clean-prose`, special cases, cross-references, readers of every new field), **acceptance** (each row met in CI, or listed for the rehearsal) |
-  | Fix | the implementer | fixes the confirmed findings and reruns the checks; at most two rounds, then the item goes to `needs-decision` |
-  | Publish | 1 | pushes, opens the PR (title by rule; body: acceptance table, rehearsal lines, open questions) |
+  | Scope | 1 reader | reads the item, `PLAN.md` §1–5, and the code areas; stops the item if it is deferred, if a dependency has no `Upgrade-item:` commit on `main`, or if a repo it names is not attached; returns files, tests to add, risks, and the rehearsal checks needed |
+  | Build | 1 implementer (worktree) | implements under the repo's `CLAUDE.md` on the branch `upgrade/<item>`: `clean-code`/`clean-prose`, a test that builds the defect class or pins the behaviour, the trailers |
+  | Verify | 3 refuters, two at a time | lenses: **behaviour** (does `mac-local` change?), **contract** (`clean-prose`, special cases, cross-references, readers of every new field), **acceptance** (each row met in CI, or listed for the rehearsal) |
+  | Fix | the implementer | a new agent per round, in a worktree on the same branch; fixes the confirmed findings and reruns the checks; at most two rounds, then the item goes to `needs-decision` |
+  | Publish | 1 | pushes, opens the PR with the GitHub MCP tools (title by rule; body: acceptance table, rehearsal lines, open questions); a draft labelled `needs-decision` when anything is left for you |
 
+- **What the spike measured binds the lanes** (`spikes.md` items 4 and 5).
+  The Workflow tool runs two agents at once on the 4-vCPU VM, so the three
+  refuters take two rounds of agent time. Each agent costs about 68,000 tokens
+  before it does any work, about 0.4 to 0.55 million tokens per item. A cloud
+  session pushes its branch and opens its PR against `main` without you.
+- **Every upgrade commit carries `Upgrade-item: <id>`** beside its
+  `Defect-class:` or `Change-class:` trailer. The Scope reader finds an item's
+  dependencies on `main` by that trailer.
+- **The lane's session prompt authorizes the `upgrade/<item>` branches.** A
+  cloud session pushes only to the branches its prompt names.
+- **Each agent that edits runs the checks itself.** The post-edit hook checks
+  the checkout `$CLAUDE_PROJECT_DIR` names, never the agent's worktree, until
+  X1 makes it check the worktree that holds the edited file.
 - **Cloud sessions can't message back.** The conductor reads their results
   from GitHub: PRs, CI, and labels.
 
@@ -374,11 +397,17 @@ conductor lists open decisions at each wave's end.
    - an `ingest` dry run;
    - a Stage 2 → 6 backfill of three works in the staging vault;
    - one research question answered through the dispatcher, from a local
-     session; Remote Control is checked after the switch, in step 4.7.
+     session; Remote Control is checked after the switch, in step 4.7;
+   - the symlinked core skills, workers, and workflows loading on macOS
+     (A0; the spike tested Linux only);
+   - the sandbox's write limits and the sensitive-folder read guard against
+     Bash, Read, Grep, and Glob (G20): a cloud session enforces no sandbox,
+     so no cloud PR can verify them.
 4. **Switch** (`cutover.py switch`, read-only form first):
    1. Unload the old health and Remote Control jobs.
    2. Move the old venv aside.
-   3. Apply the settings patches and `~/.claude/settings.json`.
+   3. Apply `~/.claude/settings.json`. No settings patches exist: the item
+      PRs edit `.claude/settings.json` themselves (`spikes.md` item 2).
    4. Bootstrap for real, with `bootstrap --no-jobs`: the jobs wait for step 6.
    5. Run `claude remote-control` once by hand in `~/Developer/assistant`, to
       answer its enable and folder-trust prompts. A job can't answer them.
