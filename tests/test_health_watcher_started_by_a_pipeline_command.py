@@ -15,6 +15,7 @@ from _health.hook import HealthWatcherHook
 
 STAGE_COMMAND = "~/.research-vault/venv/bin/python .claude/skills/extract-corpus/scripts/extract.py status"
 OTHER_COMMAND = "git status --porcelain"
+FORMER_CHECKOUTS_LABEL = "com.research-vault.machine-health"
 
 
 class FakeLaunchctl:
@@ -22,9 +23,11 @@ class FakeLaunchctl:
         self.loaded = loaded
         self.bootstrap_fails = bootstrap_fails
         self.calls: list[str] = []
+        self.addressed: list[str] = []
 
     def run(self, arguments: list[str]) -> subprocess.CompletedProcess:
         self.calls.append(arguments[0])
+        self.addressed.extend(arguments[1:])
         return subprocess.CompletedProcess(arguments, self._returncode(arguments[0]), "", "refused")
 
     def _returncode(self, verb: str) -> int:
@@ -80,6 +83,18 @@ class TestAPipelineCommandWhileAStaleLaunchAgentIsLoaded(InstallerCase):
         self.hook(launchctl).report(STAGE_COMMAND)
         self.assertTrue(self.agent.is_current())
         self.assertEqual(["bootout", "print", "bootstrap"], launchctl.calls)
+
+
+class TestAPipelineCommandBesideTheFormerCheckoutsJob(InstallerCase):
+    def test_writes_a_launch_agent_of_its_own(self):
+        own_agent = health.LaunchAgent(self.script, self.agent.path.with_name("launchd.log"))
+        self.assertNotEqual(f"{FORMER_CHECKOUTS_LABEL}.plist", own_agent.path.name)
+
+    def test_addresses_no_launchd_job_of_the_former_checkout(self):
+        launchctl = FakeLaunchctl(loaded=True)
+        self.agent.path.write_bytes(b"stale")
+        self.hook(launchctl).report(STAGE_COMMAND)
+        self.assertEqual([], [argument for argument in launchctl.addressed if FORMER_CHECKOUTS_LABEL in argument])
 
 
 class TestACommandOutsideThePipeline(InstallerCase):

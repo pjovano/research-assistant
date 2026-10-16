@@ -5,7 +5,7 @@ from pathlib import Path
 
 from _vault.machine import MACHINE_CONFIG_PATH
 
-AGENT_LABEL = "com.research-vault.machine-health"
+AGENT_LABEL = "com.research-assistant.machine-health"
 SAMPLE_INTERVAL_SECONDS = 60
 BACKGROUND_NICE = 10
 VENV_PYTHON = MACHINE_CONFIG_PATH.parent / "venv" / "bin" / "python"

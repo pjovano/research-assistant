@@ -17,7 +17,7 @@ NEVER dispatch it to a worker.
 | `scripts/health.py` | the CLI, whose commands are tabled below | launchd for `sample`; the orchestrator for the rest |
 | `lib/machine_health.py` | the facade over `lib/_health/` | `health.py` |
 | health journals | `~/.research-vault/cache/health/samples/` and `alerts/`, one JSON-lines file per day; on the primary, never synced | written by `sample` |
-| launch agent | `~/Library/LaunchAgents/com.research-vault.machine-health.plist`, naming `health.py` in `~/Developer/research-assistant`, never in a worktree | launchd |
+| launch agent | `~/Library/LaunchAgents/com.research-assistant.machine-health.plist`, naming `health.py` in `~/Developer/research-assistant`, never in a worktree; NEVER write or unload `com.research-vault.machine-health`: that job is the frozen checkout's, which the rollback reloads | launchd |
 | `ensure-health-watcher` | the `lib/harness_hooks.py` subcommand a PreToolUse hook runs before every Bash command | the harness |
 
 **The health watcher NEVER imports `vault`.** Resolving the vault reads
