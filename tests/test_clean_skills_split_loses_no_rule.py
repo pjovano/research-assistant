@@ -32,10 +32,10 @@ REWORDED = {
          "work in chat. Not for domain content.",
          DOMAIN_CONTENT_IS_RESEARCH_CONTENT),
     "(The Research Vault section below overrides this for the vault.)":
-        ("**The domain's overlay.** If `.claude/code-overlay.md` exists, read it whole after this file.",
+        ("**The domain's code overlay.** If `.claude/code-overlay.md` exists, read it whole after this file.",
          "In the vault, **Fix what you find** overrides `clean-code`'s **Scope of a change**."),
     "The control plane is the repository this skill lives in.":
-        ("The control plane is the repository this overlay lives in.",),
+        ("The control plane is the repository this code overlay lives in.",),
     "Everything above is the standard for all code in the control plane, and it binds a one-line fix as much as a "
     "new module.":
         ("Everything `clean-code` states is the standard for all code in the control plane, and it binds a one-line "
@@ -62,8 +62,7 @@ REWORDED = {
         ("Per Scope, this rule binds domain content as well.", DOMAIN_CONTENT_IS_RESEARCH_CONTENT),
     "Does not apply to research content: derived research notes, the substance of a research answer, or the user's "
     "own drafts.":
-        ("Does not apply to domain content: what a domain writes for the user to read, and the user's own writing, "
-         "as the domain's glossary names them.", DOMAIN_CONTENT_IS_RESEARCH_CONTENT),
+        ("Does not apply to domain content.", DOMAIN_CONTENT_IS_RESEARCH_CONTENT),
     "One exception binds: §6's paragraph rule applies to research content too.":
         ("One exception binds: §6's paragraph rule applies to domain content too.",
          DOMAIN_CONTENT_IS_RESEARCH_CONTENT),

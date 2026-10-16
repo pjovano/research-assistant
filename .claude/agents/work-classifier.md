@@ -238,7 +238,7 @@ on the choice, and every question and note you wrote.
 
 If you write code — a one-liner, a throwaway pipeline — it obeys
 `.claude/skills/clean-code/SKILL.md` and `.claude/code-overlay.md`. Read the
-skill, then the overlay, before writing any.
+skill, then the code overlay, before writing any.
 NEVER edit the shared pipeline scripts: the test suite at `tests/` covers
 them, and you are not running it. If a script looks wrong, say so in your
 report.

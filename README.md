@@ -133,9 +133,10 @@ Martin's Clean Code, and `clean-prose` holds every instruction file to a
 fixed vocabulary and sentence form, so that a worker reading nothing but its
 own instructions can tell what binds it. Both are core skills, linked from
 `vendor/agent-core/` into `.claude/skills/`, and are invoked before any edit.
-Each reads the vault's overlay after its own text: `clean-code` reads
-`.claude/code-overlay.md`, the vault's rules for code, and `clean-prose` reads
-`.claude/glossary.md`, the vault's Vocabulary.
+Each reads a file of the vault after its own text: `clean-code` reads the
+code overlay, `.claude/code-overlay.md`, the vault's rules on code, and
+`clean-prose` reads the glossary, `.claude/glossary.md`, the vault's
+Vocabulary and its rules on instruction text.
 
 Per-machine values, such as where the search stores live, sit outside the
 repository in `~/.research-vault/machine.json`, and the models the engines

@@ -112,9 +112,9 @@ A duplicate whose copies have drifted apart outranks one that still agrees.
 
 ## Check 2b — Prose quality
 
-The standard is `.claude/skills/clean-prose/SKILL.md` with its overlay
-`.claude/glossary.md`; the contract's §5 gates authoring against it, and this
-check audits conformance after the fact. Read the skill, then the overlay,
+The standard is `.claude/skills/clean-prose/SKILL.md` with the vault's
+glossary, `.claude/glossary.md`; the contract's §5 gates authoring against it, and this
+check audits conformance after the fact. Read the skill, then the glossary,
 before running the check.
 
 Apply to every instruction file in the audit set. Report the measures as

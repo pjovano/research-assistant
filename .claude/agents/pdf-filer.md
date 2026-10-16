@@ -349,7 +349,7 @@ If your dispatch asks for a structured report, fill its fields as follows:
 
 If you write code — a throwaway pipeline, a one-liner — it obeys
 `.claude/skills/clean-code/SKILL.md` and `.claude/code-overlay.md`. Read the
-skill, then the overlay, before writing any, including a one-line fix: write
+skill, then the code overlay, before writing any, including a one-line fix: write
 no comments and no docstrings.
 
 NEVER edit the pipeline scripts: the characterization suite at `tests/` covers them, you are not running it, and you see one PDF

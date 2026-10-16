@@ -1,7 +1,7 @@
 # Glossary — Research Vault
 
-The vault's overlay on `clean-prose`, which reads this file after its own text:
-the vault's Vocabulary and the vault's rules on instruction text.
+The glossary is the vault's Vocabulary rows and the vault's rules on
+instruction text, which `clean-prose` reads after its own text.
 
 ## Domain content
 

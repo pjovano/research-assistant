@@ -1,8 +1,8 @@
 # Code overlay — Research Vault
 
-The vault's overlay on `clean-code`, which reads this file after its own text.
+The code overlay is the vault's rules on code, which `clean-code` reads after its own text.
 
-The control plane is the repository this overlay lives in. Everything `clean-code` states is the standard for all code in the control plane, and it binds a one-line fix as much as a new module. There are no exemptions. The rules below add to the standard for control-plane code only. In the vault, **Fix what you find** overrides `clean-code`'s **Scope of a change**.
+The control plane is the repository this code overlay lives in. Everything `clean-code` states is the standard for all code in the control plane, and it binds a one-line fix as much as a new module. There are no exemptions. The rules below add to the standard for control-plane code only. In the vault, **Fix what you find** overrides `clean-code`'s **Scope of a change**.
 
 **Organize as objects.** In a language with classes, code is organized as classes with encapsulated state, composed rather than inherited. Free functions are permitted in exactly three places: the single entry point of a script, pure functions with no domain state (a formatter, a parser of one value), and the re-exports required by the frozen-name rule below.
 
