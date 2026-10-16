@@ -230,11 +230,15 @@ class TestInstructionPointersThroughACoreSymlink(unittest.TestCase):
                      "detail": f"{BROKEN_SKILL_LINK}/SKILL.md"}]
         self.assertEqual(expected, self._findings(BROKEN_LINK_NOTE))
 
-    def test_a_finding_in_a_linked_core_skill_is_labelled_by_its_vendored_path(self) -> None:
+    def test_a_finding_in_a_linked_core_skill_is_labelled_by_its_link_path(self) -> None:
         linked_skill = self.files.root / CORE_SKILL_LINK / "SKILL.md"
         linked_skill.write_text(BROKEN_LINK_NOTE, encoding="utf-8")
         findings = InstructionPointers([linked_skill], TODAY, root=self.files.root).findings()
-        self.assertEqual([CORE_SKILL_FILE], [finding["file"] for finding in findings])
+        self.assertEqual([f"{CORE_SKILL_LINK}/SKILL.md"], [finding["file"] for finding in findings])
+
+    def test_a_linked_core_skill_keeps_the_label_its_baseline_key_carries(self) -> None:
+        linked_skill = self.files.root / CORE_SKILL_LINK / "SKILL.md"
+        self.assertEqual(f"{CORE_SKILL_LINK}/SKILL.md", RepositoryPath(linked_skill, self.files.root).label())
 
 
 class TestNamedWorks(unittest.TestCase):
