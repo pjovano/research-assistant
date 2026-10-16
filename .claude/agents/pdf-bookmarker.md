@@ -238,8 +238,9 @@ a batch, runs it.
 # Code standard
 
 If you write code — a one-liner, a script to assemble the entry list — it
-obeys `.claude/skills/clean-code/SKILL.md`. Read that skill before writing
-any, including a one-line fix. NEVER edit the shared pipeline scripts: they
+obeys `.claude/skills/clean-code/SKILL.md` and `.claude/code-overlay.md`.
+Read the skill, then the code overlay, before writing any, including a one-line
+fix. NEVER edit the shared pipeline scripts: they
 are covered by the test suite at `tests/`, which you are not running.
 If a script looks wrong, say so in your report and continue with your own
 file.

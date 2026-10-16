@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import vault
@@ -9,7 +10,8 @@ ROOT_FILES = ("AGENTS.md", "CLAUDE.md", ".mcp.json", "requirements.txt", "requir
 ENCODING = "utf-8"
 GROUP_PATTERNS = {
     "contract": ROOT_FILES + (".claude/settings.json",),
-    "skills": (".claude/skills/*/SKILL.md", ".claude/skills/*/reference/*"),
+    "skills": (".claude/skills/*/SKILL.md", ".claude/skills/*/reference/*", ".claude/code-overlay.md",
+               ".claude/glossary.md"),
     "workers": (".claude/agents/*.md",),
     "code": ("lib/*.py", "lib/_*/*.py", ".claude/skills/*/server.py", ".claude/skills/*/scripts/*.py",
              ".claude/skills/*/scripts/_*/*.py"),
@@ -47,7 +49,15 @@ class RepositoryPath:
         self._root = root
 
     def label(self) -> str:
-        try:
-            return self._path.resolve().relative_to(self._root.resolve()).as_posix()
-        except ValueError:
-            return self._path.as_posix()
+        lexical_path = self._lexical(self._path)
+        resolved_root = self._root.resolve()
+        candidates = ((lexical_path, self._lexical(self._root)), (lexical_path, resolved_root),
+                      (self._path.resolve(), resolved_root))
+        for path, root in candidates:
+            if path.is_relative_to(root):
+                return path.relative_to(root).as_posix()
+        return self._path.as_posix()
+
+    @staticmethod
+    def _lexical(path: Path) -> Path:
+        return Path(os.path.abspath(path))

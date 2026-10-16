@@ -74,7 +74,8 @@ in the file.
 # Code standard
 
 If you write code beyond the one command that writes the readings file, it
-obeys `.claude/skills/clean-code/SKILL.md`: read that skill first, and write no
-comments or docstrings. NEVER edit a script in the repository. You do not inherit
-the vault contract; your instructions are this file and, if you write code,
-`.claude/skills/clean-code/SKILL.md`.
+obeys `.claude/skills/clean-code/SKILL.md` and `.claude/code-overlay.md`: read
+the skill, then the code overlay, first, and write no comments or docstrings. NEVER
+edit a script in the repository. You do not inherit the vault contract; your
+instructions are this file and, if you write code,
+`.claude/skills/clean-code/SKILL.md` and `.claude/code-overlay.md`.

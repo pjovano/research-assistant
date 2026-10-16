@@ -5,7 +5,7 @@ import subprocess
 import unittest
 from pathlib import Path
 
-from _support import PROJECT_ROOT, SKILLS_DIR
+from _support import PROJECT_ROOT
 
 INSTRUCTION_PATTERNS = ("CLAUDE.md", "AGENTS.md", "README.md", ".claude/*.md", ".claude/**/*.md")
 PEER_PHRASES = ("on each machine", "each machine's", "either machine", "both machines", "both environments",
@@ -14,7 +14,7 @@ KEPT_SENTENCES = ("two machines editing the same corpus file through iCloud at o
                   "when two machines change it at once")
 WHITESPACE_RUN = re.compile(r"\s+")
 IMPORT_LINE = "@AGENTS.md"
-VOCABULARY_FILE = SKILLS_DIR / "clean-prose" / "SKILL.md"
+VOCABULARY_FILE = PROJECT_ROOT / ".claude" / "glossary.md"
 ROLE_AND_TRAILER_TERMS = ("primary", "secondary", "`Defect-class:` trailer", "`Change-class:` trailer")
 TABLE_CELL_SEPARATOR = "|"
 
