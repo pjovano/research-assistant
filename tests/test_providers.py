@@ -18,10 +18,10 @@ LiveTree.activate()
 
 import providers
 from _clean.ocr import VisionReader
+from agent_core._adapters.host.launchd import LaunchdScheduler
+from agent_core._adapters.host.macos_notifiers import DesktopNotifier, RemindersNotifier
+from agent_core._adapters.host.macos_readings import MacosReadings
 from _extract.engine import MarkerEngine
-from _health.installer import LaunchAgentInstaller
-from _health.notifier import DesktopNotifier, RemindersNotifier
-from _health.sampler import SystemProbes
 from _rag.chroma import EmbeddingStore
 from _rag.embedding import OllamaEmbedder
 from _rag.fulltext import FullTextStore
@@ -38,9 +38,9 @@ PORTS_DIR = PROJECT_ROOT / "lib" / "_ports"
 RELATIVE_IMPORT = "."
 LIB_DIR = PROJECT_ROOT / "lib"
 TODAYS_CLASSES = {
-    providers.SCHEDULER: LaunchAgentInstaller,
+    providers.SCHEDULER: LaunchdScheduler,
     providers.NOTIFIER: (DesktopNotifier, RemindersNotifier),
-    providers.SYSTEM_READINGS: SystemProbes,
+    providers.SYSTEM_READINGS: MacosReadings,
     providers.ACCELERATOR: MetalAccess,
     providers.TRASH: Trash,
     providers.EMBEDDER: OllamaEmbedder,
@@ -61,8 +61,8 @@ TODAYS_MACHINES = {
                            "whisper_model": "~/models/whisper.bin", "engine_slots": 8},
 }
 HEAVY_MODULES = ("torch", "ocrmac", "pyannote", "chromadb", "transformers", "marker", "surya")
-ADAPTER_MODULES = ("_health.installer", "_rag.embedding", "_extract.engine", "_clean.ocr", "_transcribe.whispering",
-                   "_references.parsing", "_writing.conversion")
+ADAPTER_MODULES = ("agent_core._adapters.host.launchd", "_rag.embedding", "_extract.engine", "_clean.ocr",
+                   "_transcribe.whispering", "_references.parsing", "_writing.conversion")
 PLACEHOLDER_KEY = "placeholder-value-of-the-test-key"
 OTHER_PLACEHOLDER = "placeholder-value-of-another-variable"
 KEY_VARIABLE = "EMBEDDING_API_KEY"
@@ -315,8 +315,8 @@ class TestTheReport(unittest.TestCase):
     def test_the_report_names_each_ports_class_and_each_unconfigured_port(self) -> None:
         ports = ProviderReport(Providers.from_machine({}, {}), DEFAULT_PROFILE).as_dict()["ports"]
         self.assertEqual("_rag.embedding.OllamaEmbedder", ports[providers.EMBEDDER])
-        self.assertEqual(["_health.notifier.DesktopNotifier", "_health.notifier.RemindersNotifier"],
-                         ports[providers.NOTIFIER])
+        self.assertEqual(["agent_core._adapters.host.macos_notifiers.DesktopNotifier",
+                          "agent_core._adapters.host.macos_notifiers.RemindersNotifier"], ports[providers.NOTIFIER])
         self.assertIn("'icloud'", ports[providers.SYNC]["unconfigured"])
 
     def test_the_script_prints_the_report_of_the_machine_json_it_is_given(self) -> None:

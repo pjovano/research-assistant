@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from agent_core._ports.host import Notifier
+
 from _health.journal import DailyJournal
 from _health.readings import Alert, Sample
 from _health.sampler import Sampler
@@ -13,10 +15,6 @@ RAISED_AT = "raised_at"
 
 class Detector(Protocol):
     def alerts(self, sample: Sample, now: float) -> list[Alert]: ...
-
-
-class Notifier(Protocol):
-    def notify(self, alert: Alert) -> None: ...
 
 
 class HealthJournals:

@@ -9,12 +9,14 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from _vault.machine import MACHINE_CONFIG_PATH, MachineConfig, MachineConfigError, ProviderChoices
+from core_path import VendoredCore
 
 ADAPTER_FIELD = "adapter"
 KEY_ENV_FIELD = "key_env"
 UNCONFIGURED_FIELD = "unconfigured"
 SKILLS_DIR = Path(__file__).resolve().parent.parent / ".claude" / "skills"
 SCRIPTS_FOLDER = "scripts"
+CORE_HOST_ADAPTERS = "agent_core._adapters.host"
 
 SCHEDULER = "scheduler"
 NOTIFIER = "notifier"
@@ -36,6 +38,9 @@ HOST_PORTS = (SCHEDULER, NOTIFIER, SYSTEM_READINGS, ACCELERATOR, TRASH, SYNC, LO
 COMPUTE_PORTS = (EMBEDDER, EMBEDDING_STORE, FULLTEXT_STORE, RERANKER, LAYOUT_ENGINE, LINE_RECOGNIZER, TRANSCRIBER,
                  DIARIZER, CITATION_PARSER)
 PORTS = HOST_PORTS + COMPUTE_PORTS
+
+
+VendoredCore.join_module_path()
 
 
 class ProviderNotConfigured(LookupError):
@@ -87,10 +92,10 @@ class AdapterClasses:
 
 
 ADAPTERS = {
-    SCHEDULER: {"launchd": AdapterClass("_health.installer", "LaunchAgentInstaller")},
-    NOTIFIER: {"macos": AdapterClasses(AdapterClass("_health.notifier", "DesktopNotifier"),
-                                       AdapterClass("_health.notifier", "RemindersNotifier"))},
-    SYSTEM_READINGS: {"macos": AdapterClass("_health.sampler", "SystemProbes")},
+    SCHEDULER: {"launchd": AdapterClass(f"{CORE_HOST_ADAPTERS}.launchd", "LaunchdScheduler")},
+    NOTIFIER: {"macos": AdapterClasses(AdapterClass(f"{CORE_HOST_ADAPTERS}.macos_notifiers", "DesktopNotifier"),
+                                       AdapterClass(f"{CORE_HOST_ADAPTERS}.macos_notifiers", "RemindersNotifier"))},
+    SYSTEM_READINGS: {"macos": AdapterClass(f"{CORE_HOST_ADAPTERS}.macos_readings", "MacosReadings")},
     ACCELERATOR: {"metal": AdapterClass("engine_reach", "MetalAccess")},
     TRASH: {"trash-command": AdapterClass("_writing.conversion", "Trash")},
     SYNC: {},

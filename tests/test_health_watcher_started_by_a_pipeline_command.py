@@ -12,6 +12,7 @@ LiveTree.activate()
 
 import machine_health as health
 from _health.hook import HealthWatcherHook
+from agent_core._adapters.host.launchd import Launchctl, LaunchdScheduler
 
 STAGE_COMMAND = "~/.research-vault/venv/bin/python .claude/skills/extract-corpus/scripts/extract.py status"
 OTHER_COMMAND = "git status --porcelain"
@@ -44,18 +45,30 @@ class InstallerCase(unittest.TestCase):
         directory = Path(self.enterContext(tempfile.TemporaryDirectory()))
         self.script = directory / "health.py"
         self.script.write_text("", encoding="utf-8")
-        self.agent = health.LaunchAgent(self.script, directory / "launchd.log", directory / "agent.plist")
+        self.plist_directory = directory / "LaunchAgents"
+        self.health_job = health.HealthJob(self.script, directory / "launchd.log")
+        self.plist = self.plist_directory / f"{health.AGENT_LABEL}.plist"
 
-    def installer(self, launchctl: FakeLaunchctl) -> health.LaunchAgentInstaller:
-        return health.LaunchAgentInstaller(self.agent, health.Launchctl(launchctl.run))
+    def scheduler(self, launchctl: FakeLaunchctl) -> LaunchdScheduler:
+        return LaunchdScheduler(self.plist_directory, Launchctl(launchctl.run))
 
     def hook(self, launchctl: FakeLaunchctl, platform: str = "darwin") -> HealthWatcherHook:
-        return HealthWatcherHook(self.installer(launchctl), platform)
+        return HealthWatcherHook(self.scheduler(launchctl), self.health_job, platform)
+
+    def plist_is_current(self) -> bool:
+        return self.plist.is_file() and self.plist.read_text(encoding="utf-8") == self.definition()
+
+    def definition(self) -> str:
+        return self.scheduler(FakeLaunchctl(loaded=False)).definition(self.health_job.job())
+
+    def write_current_plist(self) -> None:
+        self.plist_directory.mkdir(parents=True, exist_ok=True)
+        self.plist.write_text(self.definition(), encoding="utf-8")
 
 
-class TestTheLaunchAgent(InstallerCase):
+class TestTheHealthJob(InstallerCase):
     def test_runs_the_sample_command_every_minute(self):
-        contents = plistlib.loads(self.agent.contents())
+        contents = plistlib.loads(self.definition().encode())
         self.assertEqual(([str(self.script), "sample"], 60),
                          (contents["ProgramArguments"][1:], contents["StartInterval"]))
 
@@ -65,13 +78,13 @@ class TestAPipelineCommandOnAMachineWithoutTheWatcher(InstallerCase):
         launchctl = FakeLaunchctl(loaded=False)
         report = self.hook(launchctl).report(STAGE_COMMAND)
         self.assertIn("Started the health watcher", report["systemMessage"])
-        self.assertTrue(self.agent.is_current() and launchctl.loaded)
+        self.assertTrue(self.plist_is_current() and launchctl.loaded)
 
 
 class TestAPipelineCommandWhileTheWatcherRuns(InstallerCase):
     def test_changes_nothing(self):
         launchctl = FakeLaunchctl(loaded=True)
-        self.agent.write()
+        self.write_current_plist()
         self.assertIsNone(self.hook(launchctl).report(STAGE_COMMAND))
         self.assertEqual(["print"], launchctl.calls)
 
@@ -79,20 +92,21 @@ class TestAPipelineCommandWhileTheWatcherRuns(InstallerCase):
 class TestAPipelineCommandWhileAStaleLaunchAgentIsLoaded(InstallerCase):
     def test_rewrites_and_reloads_it(self):
         launchctl = FakeLaunchctl(loaded=True)
-        self.agent.path.write_bytes(b"stale")
+        self.plist_directory.mkdir(parents=True)
+        self.plist.write_bytes(b"stale")
         self.hook(launchctl).report(STAGE_COMMAND)
-        self.assertTrue(self.agent.is_current())
+        self.assertTrue(self.plist_is_current())
         self.assertEqual(["bootout", "print", "bootstrap"], launchctl.calls)
 
 
 class TestAPipelineCommandBesideTheFormerCheckoutsJob(InstallerCase):
     def test_writes_a_launch_agent_of_its_own(self):
-        own_agent = health.LaunchAgent(self.script, self.agent.path.with_name("launchd.log"))
-        self.assertNotEqual(f"{FORMER_CHECKOUTS_LABEL}.plist", own_agent.path.name)
+        self.assertNotEqual(FORMER_CHECKOUTS_LABEL, self.health_job.job().label)
 
     def test_addresses_no_launchd_job_of_the_former_checkout(self):
         launchctl = FakeLaunchctl(loaded=True)
-        self.agent.path.write_bytes(b"stale")
+        self.plist_directory.mkdir(parents=True)
+        self.plist.write_bytes(b"stale")
         self.hook(launchctl).report(STAGE_COMMAND)
         self.assertEqual([], [argument for argument in launchctl.addressed if FORMER_CHECKOUTS_LABEL in argument])
 
@@ -116,7 +130,7 @@ class TestAPipelineCommandWhenTheCheckoutLacksTheWatcherScript(InstallerCase):
         launchctl = FakeLaunchctl(loaded=False)
         self.script.unlink()
         self.assertIsNone(self.hook(launchctl).report(STAGE_COMMAND))
-        self.assertFalse(self.agent.path.exists())
+        self.assertFalse(self.plist.exists())
 
 
 class TestALaunchAgentLaunchdRefuses(InstallerCase):

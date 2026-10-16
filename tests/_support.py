@@ -11,15 +11,17 @@ PROJECT_ROOT = TESTS_DIR.parent
 SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
 FIXTURES_DIR = TESTS_DIR / "fixtures"
 GOLDENS_DIR = FIXTURES_DIR / "goldens"
+VENDORED_CORE_LIB = PROJECT_ROOT / "vendor" / "agent-core" / "lib"
 
 
 class ModuleSearchPath:
-    def __init__(self, lib_dir: Path, skills_dir: Path) -> None:
+    def __init__(self, lib_dir: Path, skills_dir: Path, core_lib_dir: Path = VENDORED_CORE_LIB) -> None:
         self._lib_dir = lib_dir
         self._skills_dir = skills_dir
+        self._core_lib_dir = core_lib_dir
 
     def directories(self) -> list[Path]:
-        return [self._lib_dir] + sorted(self._skills_dir.glob("*/scripts"))
+        return [self._core_lib_dir, self._lib_dir] + sorted(self._skills_dir.glob("*/scripts"))
 
     def activate(self) -> None:
         for directory in self.directories():
