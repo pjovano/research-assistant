@@ -10,10 +10,11 @@ from _support import PROJECT_ROOT, SKILLS_DIR
 
 LIB_DIR = PROJECT_ROOT / "lib"
 
-LIBRARY_FACADES = ("annotate", "citation_graph", "machine_health", "identifiers", "pagetext", "rag", "references",
-                   "titlecase", "vault", "zotero")
+LIBRARY_FACADES = ("annotate", "citation_graph", "machine_health", "identifiers", "pagetext", "providers", "rag",
+                   "references", "titlecase", "vault", "zotero")
 
-LIBRARY_PACKAGES = ("_annotate", "_drive", "_graph", "_health", "_pagetext", "_rag", "_references", "_vault", "_writing")
+LIBRARY_PACKAGES = ("_annotate", "_drive", "_graph", "_health", "_pagetext", "_ports", "_rag", "_references", "_vault",
+                    "_writing")
 
 ENTRY_SCRIPTS = (
     "cite-links/scripts/cite.py",

@@ -4,7 +4,16 @@ import json
 from pathlib import Path
 
 MACHINE_CONFIG_PATH = Path.home() / ".research-vault" / "machine.json"
+PROFILE_KEY = "profile"
+PROVIDERS_KEY = "providers"
+DEFAULT_PROFILE = "mac-local"
+PROFILES_DIR = Path(__file__).resolve().parent.parent / "profiles"
+PROFILE_SUFFIX = ".json"
 _ENCODING = "utf-8"
+
+
+class UnknownProfile(ValueError):
+    pass
 
 
 class MachineConfig:
@@ -23,6 +32,36 @@ class MachineConfig:
             return json.loads(text) or {}
         except ValueError as error:
             raise SystemExit(f"{self._path} is not valid JSON: {error}") from error
+
+
+class ProviderChoices:
+    def __init__(self, machine: dict, profiles_dir: Path = PROFILES_DIR) -> None:
+        self._machine = machine
+        self._profiles_dir = profiles_dir
+
+    @property
+    def profile(self) -> str:
+        return str(self._machine.get(PROFILE_KEY) or DEFAULT_PROFILE)
+
+    def entries(self) -> dict[str, dict]:
+        return {**self._profile_entries(), **self._overrides()}
+
+    def _overrides(self) -> dict[str, dict]:
+        overrides = self._machine.get(PROVIDERS_KEY) or {}
+        if not isinstance(overrides, dict):
+            raise UnknownProfile(f"{MACHINE_CONFIG_PATH}'s {PROVIDERS_KEY} must be an object of provider entries, "
+                                 f"not {type(overrides).__name__}")
+        return overrides
+
+    def _profile_entries(self) -> dict[str, dict]:
+        if self.profile not in self.available():
+            raise UnknownProfile(f"{MACHINE_CONFIG_PATH} names the profile {self.profile!r} under {PROFILE_KEY}; "
+                                 f"the profiles are {', '.join(self.available())}")
+        path = self._profiles_dir / f"{self.profile}{PROFILE_SUFFIX}"
+        return json.loads(path.read_text(encoding=_ENCODING))[PROVIDERS_KEY]
+
+    def available(self) -> list[str]:
+        return sorted(path.stem for path in self._profiles_dir.glob(f"*{PROFILE_SUFFIX}"))
 
 
 def load_machine_config() -> dict:
