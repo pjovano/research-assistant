@@ -100,7 +100,7 @@ class TestTheSessionStartHook(unittest.TestCase):
 
 class StubPrograms:
     LOGGED_STUB = '#!/bin/sh\necho "$(basename "$0") $*" >> "$STUB_CALLS"\n'
-    UV_STUB = LOGGED_STUB + (
+    UV_STUB = LOGGED_STUB + 'echo "uv-no-proxy $NO_PROXY" >> "$STUB_CALLS"\n' + (
         'if [ "$1" = venv ]; then\n'
         '  mkdir -p "$4/bin"\n'
         '  printf \'#!/bin/sh\\necho "python $*" >> "$STUB_CALLS"\\n\' > "$4/bin/python"\n'
@@ -108,6 +108,7 @@ class StubPrograms:
         'fi\n'
         'if [ "$1" = pip ]; then exit "${STUB_SYNC_EXIT:-0}"; fi\n')
     CURL_STUB = LOGGED_STUB + 'exit "${STUB_CURL_EXIT:-0}"\n'
+    GETENT_STUB = '#!/bin/sh\nfor name in $STUB_RESOLVABLE; do [ "$2" = "$name" ] && exit 0; done\nexit 2\n'
     PLAIN_PROGRAMS = ("dpkg", "node")
 
     def __init__(self, directory: Path) -> None:
@@ -115,6 +116,7 @@ class StubPrograms:
         self.calls = directory / "calls.log"
         self._write("uv", self.UV_STUB)
         self._write("curl", self.CURL_STUB)
+        self._write("getent", self.GETENT_STUB)
         for program in self.PLAIN_PROGRAMS:
             self._write(program, self.LOGGED_STUB)
 
@@ -122,6 +124,11 @@ class StubPrograms:
         stub = self.directory / program
         stub.write_text(body)
         stub.chmod(0o755)
+
+    def no_proxy_seen_by_uv(self) -> list[str]:
+        prefix = "uv-no-proxy "
+        seen = [line[len(prefix):] for line in self.calls.read_text().splitlines() if line.startswith(prefix)]
+        return seen[0].split(",")
 
     def called(self, command: str) -> bool:
         return self.calls.exists() and any(line.startswith(command) for line in self.calls.read_text().splitlines())
@@ -177,6 +184,31 @@ class TestAFailedSetupStepStopsOnlyTheStepsThatNeedIt(unittest.TestCase):
         result = self.setup.run()
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertTrue((self.home / BUILT_MARK).exists())
+
+
+class TestTheSetupRoutesAHostItCannotResolveThroughTheGateway(unittest.TestCase):
+    RESOLVABLE_HOST = "resolvable.example"
+    UNRESOLVABLE_HOST = "package-index.example"
+    ADDRESSES_AND_SUFFIX_PATTERNS = ("127.0.0.0/8", "::1", ".svc.cluster.local", "*.svc.cluster.local")
+
+    def setUp(self):
+        home = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        self.programs = StubPrograms(Path(self.enterContext(tempfile.TemporaryDirectory())))
+        self.setup = CloudSetup(home, self.programs)
+
+    def no_proxy_after_setup(self, *entries: str) -> list[str]:
+        self.setup.run(NO_PROXY=",".join(entries), STUB_RESOLVABLE=self.RESOLVABLE_HOST)
+        return self.programs.no_proxy_seen_by_uv()
+
+    def test_an_unresolvable_host_leaves_no_proxy(self):
+        self.assertNotIn(self.UNRESOLVABLE_HOST, self.no_proxy_after_setup(self.RESOLVABLE_HOST, self.UNRESOLVABLE_HOST))
+
+    def test_a_resolvable_host_stays_in_no_proxy(self):
+        self.assertIn(self.RESOLVABLE_HOST, self.no_proxy_after_setup(self.RESOLVABLE_HOST, self.UNRESOLVABLE_HOST))
+
+    def test_addresses_and_suffix_patterns_stay_in_no_proxy(self):
+        kept = self.no_proxy_after_setup(*self.ADDRESSES_AND_SUFFIX_PATTERNS)
+        self.assertEqual(list(self.ADDRESSES_AND_SUFFIX_PATTERNS), kept)
 
 
 if __name__ == "__main__":
