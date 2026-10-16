@@ -6,12 +6,17 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from _support import PROJECT_ROOT
+from _support import PROJECT_ROOT, LiveTree
+
+LiveTree.activate()
+
+from _hooks.work_tree import without_repository_locating_variables
 
 PRE_PUSH = Path(".githooks/pre-push")
+HOOK_SCRIPT = Path("lib/harness_hooks.py")
+LINTER_CONFIGURATION = Path("pyproject.toml")
 AUDIT_SCRIPT = Path(".claude/skills/vault-audit/scripts/audit.py")
 VENV = Path(".research-vault/venv")
-REPOSITORY_LOCATING_VARIABLES = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")
 TEST_MODULE = "import unittest\n\n\nclass TestPush(unittest.TestCase):\n    def test_push(self):\n        {assertion}\n"
 NAMED_WORK = {"file": "lib/x.py", "line": 4, "detail": "Doe - 2020 - A Work"}
 
@@ -35,7 +40,7 @@ class PushingTree:
         self._write("lib/unused.py", "import os\n")
 
     def push(self) -> subprocess.CompletedProcess:
-        environment = {key: value for key, value in os.environ.items() if key not in REPOSITORY_LOCATING_VARIABLES}
+        environment = without_repository_locating_variables(os.environ)
         environment["HOME"] = str(self._home)
         return subprocess.run([str(self._root / PRE_PUSH), "origin", "unused"], cwd=self._root, input="",
                               capture_output=True, text=True, env=environment)
@@ -44,6 +49,15 @@ class PushingTree:
         subprocess.run(["git", "init", "--quiet", str(self._root)], check=True)
         (self._root / PRE_PUSH).parent.mkdir(parents=True)
         shutil.copy(PROJECT_ROOT / PRE_PUSH, self._root / PRE_PUSH)
+        shutil.copy(PROJECT_ROOT / LINTER_CONFIGURATION, self._root / LINTER_CONFIGURATION)
+        self._install_the_hook_script()
+
+    def _install_the_hook_script(self) -> None:
+        library = self._root / HOOK_SCRIPT.parent
+        library.mkdir(parents=True)
+        shutil.copy(PROJECT_ROOT / HOOK_SCRIPT, self._root / HOOK_SCRIPT)
+        for package in (PROJECT_ROOT / HOOK_SCRIPT.parent).glob("_*"):
+            (library / package.name).symlink_to(package, target_is_directory=True)
 
     def _install_the_interpreter(self) -> None:
         environment = self._home / VENV
@@ -70,19 +84,19 @@ class TestThePrePushHookRunsTheFullChecks(unittest.TestCase):
         result = self.tree.push()
         self.assertNotEqual(0, result.returncode)
         self.assertIn("FAIL: test_push", result.stderr)
-        self.assertIn("the test suite", result.stderr)
+        self.assertIn("the test suite fails", result.stderr)
 
     def test_a_linter_finding_refuses_the_push(self):
         self.tree.add_unused_import()
         result = self.tree.push()
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("F401", result.stdout)
+        self.assertIn("F401", result.stderr)
 
     def test_a_named_work_refuses_the_push(self):
         self.tree.audit_names([NAMED_WORK])
         result = self.tree.push()
         self.assertNotEqual(0, result.returncode)
-        self.assertIn("lib/x.py:4: Doe - 2020 - A Work", result.stdout)
+        self.assertIn("lib/x.py:4: Doe - 2020 - A Work", result.stderr)
 
 
 class TestTheRepositoryShipsTheHook(unittest.TestCase):

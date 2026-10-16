@@ -24,6 +24,10 @@ WIRED_SOURCES = {
     "tests/test_helper_user.py": "from _helper import alpha\n",
     "tests/fixtures/data.py": "import alpha\n",
     "bin/tool.py": "import alpha\n",
+    "lib/epsilon.py": "EPSILON = 5\n",
+    ".claude/skills/demo/scripts/delta.py": "import epsilon\n",
+    "tests/test_delta_by_path.py": "from pathlib import Path\n\nDELTA = Path('demo') / 'scripts' / 'delta.py'\n",
+    "tests/test_delta_command.py": "COMMAND = 'python .claude/skills/demo/scripts/delta.py run'\n",
 }
 PASSING_TEST = ("import unittest\nfrom _shared import VALUE\n\n\nclass TestShared(unittest.TestCase):\n"
                 "    def test_value(self):\n        self.assertEqual(1, VALUE)\n")
@@ -44,7 +48,7 @@ class SourceTree:
         return AffectedTests(self.root).selection(self.root / relative)
 
     def suite_check(self, relative: str) -> harness_hooks.SuiteCheck:
-        return harness_hooks.SuiteCheck(self.root, (self.root / relative).resolve())
+        return harness_hooks.SuiteCheck.for_edit(self.root, (self.root / relative).resolve())
 
 
 class TestTheSelectionFollowsTheImportClosure(unittest.TestCase):
@@ -72,9 +76,12 @@ class TestTheSelectionFollowsTheImportClosure(unittest.TestCase):
     def test_an_edited_test_helper_selects_every_test_module_that_imports_it(self):
         self.assertEqual(("test_helper_user",), self._selected("tests/_helper.py"))
 
-    def test_a_module_no_test_imports_selects_nothing(self):
-        self.tree.write("lib/unused.py", "import alpha\n")
-        self.assertTrue(self.tree.selection("lib/unused.py").runs_nothing())
+    def test_a_script_a_test_module_names_by_its_path_selects_that_test_module(self):
+        self.assertEqual(("test_delta_by_path", "test_delta_command"),
+                         self._selected(".claude/skills/demo/scripts/delta.py"))
+
+    def test_a_module_a_script_named_by_its_path_imports_selects_the_test_modules_naming_the_script(self):
+        self.assertEqual(("test_delta_by_path", "test_delta_command"), self._selected("lib/epsilon.py"))
 
     def test_the_selected_modules_run_with_the_tests_directory_on_the_search_path(self):
         self.assertEqual((self.tree.root.resolve() / "tests",),
@@ -94,6 +101,10 @@ class TestTheFullSuiteRunsWhereTheGraphCannotAnswer(unittest.TestCase):
 
     def test_a_python_file_in_a_directory_that_is_not_a_package_selects_the_full_suite(self):
         self.assertIsInstance(self.tree.selection("tests/fixtures/data.py"), FullSuite)
+
+    def test_a_module_no_test_module_reaches_selects_the_full_suite(self):
+        self.tree.write("lib/unused.py", "import alpha\n")
+        self.assertIsInstance(self.tree.selection("lib/unused.py"), FullSuite)
 
 
 class TestTheSuiteCheckRunsTheSelection(unittest.TestCase):
@@ -115,9 +126,10 @@ class TestTheSuiteCheckRunsTheSelection(unittest.TestCase):
         command = self._run_arguments("lib/alpha.py").call_args.args[0]
         self.assertEqual(["discover", "-s", "tests"], command[-3:])
 
-    def test_an_edit_no_test_module_imports_runs_no_test(self):
+    def test_an_edit_no_test_module_reaches_makes_the_check_discover_the_whole_suite(self):
         self.tree.write("lib/unused.py", "UNUSED = 0\n")
-        self._run_arguments("lib/unused.py").assert_not_called()
+        command = self._run_arguments("lib/unused.py").call_args.args[0]
+        self.assertEqual(["discover", "-s", "tests"], command[-3:])
 
 
 class TestTheAffectedModulesRunForReal(unittest.TestCase):

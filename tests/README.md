@@ -1,10 +1,18 @@
 # Characterization suite
 
 Control plane, not vault content. Pins the **current** behaviour of the
-pipeline's pure functions so a refactor can be verified. Contract §5 requires
-this suite to run before and after every code change. Run it from the repository:
+pipeline's pure functions so a refactor can be verified. Contract §5 runs the
+affected test modules after every edit, and this test suite before every push
+and in CI. Run the test suite from the repository:
 
     ~/.research-vault/venv/bin/python -m unittest discover -s tests -v
+
+**Every test module runs alone.** The post-edit hook runs each affected test
+module by name, with `tests/` alone on the search path. A test module MUST call
+`LiveTree.activate()`, or import a helper that calls it, before it imports a
+module of `lib/` or of a skill's `scripts/`.
+`test_every_test_module_activates_the_search_path_before_importing_the_control_plane.py`
+fails a test module that does not.
 
 Stdlib `unittest` only: the suite adds no entry to `requirements.txt`.
 Every test builds its own PDFs and notes in a temporary directory, through

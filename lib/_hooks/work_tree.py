@@ -2,10 +2,15 @@ from __future__ import annotations
 
 import os
 import subprocess
+from collections.abc import Mapping
 from pathlib import Path
 
 GIT_TIMEOUT_SECONDS = 10
 REPOSITORY_LOCATING_VARIABLES = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")
+
+
+def without_repository_locating_variables(environment: Mapping[str, str]) -> dict[str, str]:
+    return {key: value for key, value in environment.items() if key not in REPOSITORY_LOCATING_VARIABLES}
 
 
 class GitDirectory:
@@ -21,15 +26,12 @@ class GitDirectory:
     def _answer(self, *arguments: str) -> Path | None:
         try:
             completed = subprocess.run(["git", "-C", str(self._directory), "rev-parse", *arguments],
-                                       capture_output=True, text=True, env=self._environment(),
+                                       capture_output=True, text=True,
+                                       env=without_repository_locating_variables(os.environ),
                                        timeout=GIT_TIMEOUT_SECONDS)
         except (OSError, subprocess.TimeoutExpired):
             return None
         return Path(completed.stdout.strip()).resolve() if completed.returncode == 0 else None
-
-    @staticmethod
-    def _environment() -> dict:
-        return {key: value for key, value in os.environ.items() if key not in REPOSITORY_LOCATING_VARIABLES}
 
 
 class CheckedTree:

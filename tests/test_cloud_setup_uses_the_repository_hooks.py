@@ -5,13 +5,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from _support import PROJECT_ROOT
+from _support import PROJECT_ROOT, LiveTree
+
+LiveTree.activate()
+
+from _hooks.work_tree import REPOSITORY_LOCATING_VARIABLES
 
 SETUP_SCRIPT = Path("bin/cloud-setup.sh")
 HOOKS_PATH = ".githooks"
 NETWORK_STEPS = ("install_pandoc", "build_python_environment", "require_node")
-HOST_CHANGING_VARIABLES = ("CCR_AGENT_PROXY_CA_CERT_B64", "NO_PROXY", "no_proxy", "GIT_DIR", "GIT_WORK_TREE",
-                           "GIT_COMMON_DIR", "GIT_INDEX_FILE")
+HOST_CHANGING_VARIABLES = ("CCR_AGENT_PROXY_CA_CERT_B64", "NO_PROXY", "no_proxy", *REPOSITORY_LOCATING_VARIABLES)
 
 
 class StagedSetup:

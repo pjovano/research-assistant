@@ -439,10 +439,11 @@ pandoc`, and CI installs the version its workflow names. `typst`, which
 typst`; CI does not install it, and the test that needs it is skipped
 there.
 
-* The hook below runs the test modules an edit affects after every edit, and
-  the full test suite runs before every push and in CI:
+* After every edit to a Python file, the post-edit hook runs the affected
+  test modules.
+* The test suite runs before every push and in CI:
   `~/.research-vault/venv/bin/python -m unittest discover -s tests`.
-  If a test fails after a change, revert the change; `clean-code` names the
+* If a test fails after a change, revert the change; `clean-code` names the
   one exception, an expectation moved with the fix.
 * Run the linter from the repository after every code change:
   `~/.research-vault/venv/bin/ruff check .`, and fix every finding it names.
@@ -450,19 +451,20 @@ there.
   instruction text:
   `~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py lint`,
   and fix every finding its `works` list names.
-* A hook in `.claude/settings.json` runs the checks after every edit, in the
-  work tree that holds the edited file, the repository or a git worktree of
-  it, and reports a failure as an error: after an edit to a Python file, the
-  linter, the audit linter's `works` check, and the affected test modules,
-  each test module whose imports reach the edited file; after an edit to a
-  Markdown file, the audit linter's `works` check alone. If a source file
-  fails to parse, or the edited file is no module the tests can import, the
-  hook runs the full suite in place of the affected test modules.
-* `.githooks/pre-push` runs the full suite, the linter, and the audit
-  linter's `works` check in the pushing work tree, and refuses the push if
-  one fails. Point every checkout at it with `git config core.hooksPath
-  .githooks`; `bin/cloud-setup.sh` does so in a cloud session.
-* CI fails a pull request that fails the suite, the linter, the audit
+* The post-edit hook, a hook in `.claude/settings.json`, runs the checks
+  after every edit, in the checkout that holds the edited file. The post-edit
+  hook reports a failing check as an error. After an edit to a Python file,
+  the post-edit hook runs the linter, the audit linter's `works` check, and
+  the affected test modules. After an edit to a Markdown file, the post-edit
+  hook runs the audit linter's `works` check alone. If a source file fails to
+  parse, or no test module reaches the edited file, the post-edit hook runs
+  the test suite in place of the affected test modules.
+* If a checkout's `core.hooksPath` names `.githooks`, the pre-push hook runs
+  the test suite, the linter, and the audit linter's `works` check in that
+  checkout before every push. If one of the three fails, the pre-push hook
+  refuses the push. In a cloud session, `bin/cloud-setup.sh` sets
+  `core.hooksPath` to `.githooks`.
+* CI fails a pull request that fails the test suite, the linter, the audit
   linter's `works` check, or the secret scan, which runs gitleaks over the
   tree and every commit.
 * **A cloud session builds its own environment.** If `CLAUDE_CODE_REMOTE`

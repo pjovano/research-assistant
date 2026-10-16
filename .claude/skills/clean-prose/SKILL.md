@@ -241,6 +241,12 @@ in its place.
 | defect class | the property of a PDF that produces a failure, stated without naming a work | corner case, edge case, bug (for the class) |
 | special case | a rule, a branch, a constant, or a table entry that only one work, or only the works of one batch, can meet | one-off, workaround, hack, exception (for a special case) |
 | golden | a pinned expectation file under `tests/fixtures/goldens/` | baseline, snapshot (alone) |
+| test suite | every test module under `tests/`, as `-m unittest discover -s tests` runs it | full suite, full test suite, whole suite |
+| affected test modules | the test modules the post-edit hook runs after an edit to a Python file: each test module whose imports, or whose strings naming a `.py` file, reach the edited file | the test modules an edit affects, selected modules, the selection |
+| post-edit hook | the hook in `.claude/settings.json` that runs `harness_hooks.py checks-after-edit` after every edit | edit hook, after-edit check |
+| pre-push hook | `.githooks/pre-push`, which runs the test suite, the linter, and the audit linter's `works` check before every push from a checkout whose `core.hooksPath` names `.githooks` | push hook, pre-push check |
+| checkout | the files of the control plane in one directory: the main checkout, or a worktree | work tree, clone (for a checkout) |
+| worktree | a checkout `git worktree add` made beside the main checkout, sharing its repository | git worktree, linked work tree |
 | audit baseline | `.claude/skills/vault-audit/baseline.json`, one digest per control-plane file as of the last accepted audit | manifest, snapshot (for the baseline) |
 | audit set | the files one audit reads whole: those changed since the last accepted audit, plus every control-plane file that names one | audit scope, changed set, delta |
 | conflict copy | a sibling file a sync service leaves beside a note or a store when two machines change it at once | conflicted copy, duplicate (for the file) |

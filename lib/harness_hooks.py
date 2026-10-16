@@ -5,11 +5,12 @@ import os
 import subprocess
 import sys
 from collections.abc import Callable
+from functools import cached_property
 from pathlib import Path
 
 from _health.hook import HealthWatcherHook
-from _hooks.affected_tests import AffectedModules, AffectedTests, FullSuite
-from _hooks.work_tree import CheckedTree
+from _hooks.affected_tests import EditSelection, FullSuite, TestSelection
+from _hooks.work_tree import CheckedTree, without_repository_locating_variables
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 INTERPRETER = Path("~/.research-vault/venv/bin/python").expanduser()
@@ -49,18 +50,33 @@ CORPUS_WRITE_REASON = ("the Write tool creates no note under the derived corpus:
 
 class HookEvent:
     def __init__(self, payload: dict) -> None:
-        self._payload = payload
+        self._given_payload = payload
 
     @classmethod
     def from_stdin(cls) -> "HookEvent":
-        return cls(json.load(sys.stdin))
+        return StdinHookEvent()
 
     def edited_path(self) -> Path | None:
-        given = self._payload.get("tool_input", {}).get("file_path")
+        given = self._payload().get("tool_input", {}).get("file_path")
         return None if given is None else Path(given)
 
     def command(self) -> str:
-        return self._payload.get("tool_input", {}).get("command", "")
+        return self._payload().get("tool_input", {}).get("command", "")
+
+    def _payload(self) -> dict:
+        return self._given_payload
+
+
+class StdinHookEvent(HookEvent):
+    def __init__(self) -> None:
+        super().__init__({})
+
+    def _payload(self) -> dict:
+        return self._stdin_payload
+
+    @cached_property
+    def _stdin_payload(self) -> dict:
+        return json.load(sys.stdin)
 
 
 class EditedProjectFile:
@@ -157,7 +173,7 @@ class EditCheck:
         return self.COMMAND
 
     def _environment(self) -> dict:
-        return {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+        return {**without_repository_locating_variables(os.environ), "PYTHONDONTWRITEBYTECODE": "1"}
 
 
 class LintCheck(EditCheck):
@@ -175,31 +191,20 @@ class SuiteCheck(EditCheck):
     TIMEOUT_SECONDS = SUITE_TIMEOUT_SECONDS
     REPORT_TAIL_BLOCKS = 10
 
-    def __init__(self, project_root: Path, edited: Path) -> None:
+    def __init__(self, project_root: Path, selection: TestSelection) -> None:
         super().__init__(project_root)
-        self._edited = edited
-        self._selected: FullSuite | AffectedModules | None = None
+        self._selection = selection
 
     @classmethod
     def for_edit(cls, tree: Path, edited: Path) -> EditCheck:
-        return cls(tree, edited)
-
-    def failure_report(self) -> str | None:
-        if self._selection().runs_nothing():
-            return None
-        return super().failure_report()
-
-    def _selection(self) -> FullSuite | AffectedModules:
-        if self._selected is None:
-            self._selected = AffectedTests(self._project_root).selection(self._edited)
-        return self._selected
+        return cls(tree, EditSelection(tree, edited))
 
     def _command(self) -> tuple[str, ...]:
-        return (*self.COMMAND, *self._selection().unittest_arguments())
+        return (*self.COMMAND, *self._selection.unittest_arguments())
 
     def _environment(self) -> dict:
         environment = super()._environment()
-        search = [str(directory) for directory in self._selection().search_directories()]
+        search = [str(directory) for directory in self._selection.search_directories()]
         inherited = [environment["PYTHONPATH"]] if environment.get("PYTHONPATH") else []
         if search:
             environment["PYTHONPATH"] = os.pathsep.join([*search, *inherited])
@@ -299,6 +304,8 @@ class HookCli:
     def run(self, subcommand: str, event: HookEvent) -> int:
         if subcommand == "checks-after-edit":
             return self._checks_after_edit(event)
+        if subcommand == "checks-before-push":
+            return self._checks_before_push()
         if subcommand == "guard-bash":
             return self._emitted(BashGuard(event.command()).decision())
         if subcommand == "guard-write":
@@ -315,6 +322,16 @@ class HookCli:
                 sys.stderr.write(f"{check.INSTRUCTION}\n{report}\n")
                 return BLOCKING_EXIT_CODE
         return 0
+
+    def _checks_before_push(self) -> int:
+        reports = [(check.LABEL, check.failure_report()) for check in self._checks_of_a_push()]
+        failures = [f"{label} fails; the push is refused:\n{report}\n" for label, report in reports if report]
+        sys.stderr.write("".join(failures))
+        return BLOCKING_EXIT_CODE if failures else 0
+
+    def _checks_of_a_push(self) -> tuple[EditCheck, ...]:
+        return (SuiteCheck(self._project_root, FullSuite()), LintCheck(self._project_root),
+                AuditCheck(self._project_root))
 
     @staticmethod
     def _emitted(decision: dict | None) -> int:
