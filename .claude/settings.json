@@ -28,12 +28,12 @@
       "Bash(~/.research-vault/venv/bin/python .claude/skills/manage-projects/scripts/projects.py:*)",
       "Bash(~/.research-vault/venv/bin/python .claude/skills/take-notes/scripts/notes.py:*)",
       "Bash(~/.research-vault/venv/bin/python .claude/skills/edit-drafts/scripts/drafts.py:*)",
-      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/clean-pdfs/scripts/clean.py:*)",
-      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/file-pdfs/scripts/file.py:*)",
-      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/extract-corpus/scripts/extract.py:*)",
-      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/classify-and-place/scripts/bibliographies.py:*)",
-      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/search/scripts/search.py:*)",
-      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/ingest/scripts/ingest.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/clean-pdfs/scripts/clean.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/file-pdfs/scripts/file.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/extract-corpus/scripts/extract.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/classify-and-place/scripts/bibliographies.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/search/scripts/search.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/ingest/scripts/ingest.py:*)",
       "Bash(git status --porcelain)",
       "Bash(git branch --show-current)",
       "Bash(git switch:*)",
@@ -180,10 +180,10 @@
       "~/.research-vault/venv/bin/python .claude/skills/search/scripts/search.py *",
       "~/.research-vault/venv/bin/python .claude/skills/ingest/scripts/ingest.py *",
       "~/.research-vault/venv/bin/python .claude/skills/transcribe-talks/scripts/transcribe.py *",
-      "~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/clean-pdfs/scripts/clean.py *",
-      "~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/extract-corpus/scripts/extract.py *",
-      "~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/search/scripts/search.py *",
-      "~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/ingest/scripts/ingest.py *"
+      "~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/clean-pdfs/scripts/clean.py *",
+      "~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/extract-corpus/scripts/extract.py *",
+      "~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/search/scripts/search.py *",
+      "~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/ingest/scripts/ingest.py *"
     ]
   }
 }

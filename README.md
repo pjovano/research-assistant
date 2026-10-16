@@ -1,4 +1,4 @@
-# research-tools
+# research-assistant
 
 The control plane of a personal research vault: a library of PDFs, the
 Zotero records that identify them, a derived corpus of Markdown text built
@@ -142,11 +142,11 @@ machine or an absolute path, so a secondary can later become the primary.
 ## Running it
 
 The tools run on the primary, a Mac with Claude Code, and
-`~/Developer/research-tools` opened as the project folder. A secondary needs
+`~/Developer/research-assistant` opened as the project folder. A secondary needs
 none of the steps below: it holds the vault through iCloud, and its sessions
 run on the primary.
 
-1. Clone the repository to `~/Developer/research-tools`.
+1. Clone the repository to `~/Developer/research-assistant`.
 2. Write `~/.research-vault/machine.json`. Every key is optional: `vault_dir`
    (default `~/Documents`), `rag_dir` for the search stores,
    `crossref_mailto` for the identifier lookups, `batch_update_minutes` for

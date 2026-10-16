@@ -1,7 +1,7 @@
 ---
 name: ingest
 description: "Ingest — run a batch, or a backfill from Stage 2, through the ingest workflow: each PDF through Stages 0 to 4 on its own, then the bibliographies check beside the citation sweep, the reshaping, the check-off of the project reading lists, Stage 5 on each bibliography the batch touched, and Stage 6, once, and the batch's one report."
-allowed-tools: Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/ingest/scripts/ingest.py:*), Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/extract-corpus/scripts/extract.py drive-queue), Workflow, CronCreate, CronDelete, mcp__claude-code-remote__send_later
+allowed-tools: Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/ingest/scripts/ingest.py:*), Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/extract-corpus/scripts/extract.py drive-queue), Workflow, CronCreate, CronDelete, mcp__claude-code-remote__send_later
 ---
 
 # ingest (the batch, through the `ingest` workflow)
@@ -66,7 +66,7 @@ judgment.** It runs the other skills' scripts and imports none of their code.
 
 **Every command names its script from the home directory.** Run each
 `ingest.py` and `extract.py` command this skill names as
-`~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/<skill>/scripts/<script> <subcommand>`,
+`~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/<skill>/scripts/<script> <subcommand>`,
 from any working directory. NEVER change the working directory: every relay
 of the run inherits it.
 
@@ -166,7 +166,7 @@ name, so every step, and every command a step detaches, runs outside it. If
 `prefetch` is run by hand, outside a run, run exactly this as one Bash
 command in the background, with nothing before or after it:
 
-    ~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/extract-corpus/scripts/extract.py prefetch
+    ~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/extract-corpus/scripts/extract.py prefetch
 
 NEVER start `prefetch` by hand while a run holds the run lock: the run starts
 its own.
