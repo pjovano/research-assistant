@@ -14,6 +14,7 @@ export const meta = {
 const ITEM_ID_PATTERN = /^[A-Z][0-9]+(\.[0-9]+)?[a-z]?(\+[A-Z][0-9]+)?$/
 const MAX_FIX_ROUNDS = 2
 const NEEDS_DECISION_LABEL = 'needs-decision'
+const PUSH_TIMEOUT_MS = 600000
 const CHECK_COMMANDS = [
   '~/.research-vault/venv/bin/python -m unittest discover -s tests',
   '~/.research-vault/venv/bin/ruff check .',
@@ -135,8 +136,9 @@ const PUBLISH_SCHEMA = {
     },
     labelled: { type: 'boolean' },
     auto_merge: { type: 'string', enum: ['enabled', 'refused', 'not-requested'] },
+    push_failures: STRINGS,
   },
-  required: ['prs', 'labelled', 'auto_merge'],
+  required: ['prs', 'labelled', 'auto_merge', 'push_failures'],
 }
 
 const LENSES = [
@@ -192,6 +194,7 @@ const publication = await agent(publishPrompt(scope, build, verification.finding
   label: `publish:${item}`, phase: 'Publish', schema: PUBLISH_SCHEMA,
 })
 if (!publication) return stopped('Publish', 'the publisher did not return; the branch is local only')
+if (publication.push_failures.length > 0) return pushFailed(publication)
 
 return {
   item,
@@ -219,6 +222,10 @@ function branchSlug(id) {
 function stopped(phaseName, reason) {
   log(`${item} stopped at ${phaseName}: ${reason}`)
   return { item, branch, status: 'stopped', phase: phaseName, reason }
+}
+
+function pushFailed(publication) {
+  return { ...stopped('Publish', `a push failed: ${publication.push_failures.join('; ')}`), prs: publication.prs }
 }
 
 async function verify() {
@@ -390,8 +397,18 @@ function publishPrompt(scopeResult, buildResult, findings, unresolved, reasons) 
     context(),
     '',
     'You are the publisher.',
-    `1. In each repository the item names, run \`git push -u origin ${branch}\`.`,
+    `1. In each repository the item names, run \`git push -u origin ${branch}\` in a Bash call with \`timeout\``,
+    `   ${PUSH_TIMEOUT_MS}: the pre-push hook runs the test suite, the linter, and the audit linter's \`works\` check`,
+    '   before the push, and outlasts the default timeout.',
+    '   The pre-push hook refused a push if the push\'s output holds `fails; the push is refused`',
+    '   or `the hook failed`.',
+    '   If the pre-push hook refused the push, the push is a check failure: record it under `push_failures`.',
+    '   NEVER retry a push the pre-push hook refused: the same checks fail again on the same commit.',
     '   If the push fails on a network error, retry up to four times, waiting 2, 4, 8, and 16 seconds.',
+    '   If the push times out, or still fails on a network error after the fourth retry,',
+    '   record it under `push_failures`.',
+    '   Record each push failure as its repository, then the last lines of the push\'s output.',
+    '   If a repository\'s push failed, open and update no pull request for it.',
     '2. Open one pull request per repository against `main` with the GitHub MCP tools (load them with ToolSearch).',
     '   If an open pull request already has this head branch, update its title and body instead.',
     `   Open it as a draft: ${needsDecision ? 'yes' : 'no'}.`,
@@ -418,6 +435,6 @@ function publishPrompt(scopeResult, buildResult, findings, unresolved, reasons) 
     JSON.stringify(reasons, null, 2),
     '',
     'Return each pull request\'s repository, number, URL, title, and whether it is a draft; whether you labelled them;',
-    'and whether auto-merge is enabled, was refused, or was not requested.',
+    'whether auto-merge is enabled, was refused, or was not requested; and each push failure.',
   ].join('\n')
 }
