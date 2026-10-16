@@ -19,6 +19,33 @@ export TIKTOKEN_CACHE_DIR="$STATE_DIR/tiktoken"
 
 FAILED_STEPS=""
 
+route_unresolvable_hosts_through_gateway() {
+  NO_PROXY="$(entries_reachable_without_gateway "${NO_PROXY:-}")"
+  no_proxy="$NO_PROXY"
+  export NO_PROXY no_proxy
+}
+
+entries_reachable_without_gateway() {
+  local entries entry kept=""
+  IFS=',' read -ra entries <<< "$1"
+  for entry in ${entries[@]+"${entries[@]}"}; do
+    if is_reachable_without_gateway "$entry"; then kept="${kept:+$kept,}$entry"; fi
+  done
+  printf '%s' "$kept"
+}
+
+is_reachable_without_gateway() {
+  is_address "$1" || is_suffix_pattern "$1" || getent hosts "$1" > /dev/null
+}
+
+is_address() {
+  [[ "$1" != *[!0-9A-Fa-f.:/]* ]]
+}
+
+is_suffix_pattern() {
+  [[ "$1" == .* || "$1" == \** ]]
+}
+
 point_at_empty_vault() {
   mkdir -p "$EMPTY_VAULT/research vault"
   printf '{"vault_dir": "~/.research-vault/empty-vault"}\n' > "$STATE_DIR/machine.json"
@@ -85,6 +112,7 @@ stop_unless_every_step_passed() {
 }
 
 main() {
+  route_unresolvable_hosts_through_gateway
   point_at_empty_vault
   trust_gateway_certificate
   run_step install_pandoc
