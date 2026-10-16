@@ -28,6 +28,7 @@
       "Bash(~/.research-vault/venv/bin/python .claude/skills/manage-projects/scripts/projects.py:*)",
       "Bash(~/.research-vault/venv/bin/python .claude/skills/take-notes/scripts/notes.py:*)",
       "Bash(~/.research-vault/venv/bin/python .claude/skills/edit-drafts/scripts/drafts.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/remember/scripts/check_user_file.py:*)",
       "Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/clean-pdfs/scripts/clean.py:*)",
       "Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/file-pdfs/scripts/file.py:*)",
       "Bash(~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/extract-corpus/scripts/extract.py:*)",

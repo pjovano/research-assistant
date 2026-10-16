@@ -10,8 +10,9 @@ syncs it between the primary, the one Mac that holds this repository and
 runs every operation, and any secondary, which holds the vault alone. This
 repository holds everything that operates on it: the contract, the skills,
 the worker instructions, the shared code, and the tests. It is run by Claude
-Code, which reads `CLAUDE.md`, and through its import the contract in
-`AGENTS.md`, as its standing instructions, and each skill as the procedure
+Code, which reads `CLAUDE.md`, and through its imports the contract in
+`AGENTS.md`, the core's `SOUL.md`, and the local `USER.md`, as its standing
+instructions, and each skill as the procedure
 for one operation.
 
 ## What the vault holds
@@ -114,7 +115,8 @@ heading tree and frontmatter, and walks the citation graph.
 | Path | Holds |
 | --- | --- |
 | `AGENTS.md` | the contract: the mandate, the architecture, the conventions, the operations, and the standards |
-| `CLAUDE.md` | the one line `@AGENTS.md`, which imports the contract into every Claude Code session |
+| `CLAUDE.md` | the three lines `@AGENTS.md`, `@vendor/agent-core/SOUL.md`, and `@USER.md`, which import the contract, the soul file, and the user file into every Claude Code session |
+| `USER.md` | the user file: what is true of the user now, kept by the `remember` skill on the primary alone and never versioned |
 | `.claude/settings.json` | permissions and hooks; one hook runs the checks after every edit to a Python or Markdown file, the affected test modules among them, another turns every destructive command into a permission prompt |
 | `.githooks/` | the pre-push hook, which runs the test suite, the linter, and the audit linter before every push |
 | `.claude/skills/<skill>/` | one skill per operation: `SKILL.md`, its `scripts/`, and any `reference/` files it loads |
