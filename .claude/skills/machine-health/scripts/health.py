@@ -56,8 +56,8 @@ class HealthCli:
         needed = health_job.script_exists and not scheduler.installed(job)
         if arguments.apply and needed:
             scheduler.install(job)
-        self._print({"label": job.label, "needed": needed, "installed": arguments.apply and needed,
-                     "definition": scheduler.definition(job), "manual": scheduler.manual_install(job)})
+        self._print({"plist": scheduler.location(job), "needed": needed, "installed": arguments.apply and needed,
+                     "contents": scheduler.definition(job), "manual": scheduler.manual_install(job)})
         return 0
 
     def _run_uninstall(self, arguments: argparse.Namespace) -> int:

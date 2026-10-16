@@ -34,7 +34,7 @@ answer the prompt. `health.py` reads `machine.json` through
 | `sample` | take one sample, append it to the health journals, prune journal days past the retention, run the detectors on the sample, journal and notify each health alert not raised within the cooldown | the health journals; a desktop notification; a reminder |
 | `report [--hours N]` | the system's worst readings, each process's first, last, and peak memory and its growth per hour, and the health alerts of the last `N` hours, 24 by default | nothing |
 | `install [--apply]` | print the launch agent, whether it needs installing, and the `launchctl` command that loads it by hand; with `--apply`, write the launch agent if it is missing or stale and load it if it is not loaded | the launch agent |
-| `uninstall [--apply]` | print the health job's label and whether it is installed; with `--apply`, unload the health job and delete its launch agent | the launch agent |
+| `uninstall [--apply]` | print the launch agent's label and whether it is installed; with `--apply`, unload the launch agent and delete it | the launch agent |
 
 ## Samples
 

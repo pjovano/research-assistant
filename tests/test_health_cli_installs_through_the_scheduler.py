@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,11 +15,14 @@ LiveTree.activate()
 import health as health_script
 import machine_health as health
 import providers
+from agent_core._adapters.host.launchd import Launchctl, LaunchdScheduler
 from agent_core._ports.host import Job
 from providers import Providers
 
 FAKE_ADAPTER = "fake"
 FORMER_CHECKOUTS_LABEL = "com.research-vault.machine-health"
+INSTALL_REPORT_KEYS = ["plist", "needed", "installed", "contents", "manual"]
+NOT_LOADED = 113
 
 
 class RecordingScheduler:
@@ -37,6 +41,9 @@ class RecordingScheduler:
     def remove(self, job: Job) -> None:
         self.removals.append(job.label)
         self._installed.discard(job.label)
+
+    def location(self, job: Job) -> str:
+        return f"jobs/{job.label}"
 
     def definition(self, job: Job) -> str:
         return f"definition of {job.label}"
@@ -58,7 +65,7 @@ class HealthCliCase(unittest.TestCase):
         directory = Path(self.enterContext(tempfile.TemporaryDirectory()))
         self.settings = health.HealthSettings({}, directory)
 
-    def run_cli(self, scheduler: RecordingScheduler, *argv: str) -> dict:
+    def run_cli(self, scheduler, *argv: str) -> dict:
         built = Providers({providers.SCHEDULER: {"adapter": FAKE_ADAPTER}}, {},
                           {providers.SCHEDULER: {FAKE_ADAPTER: GivenScheduler(scheduler)}})
         printed = io.StringIO()
@@ -88,11 +95,34 @@ class TestInstall(HealthCliCase):
     def test_the_read_only_form_prints_the_definition_and_installs_nothing(self) -> None:
         scheduler = RecordingScheduler()
         report = self.run_cli(scheduler, "install")
-        self.assertEqual((f"definition of {health.AGENT_LABEL}", []), (report["definition"], scheduler.installs))
+        self.assertEqual((f"definition of {health.AGENT_LABEL}", []), (report["contents"], scheduler.installs))
+
+    def test_the_read_only_form_prints_where_the_scheduler_keeps_the_definition(self) -> None:
+        report = self.run_cli(RecordingScheduler(), "install")
+        self.assertEqual(f"jobs/{health.AGENT_LABEL}", report["plist"])
 
     def test_the_read_only_form_prints_the_manual_command(self) -> None:
         report = self.run_cli(RecordingScheduler(), "install")
         self.assertEqual(f"install {health.AGENT_LABEL} by hand", report["manual"])
+
+
+
+class TestInstallOnLaunchd(HealthCliCase):
+    def setUp(self) -> None:
+        super().setUp()
+        self.plist_directory = Path(self.enterContext(tempfile.TemporaryDirectory())) / "LaunchAgents"
+        self.scheduler = LaunchdScheduler(self.plist_directory, Launchctl(self.not_loaded))
+
+    @staticmethod
+    def not_loaded(arguments: list[str]) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(arguments, NOT_LOADED, "", "")
+
+    def test_the_report_keeps_the_former_launch_agents_keys_in_order(self) -> None:
+        self.assertEqual(INSTALL_REPORT_KEYS, list(self.run_cli(self.scheduler, "install")))
+
+    def test_the_report_names_the_launch_agents_plist_path(self) -> None:
+        expected = str(self.plist_directory / f"{health.AGENT_LABEL}.plist")
+        self.assertEqual(expected, self.run_cli(self.scheduler, "install")["plist"])
 
 
 if __name__ == "__main__":
