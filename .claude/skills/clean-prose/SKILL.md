@@ -107,6 +107,10 @@ in its place.
 | derived corpus | `research vault/corpus/`, the directory of corpus files, one per PDF, each in the directory itself and never in its subfolder `talk transcripts/` | corpus text, text layer, extracted text, source index |
 | search stores | the per-machine embeddings and full-text index | search index, vector store, embeddings (alone) |
 | control plane | `~/Developer/research-tools`, the repository: the contract, skills, worker instructions, and code | config, tooling, project |
+| core | `core/` of the `agent-core` repository: the skills, workers, workflows, and code `agent-core` shares with every repository that vendors it | shared layer, framework, common library |
+| vendored core | `vendor/agent-core/`, the core as `git subtree` copies it from `agent-core`'s branch `core` | vendor copy, submodule, core checkout |
+| core unit | one skill, worker, or workflow of the core; a core skill, a core worker, and a core workflow are core units of those kinds | shared skill, imported skill, external skill |
+| symlink | a relative symbolic link under `.claude/` that resolves to a core unit inside the vendored core | link (for a symlink), alias, shortcut |
 | inbox | `~/Desktop/inbox/`, new PDFs awaiting ingest and Word files awaiting import | drop folder, queue |
 | batch | the inbox's contents when ingest starts, each filed work an earlier batch left short of Stage 4, and each corpus file whose body is written and whose classification is not | run, ingest set, pass |
 | set-aside PDF | a PDF of a batch whose stage reached `stop and ask the user`: left as it is, its question kept for the batch's one report | held PDF, skipped PDF, blocked PDF, parked PDF |
