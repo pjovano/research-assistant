@@ -134,8 +134,9 @@ const PUBLISH_SCHEMA = {
       },
     },
     labelled: { type: 'boolean' },
+    auto_merge: { type: 'string', enum: ['enabled', 'refused', 'not-requested'] },
   },
-  required: ['prs', 'labelled'],
+  required: ['prs', 'labelled', 'auto_merge'],
 }
 
 const LENSES = [
@@ -151,7 +152,7 @@ const LENSES = [
   {
     key: 'contract',
     question: [
-      'Does the branch break a rule of the repository\'s CLAUDE.md, `clean-code`, or `clean-prose`?',
+      'Does the branch break a rule of the repository\'s contract, `clean-code`, or `clean-prose`?',
       'Check the force words, the sentence forms, and the Vocabulary of every changed instruction line;',
       'every special case (contract §5); every file that names a changed name; a reader for every new field;',
       'a `Defect-class:` or `Change-class:` trailer and an `Upgrade-item:` trailer on every commit.',
@@ -197,6 +198,7 @@ return {
   branch,
   status: 'published',
   prs: publication.prs,
+  auto_merge: publication.auto_merge,
   needs_decision: reasons.length > 0,
   reasons,
   rehearsal_lines: build.rehearsal_lines,
@@ -272,7 +274,7 @@ function checksRule() {
     'After every change, run the checks from the root of each worktree you changed, and read their output.',
     'In `research-assistant` the checks are:',
     ...CHECK_COMMANDS.map(command => `- \`${command}\``),
-    'In another repository, and after the audit linter has moved to the core, run the commands its CLAUDE.md names.',
+    'In another repository, and after the audit linter has moved to the core, run the commands its contract names.',
   ].join('\n')
 }
 
@@ -321,7 +323,7 @@ function buildPrompt(scopeResult) {
     `   otherwise run \`git switch -c ${branch} origin/main\`.`,
     '2. For each other repository the item names, add a worktree of it under your scratchpad on the same branch name,',
     '   by the same rule, with `git -C <checkout> worktree add`.',
-    '3. Build the item as its file states, under the repository\'s CLAUDE.md:',
+    '3. Build the item as its file states, under the repository\'s contract (`AGENTS.md`, or `CLAUDE.md` before X2):',
     '   invoke `clean-code` before code and `clean-prose` before instruction text;',
     '   add a test that builds the defect class or pins the behaviour for every CI acceptance row;',
     '   add the item\'s rehearsal lines to its own section of `upgrade/rehearsal.md`.',
@@ -401,7 +403,7 @@ function publishPrompt(scopeResult, buildResult, findings, unresolved, reasons) 
     '   the domain\'s body names it and states that the domain merges after it.',
     needsDecision
       ? `6. Add the label \`${NEEDS_DECISION_LABEL}\` to each pull request, and post one comment on each that states every reason below, with the context the user needs to answer without opening the diff. End the comment with the attribution footer your session's instructions give.`
-      : '6. Add no label.',
+      : '6. Add no label. Turn on auto-merge for each pull request with the GitHub MCP tools, merge method `MERGE`:\n   the `Upgrade-item:` trailers must reach `main` in the commits themselves. If auto-merge is refused, say so in\n   your result; the pull request still stands.',
     '',
     'Acceptance rows from the Scope reader:',
     JSON.stringify(scopeResult.acceptance, null, 2),
@@ -415,6 +417,7 @@ function publishPrompt(scopeResult, buildResult, findings, unresolved, reasons) 
     'Reasons for the user\'s decision:',
     JSON.stringify(reasons, null, 2),
     '',
-    'Return each pull request\'s repository, number, URL, title, and whether it is a draft, and whether you labelled them.',
+    'Return each pull request\'s repository, number, URL, title, and whether it is a draft; whether you labelled them;',
+    'and whether auto-merge is enabled, was refused, or was not requested.',
   ].join('\n')
 }

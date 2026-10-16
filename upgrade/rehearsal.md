@@ -85,8 +85,8 @@ No Mac-only check.
 | R-P5+M3-1 | S | A health sample on the ports | `health.py sample`, then `health.py report` | the sample's readings match the old setup's sample taken within the same minute, level by level | |
 | R-P5+M3-2 | S | The new health plist matches the installed one | `health.py install` (read-only form); diff its plist with `~/Library/LaunchAgents/<old health label>.plist` | they differ only in the label and the repository path | |
 | R-P5+M3-3 | S | `uninstall` names the new jobs only | `health.py uninstall` and the Remote Control job's `uninstall`, read-only forms | neither names an old plist | |
-| R-P5+M3-4 | W | The Remote Control job loads under launchd | `launchctl print gui/$(id -u)/<new label>` | state running; working directory `~/Developer/assistant`; `caffeinate -i` in the command; no `--name` | |
-| R-P5+M3-5 | W | A session from a secondary opens in the dispatcher repo | open a session from the laptop or the phone | its working directory is `~/Developer/assistant` | |
+| R-P5+M3-4 | W | The Remote Control job loads under launchd | `launchctl print gui/$(id -u)/<new label>` | state running; working directory `~/Developer/agent-core`; `caffeinate -i` in the command; no `--name` | |
+| R-P5+M3-5 | W | A session from a secondary opens in the dispatcher repo | open a session from the laptop or the phone | its working directory is `~/Developer/agent-core` | |
 | R-P5+M3-6 | W | One research question is answered through it | ask one library question in that session | the answer comes back with verified quotations | |
 | R-P5+M3-7 | W | A handed-off dry-run batch runs in the research main checkout | ask that session for a dry-run batch | the batch runs in `~/Developer/research-assistant`, not a worktree | |
 
@@ -241,7 +241,7 @@ No Mac-only check.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-A3-1 | S | A library question routes to research | from a local session in `~/Developer/assistant`: "what does my library say about X?" | a `research-assistant` session answers with verified quotations | |
+| R-A3-1 | S | A library question routes to research | from a local session in `~/Developer/agent-core`: "what does my library say about X?" | a `research-assistant` session answers with verified quotations | |
 | R-A3-2 | S | A batch starts in the background in the research main checkout | "start a batch" (dry run) from the dispatcher | the batch runs in `~/Developer/research-assistant`; the dispatcher reports once, at the end | |
 | R-A3-3 | S | A request matching no domain is asked about | a request no `handles` entry covers | the dispatcher asks; it delegates nothing | |
 | R-A3-4 | S | A delegated session applies the project's allow rules (spike item 2) | inspect the delegated session's startup for "Ignoring … permissions.allow entries" | no such line; the research checkout is a trusted workspace | |
