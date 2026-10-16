@@ -76,6 +76,13 @@ No Mac-only check.
 
 No Mac-only check: R-A0-1 covers the symlinked `clean-code` and `clean-prose`.
 
+### A6
+
+| ID | Phase | Check | Command or action | Passes when | Result |
+| --- | --- | --- | --- | --- | --- |
+| R-A6-1 | S | A session reads the user file's recent entries | in the staging checkout of `~/Developer/research-assistant`, write `USER.md` from `vendor/agent-core/skills/remember/skeleton.md` with one dated `## Recent` entry, start a session, and ask what the user is working on | the reply names that entry | |
+| R-A6-2 | S | The soul file and the user file load through `CLAUDE.md`'s imports on macOS, and a session without the user file starts | start a session in the staging checkout and run `/memory`; then move `USER.md` out of the checkout and start another session | the first lists `vendor/agent-core/SOUL.md` and `USER.md` among its loaded files; the second starts without an error | |
+
 ### U2
 
 No Mac-only check.
