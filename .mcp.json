@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "vault-rag": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "exec ~/.research-vault/venv/bin/python .claude/skills/search/server.py"
+      ],
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "ANONYMIZED_TELEMETRY": "False"
+      }
+    }
+  }
+}

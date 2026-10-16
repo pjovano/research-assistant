@@ -1,0 +1,31 @@
+{
+  "kind": "books#volumes",
+  "totalItems": 1,
+  "items": [
+    {
+      "kind": "books#volume",
+      "id": "3eP5Y_OOuzwC",
+      "volumeInfo": {
+        "title": "The Structure of Scientific Revolutions",
+        "subtitle": "50th Anniversary Edition",
+        "authors": [
+          "Thomas S. Kuhn"
+        ],
+        "publisher": "University of Chicago Press",
+        "publishedDate": "2012-04-18",
+        "industryIdentifiers": [
+          {
+            "type": "ISBN_13",
+            "identifier": "9780226458120"
+          },
+          {
+            "type": "ISBN_10",
+            "identifier": "0226458121"
+          }
+        ],
+        "pageCount": 264,
+        "language": "en"
+      }
+    }
+  ]
+}

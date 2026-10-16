@@ -1,0 +1,270 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          2,
+          28
+        ]
+      ],
+      "date-time": "2026-02-28T21:07:03Z",
+      "timestamp": 1772312823082,
+      "version": "3.50.1"
+    },
+    "reference-count": 56,
+    "publisher": "Springer Science and Business Media LLC",
+    "issue": "9",
+    "funder": [
+      {
+        "DOI": "10.13039/501100004497",
+        "name": "Onderzoeksraad, KU Leuven",
+        "doi-asserted-by": "publisher",
+        "award": [
+          "3H160214"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "3H160214"
+            ]
+          }
+        ],
+        "id": [
+          {
+            "id": "10.13039/501100004497",
+            "id-type": "DOI",
+            "asserted-by": "publisher"
+          }
+        ]
+      },
+      {
+        "DOI": "10.13039/501100003130",
+        "name": "Fonds Wetenschappelijk Onderzoek",
+        "doi-asserted-by": "publisher",
+        "award": [
+          "3H200026"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "3H200026"
+            ]
+          }
+        ],
+        "id": [
+          {
+            "id": "10.13039/501100003130",
+            "id-type": "DOI",
+            "asserted-by": "publisher"
+          }
+        ]
+      }
+    ],
+    "content-domain": {
+      "domain": [
+        "link.springer.com"
+      ],
+      "crossmark-restriction": false
+    },
+    "short-container-title": [
+      "Synthese"
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          2021,
+          9
+        ]
+      ]
+    },
+    "DOI": "10.1007/s11229-020-02614-2",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2020,
+          3,
+          5
+        ]
+      ],
+      "date-time": "2020-03-05T19:02:22Z",
+      "timestamp": 1583434942000
+    },
+    "page": "8999-9020",
+    "update-policy": "https://doi.org/10.1007/springer_crossmark_policy",
+    "source": "Crossref",
+    "is-referenced-by-count": 9,
+    "title": [
+      "Against natural kind eliminativism"
+    ],
+    "prefix": "10.1007",
+    "volume": "198",
+    "author": [
+      {
+        "ORCID": "https://orcid.org/0000-0002-1487-0213",
+        "authenticated-orcid": false,
+        "given": "Stijn",
+        "family": "Conix",
+        "sequence": "first",
+        "affiliation": [],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0001-6924-5725",
+        "authenticated-orcid": false,
+        "given": "Pei-Shan",
+        "family": "Chi",
+        "sequence": "additional",
+        "affiliation": [],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      }
+    ],
+    "member": "297",
+    "published-online": {
+      "date-parts": [
+        [
+          2020,
+          3,
+          5
+        ]
+      ]
+    },
+    "container-title": [
+      "Synthese"
+    ],
+    "original-title": [],
+    "language": "en",
+    "deposited": {
+      "date-parts": [
+        [
+          2021,
+          10,
+          19
+        ]
+      ],
+      "date-time": "2021-10-19T05:02:40Z",
+      "timestamp": 1634619760000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://link.springer.com/10.1007/s11229-020-02614-2"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          2020,
+          3,
+          5
+        ]
+      ]
+    },
+    "references-count": 56,
+    "journal-issue": {
+      "issue": "9",
+      "published-print": {
+        "date-parts": [
+          [
+            2021,
+            9
+          ]
+        ]
+      }
+    },
+    "alternative-id": [
+      "2614"
+    ],
+    "URL": "https://doi.org/10.1007/s11229-020-02614-2",
+    "relation": {},
+    "ISSN": [
+      "0039-7857",
+      "1573-0964"
+    ],
+    "issn-type": [
+      {
+        "value": "0039-7857",
+        "type": "print"
+      },
+      {
+        "value": "1573-0964",
+        "type": "electronic"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          2020,
+          3,
+          5
+        ]
+      ]
+    },
+    "assertion": [
+      {
+        "value": "16 September 2019",
+        "order": 1,
+        "name": "received",
+        "label": "Received",
+        "group": {
+          "name": "ArticleHistory",
+          "label": "Article History"
+        }
+      },
+      {
+        "value": "27 February 2020",
+        "order": 2,
+        "name": "accepted",
+        "label": "Accepted",
+        "group": {
+          "name": "ArticleHistory",
+          "label": "Article History"
+        }
+      },
+      {
+        "value": "5 March 2020",
+        "order": 3,
+        "name": "first_online",
+        "label": "First Online",
+        "group": {
+          "name": "ArticleHistory",
+          "label": "Article History"
+        }
+      },
+      {
+        "order": 1,
+        "name": "Ethics",
+        "group": {
+          "name": "EthicsHeading",
+          "label": "Compliance with ethical standards"
+        }
+      },
+      {
+        "value": "None.",
+        "order": 2,
+        "name": "Ethics",
+        "group": {
+          "name": "EthicsHeading",
+          "label": "Conflict of interest"
+        }
+      }
+    ]
+  }
+}

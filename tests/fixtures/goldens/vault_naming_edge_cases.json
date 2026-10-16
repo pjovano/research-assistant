@@ -1,0 +1,68 @@
+{
+  "citekey": {
+    "Bermúdez": "bermudez2010",
+    "Cantù": "cantu2010",
+    "Cavaillès": "cavailles2010",
+    "Dutilh Novaes": "dutilhnovaes2010",
+    "Grattan-Guinness": "grattan-guinness2010",
+    "Gödel": "godel2010",
+    "Hettig-Rolfe": "hettig-rolfe2010",
+    "Kierkegaard": "kierkegaard2010",
+    "Poincaré": "poincare2010",
+    "Schrödinger": "schrodinger2010",
+    "Weiß": "weiss2010",
+    "Ørsted": "orsted2010",
+    "Łukasiewicz": "lukasiewicz2010"
+  },
+  "normalize_caps_name": {
+    "": "",
+    "ANSCOMBE": "Anscombe",
+    "IBM": "Ibm",
+    "JEAN-PIERRE DUPUY": "Jean-Pierre Dupuy",
+    "MCDOWELL": "McDowell",
+    "MacFarlane": "MacFarlane",
+    "McDOWELL": "McDOWELL",
+    "O'NEILL": "O'Neill",
+    "PAUL K. FEYERABEND": "Paul K. Feyerabend",
+    "de Finetti": "de Finetti",
+    "van Fraassen": "van Fraassen"
+  },
+  "parse_library_filename": {
+    "A and B - 1999 - Title.pdf": {
+      "creator": "A and B",
+      "title": "Title",
+      "year": "1999"
+    },
+    "Kripke - 1980 - Naming and Necessity.pdf": {
+      "creator": "Kripke",
+      "title": "Naming and Necessity",
+      "year": "1980"
+    },
+    "Smith - 12 - Short Year.pdf": null,
+    "not a library name.pdf": null
+  },
+  "sanitize_filename_part": {
+    "A/B: C?": "AB C",
+    "Plain": "Plain",
+    "x<y>z|w*v\"u": "xyzwvu"
+  },
+  "strip_subtitle": {
+    "A Very Long Title With No Subtitle Separator Anywhere In It At All Really": "A Very Long Title With No Subtitle Separator Anywhere In It At All Really",
+    "Being and Time": "Being and Time",
+    "Either-Or": "Either-Or",
+    "Kind-Crossing — A Study": "Kind-Crossing",
+    "Mathematics as a Science of Quantity - An Essay": "Mathematics as a Science of Quantity - An Essay",
+    "Naming and Necessity": "Naming and Necessity",
+    "Special Sciences (Or: The Disunity of Science as a Working Hypothesis)": "Special Sciences",
+    "Structure and Categoricity: Determinacy of Reference and Truth-Value": "Structure and Categoricity",
+    "The Logic of Scientific Discovery – Second Edition": "The Logic of Scientific Discovery",
+    "Truth-Value Gaps": "Truth-Value Gaps"
+  },
+  "wikilink_target": {
+    "": null,
+    "[[A|B]]": "A",
+    "[[Being]]": "Being",
+    "[[X#h]]": "X",
+    "bare": null
+  }
+}

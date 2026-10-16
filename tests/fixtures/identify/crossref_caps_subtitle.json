@@ -1,0 +1,120 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2025,
+          3,
+          27
+        ]
+      ],
+      "date-time": "2025-03-27T16:48:22Z",
+      "timestamp": 1743094102737,
+      "version": "3.40.3"
+    },
+    "edition-number": "1",
+    "reference-count": 0,
+    "publisher": "University of Chicago Press",
+    "isbn-type": [
+      {
+        "type": "print",
+        "value": "9780521362450"
+      },
+      {
+        "type": "print",
+        "value": "9780521526968"
+      },
+      {
+        "type": "electronic",
+        "value": "9780511597206"
+      }
+    ],
+    "content-domain": {
+      "domain": [],
+      "crossmark-restriction": false
+    },
+    "short-container-title": [],
+    "published-print": {
+      "date-parts": [
+        [
+          2012
+        ]
+      ]
+    },
+    "DOI": "10.7208/chicago/structure.001.0001",
+    "type": "book",
+    "created": {
+      "date-parts": [
+        [
+          2009,
+          12,
+          24
+        ]
+      ],
+      "date-time": "2009-12-24T11:29:04Z",
+      "timestamp": 1261654144000
+    },
+    "source": "Crossref",
+    "is-referenced-by-count": 1,
+    "title": [
+      "THE STRUCTURE OF SCIENTIFIC REVOLUTIONS"
+    ],
+    "prefix": "10.1017",
+    "author": [
+      {
+        "given": "THOMAS S.",
+        "family": "KUHN"
+      }
+    ],
+    "member": "56",
+    "original-title": [],
+    "deposited": {
+      "date-parts": [
+        [
+          2022,
+          10,
+          15
+        ]
+      ],
+      "date-time": "2022-10-15T00:51:22Z",
+      "timestamp": 1665795082000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://www.cambridge.org/core/product/identifier/CBO9780511597206A017/type/book_part"
+      }
+    },
+    "subtitle": [
+      "With an Introductory Essay by Ian Hacking"
+    ],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          2012
+        ]
+      ]
+    },
+    "ISBN": [
+      "9780226458120"
+    ],
+    "references-count": 0,
+    "URL": "https://doi.org/10.1017/cbo9780511597206.003",
+    "relation": {},
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          1989,
+          6,
+          29
+        ]
+      ]
+    },
+    "publisher-location": "Chicago"
+  }
+}

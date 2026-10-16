@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "enabledMcpjsonServers": [
+    "vault-rag"
+  ],
+  "autoMemoryEnabled": false,
+  "permissions": {
+    "allow": [
+      "Bash(~/.research-vault/venv/bin/python -m unittest discover -s tests:*)",
+      "Bash(~/.research-vault/venv/bin/ruff check:*)",
+      "Bash(~/.research-vault/venv/bin/python tests/capture_goldens.py:*)",
+      "Bash(~/.research-vault/venv/bin/python lib/vault.py:*)",
+      "Bash(~/.research-vault/venv/bin/python lib/zotero.py:*)",
+      "Bash(~/.research-vault/venv/bin/python lib/annotate.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/clean-pdfs/scripts/clean.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/file-pdfs/scripts/file.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/extract-corpus/scripts/extract.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/classify-and-place/scripts/bibliographies.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/discover/scripts/discover.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/extract-chapters/scripts/volumes.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/search/scripts/search.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/cite-links/scripts/cite.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/cite-links/scripts/graph.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/answer-questions/scripts/verify.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/transcribe-talks/scripts/transcribe.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/ingest/scripts/ingest.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/manage-projects/scripts/projects.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/take-notes/scripts/notes.py:*)",
+      "Bash(~/.research-vault/venv/bin/python .claude/skills/edit-drafts/scripts/drafts.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/clean-pdfs/scripts/clean.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/file-pdfs/scripts/file.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/extract-corpus/scripts/extract.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/classify-and-place/scripts/bibliographies.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/search/scripts/search.py:*)",
+      "Bash(~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/ingest/scripts/ingest.py:*)",
+      "Bash(git status --porcelain)",
+      "Bash(git branch --show-current)",
+      "Bash(git switch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git push -u origin extract-fixes/:*)",
+      "Bash(git show:*)",
+      "Bash(git pull:*)",
+      "Bash(git branch -d extract-fixes/:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr merge:*)",
+      "Edit(~/Documents/research vault/corpus/**)",
+      "Edit(~/Documents/research vault/bibliographies/**)",
+      "Edit(~/Documents/research vault/writing/**)",
+      "mcp__vault-rag__search_hybrid",
+      "mcp__vault-rag__index_status",
+      "mcp__vault-rag__get_frontmatter",
+      "mcp__vault-rag__list_works",
+      "mcp__vault-rag__cites",
+      "mcp__vault-rag__cited_by",
+      "mcp__vault-rag__neighbours",
+      "mcp__vault-rag__contexts",
+      "mcp__vault-rag__outline"
+    ]
+  },
+  "env": {
+    "ANONYMIZED_TELEMETRY": "False",
+    "PYTHONIOENCODING": "utf-8",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "HF_HUB_OFFLINE": "1"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PYTHONDONTWRITEBYTECODE=1 ~/.research-vault/venv/bin/python \"$CLAUDE_PROJECT_DIR\"/lib/harness_hooks.py guard-bash || exit 2",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "PYTHONDONTWRITEBYTECODE=1 ~/.research-vault/venv/bin/python \"$CLAUDE_PROJECT_DIR\"/lib/harness_hooks.py ensure-health-watcher || exit 2",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PYTHONDONTWRITEBYTECODE=1 ~/.research-vault/venv/bin/python \"$CLAUDE_PROJECT_DIR\"/lib/harness_hooks.py guard-write || exit 2",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "PYTHONDONTWRITEBYTECODE=1 ~/.research-vault/venv/bin/python \"$CLAUDE_PROJECT_DIR\"/lib/harness_hooks.py checks-after-edit || exit 2",
+            "timeout": 900,
+            "statusMessage": "Running the vault checks"
+          }
+        ]
+      }
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "filesystem": {
+      "allowWrite": [
+        "~/Documents/library",
+        "~/Documents/research vault/corpus",
+        "~/Documents/research vault/bibliographies",
+        "~/Documents/research vault/writing",
+        "~/Desktop/inbox",
+        "~/.research-vault/rag",
+        "~/.research-vault/cache",
+        "~/.research-vault/tiktoken",
+        "~/.cache/datalab",
+        "~/.cache/huggingface",
+        "~/.cache/torch"
+      ]
+    },
+    "network": {
+      "allowedDomains": [
+        "127.0.0.1",
+        "localhost",
+        "api.crossref.org",
+        "openlibrary.org",
+        "covers.openlibrary.org",
+        "www.googleapis.com",
+        "books.google.com",
+        "arxiv.org",
+        "export.arxiv.org",
+        "openaipublic.blob.core.windows.net"
+      ],
+      "allowLocalBinding": true
+    },
+    "excludedCommands": [
+      "gh *",
+      "git push *",
+      "git pull *",
+      "git fetch *",
+      "git checkout *",
+      "git switch *",
+      "git merge *",
+      "git rebase *",
+      "git reset *",
+      "git restore *",
+      "git stash *",
+      "git rm *",
+      "git mv *",
+      "git cherry-pick *",
+      "git revert *",
+      "git worktree *",
+      "uv pip *",
+      "~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py accept*",
+      "~/.research-vault/venv/bin/python .claude/skills/clean-pdfs/scripts/clean.py *",
+      "~/.research-vault/venv/bin/python .claude/skills/extract-corpus/scripts/extract.py *",
+      "~/.research-vault/venv/bin/python .claude/skills/search/scripts/search.py *",
+      "~/.research-vault/venv/bin/python .claude/skills/ingest/scripts/ingest.py *",
+      "~/.research-vault/venv/bin/python .claude/skills/transcribe-talks/scripts/transcribe.py *",
+      "~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/clean-pdfs/scripts/clean.py *",
+      "~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/extract-corpus/scripts/extract.py *",
+      "~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/search/scripts/search.py *",
+      "~/.research-vault/venv/bin/python ~/Developer/research-tools/.claude/skills/ingest/scripts/ingest.py *"
+    ]
+  }
+}

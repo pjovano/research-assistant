@@ -1,0 +1,1 @@
+FONT_REPAIR_RECORD_KEY = "VaultFontRepair"

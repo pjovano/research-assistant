@@ -1,0 +1,9 @@
+name: Point the vault at an empty directory
+description: Writes machine.json so importing vault resolves an empty vault
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        mkdir -p "$HOME/.research-vault/empty-vault/research vault"
+        echo '{"vault_dir": "~/.research-vault/empty-vault"}' > "$HOME/.research-vault/machine.json"

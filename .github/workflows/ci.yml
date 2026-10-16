@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  ANONYMIZED_TELEMETRY: "False"
+  HF_HUB_OFFLINE: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONIOENCODING: utf-8
+  UV_PYTHON: "3.12"
+  UV_TORCH_BACKEND: cpu
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv venv
+      - run: uv pip install ruff -c requirements.lock
+      - run: uv run --no-project ruff check .
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv venv
+      - run: uv pip install pyyaml -c requirements.lock
+      - uses: ./.github/actions/empty-vault
+      - name: Report the Clean Code measures and fail if code names a library work
+        run: |
+          uv run --no-project python .claude/skills/vault-audit/scripts/audit.py lint > audit.json
+          jq '{code, works}' audit.json
+          jq -e '.works == []' audit.json
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv venv
+      - run: uv pip sync requirements.lock
+      - uses: ./.github/actions/empty-vault
+      - name: Install pandoc, which the tests of the draft conversion run
+        uses: pandoc/actions/setup@v1
+        with:
+          version: "3.12"
+      - name: Require node, which the tests of the ingest workflow run under
+        run: node --version
+      - run: uv run --no-project python -m unittest discover -s tests
+        env:
+          REQUIRE_JS_RUNTIME: "1"
