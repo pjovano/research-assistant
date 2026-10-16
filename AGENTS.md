@@ -432,12 +432,14 @@ text; `vault-audit` audits both for special cases.
 **Every change to the control plane reaches `main` through a pull request.**
 
 * Commit on a branch cut from `main`; NEVER commit on `main` itself.
-* **Every commit's message carries one trailer of its kind in its last
-  paragraph.** If the commit fixes a defect, the trailer
+* **Every commit but a merge commit carries one trailer of its kind in its
+  message's last paragraph.** If the commit fixes a defect, the trailer
   is `Defect-class: <the defect class>`. Otherwise the trailer is
   `Change-class: refactor — <what>` or `Change-class: feature — <what>`,
   `<what>` naming what the commit restructures or adds. `vault-audit` reads
   the trailers.
+* A merge commit carries no trailer: GitHub writes the message of the merge
+  commit a pull request lands with, and the commits it merges carry theirs.
 * Push the branch and open its pull request, or push alone if the branch
   already has an open one.
 * Title the pull request with what the change fixes or adds, stated as the

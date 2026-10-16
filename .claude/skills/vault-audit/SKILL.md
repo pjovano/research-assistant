@@ -258,7 +258,7 @@ command fails, report sign 6 as unaudited and continue.
 | 3 | a condition only one PDF could meet: a literal file page, page count, exact string, or exact font name, alone or conjoined | the code in the audit set |
 | 4 | a threshold changed since the last accepted audit with no test pinning a built PDF on each side of the new value | the log, then `tests/` |
 | 5 | a rule carrying more than two exceptions; an enumeration or a chain of branches that gained an entry in each of two or more commits | the audit set, then the log |
-| 6 | a commit changing code or instruction text whose message carries neither a `Defect-class:` trailer nor a `Change-class:` trailer, or whose `Defect-class:` trailer names only a work | the log |
+| 6 | a commit other than a merge commit, changing code or instruction text, whose message carries neither a `Defect-class:` trailer nor a `Change-class:` trailer, or whose `Defect-class:` trailer names only a work | the log |
 | 7 | a test added since the last accepted audit that pins a fix and either reads a library PDF or is named for a work, where the contract requires the defect class built in a PDF of its own | the log, then `tests/` |
 
 Three things are not special cases. Data that parameterizes a rule (a list of
