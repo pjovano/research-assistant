@@ -12,3 +12,8 @@ regexes = ['''^\s*"citekey": "[a-z-]+\d{4}[a-z]?",?$''']
 description = "A line that maps a file path to a SHA-256 digest is an audit baseline entry, never a credential"
 regexTarget = "line"
 regexes = ['''^\s*"[\w./ -]+\.\w+": "[0-9a-f]{64}",?$''']
+
+[[allowlists]]
+description = "A setting whose value begins with placeholder stands in for a test value, never a credential"
+regexTarget = "line"
+regexes = ['''^\s*[\w.]+: "placeholder[/:-][a-z0-9/:-]*",?$''']
