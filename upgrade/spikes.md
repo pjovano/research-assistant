@@ -272,8 +272,63 @@ the core's own commit, so changes made in a domain can be carried back to
 
 ## Item 7, the sandbox's read-deny setting
 
-**Runs on the Mac.** This session did not test it. The cloud cannot test it:
-its sandbox is not enforced (item 1).
+**Session.** A desktop-app session on the Mac, 2026-10-15, Claude Code
+2.1.288, macOS 27.0.1. The cloud cannot test this item: its sandbox is not
+enforced (item 1). The setting's name, from the Claude Code docs
+(`settings-reference`, `sandboxing`), is `sandbox.filesystem.denyRead`. The
+docs say a `denyRead` entry does not stop the Read tool, which follows
+permission rules instead; the test checks that claim.
+
+**Setup.** A throwaway project in a scratch folder, with `git init` so that
+`.claude/settings.json` resolves `./` to the project root:
+
+| File | Content |
+| --- | --- |
+| `secret/canary.txt` | `SECRET-CANARY-7f3a` |
+| `open.txt` | `OPEN-CONTROL-1b2c`, a control outside the denied folder |
+| `.claude/settings.json` | below |
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "allowUnsandboxedCommands": false,
+    "filesystem": {
+      "denyRead": ["./secret"]
+    }
+  }
+}
+```
+
+`allowUnsandboxedCommands: false` keeps the model from retrying a denied
+command outside the sandbox, so a block can only come from the sandbox.
+
+**Test.** Nested headless runs from the project root. `--setting-sources
+project` loads this project's settings alone, so no user-level hook or rule
+takes part. `--allowedTools` grants the one tool, so no permission prompt
+decides the result. The tool calls and results below are read from the
+`stream-json` transcript, not from the model's summary.
+
+| Tool | Command | Tool result |
+| --- | --- | --- |
+| Bash | `claude -p 'Use the Bash tool exactly once to run this command and nothing else: cat open.txt; cat secret/canary.txt. …' --setting-sources project --allowedTools Bash --output-format stream-json --verbose` | `OPEN-CONTROL-1b2c` then `cat: secret/canary.txt: Operation not permitted`, exit 1: **blocked** |
+| Read | `claude -p 'Use the Read tool exactly once to read the file secret/canary.txt. …' --setting-sources project --allowedTools Read --output-format stream-json --verbose` | `SECRET-CANARY-7f3a`: **not blocked** |
+| Read, with a permission rule | the same run in a copy of the project whose settings add `"permissions": {"deny": ["Read(./secret/**)"]}` beside the same sandbox block | `File is in a directory that is denied by your permission settings.`: **blocked** |
+
+The workspace was untrusted. The project's `permissions.deny` rule still
+applied there, unlike the `permissions.allow` entries item 2 found ignored.
+
+**Result.** `sandbox.filesystem.denyRead` blocks every read of the folder by
+a sandboxed Bash command, and the control file beside it stays readable. It
+does not block the Read tool. A `Read(./<folder>/**)` deny rule in
+`permissions.deny` blocks the Read tool.
+
+**Consequence.** The cross-domain read guard holds only if it writes both
+rules for each denied folder: a `sandbox.filesystem.denyRead` entry for Bash
+and a `Read(...)` entry in `permissions.deny` for the Read tool. Grep and
+Glob were not tested. The docs (`permissions`) apply Read rules to them only
+as a "best-effort attempt", so `rehearsal.md` SHOULD check both against the
+guard's generated settings.
 
 ## Rerun after the network fix
 
@@ -336,4 +391,4 @@ throughout, and `astral.sh` was not needed.
 | 4 Workflow tool | partly | runs; 2 agents at once on 4 vCPU; the 3 refuters take two rounds; about 68,000 tokens per agent |
 | 5 push and PR | works | a cloud session publishes its own PRs against `main` |
 | 6 `git subtree` | works | the vendored core and `subtree pull --squash` hold |
-| 7 sandbox read-deny | runs on the Mac | — |
+| 7 sandbox read-deny | partly, on the Mac: blocks Bash, not the Read tool | the cross-domain read guard writes a `sandbox.filesystem.denyRead` entry and a `Read(...)` deny rule for each folder; `rehearsal.md` checks Grep and Glob |
