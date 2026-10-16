@@ -98,5 +98,86 @@ class TestTheSessionStartHook(unittest.TestCase):
         self.assertEqual('touch "$BUILT_MARK"', main_body[main_body.index("}") - 1].strip())
 
 
+class StubPrograms:
+    LOGGED_STUB = '#!/bin/sh\necho "$(basename "$0") $*" >> "$STUB_CALLS"\n'
+    UV_STUB = LOGGED_STUB + (
+        'if [ "$1" = venv ]; then\n'
+        '  mkdir -p "$4/bin"\n'
+        '  printf \'#!/bin/sh\\necho "python $*" >> "$STUB_CALLS"\\n\' > "$4/bin/python"\n'
+        '  chmod +x "$4/bin/python"\n'
+        'fi\n'
+        'if [ "$1" = pip ]; then exit "${STUB_SYNC_EXIT:-0}"; fi\n')
+    CURL_STUB = LOGGED_STUB + 'exit "${STUB_CURL_EXIT:-0}"\n'
+    PLAIN_PROGRAMS = ("dpkg", "node")
+
+    def __init__(self, directory: Path) -> None:
+        self.directory = directory
+        self.calls = directory / "calls.log"
+        self._write("uv", self.UV_STUB)
+        self._write("curl", self.CURL_STUB)
+        for program in self.PLAIN_PROGRAMS:
+            self._write(program, self.LOGGED_STUB)
+
+    def _write(self, program: str, body: str) -> None:
+        stub = self.directory / program
+        stub.write_text(body)
+        stub.chmod(0o755)
+
+    def called(self, command: str) -> bool:
+        return self.calls.exists() and any(line.startswith(command) for line in self.calls.read_text().splitlines())
+
+
+class CloudSetup:
+    SYSTEM_PATH = "/usr/bin:/bin"
+
+    def __init__(self, home: Path, programs: StubPrograms) -> None:
+        self._home = home
+        self._programs = programs
+
+    def run(self, **failures: str) -> subprocess.CompletedProcess:
+        environment = {key: value for key, value in os.environ.items() if key != "CCR_AGENT_PROXY_CA_CERT_B64"}
+        environment.update(HOME=str(self._home), STUB_CALLS=str(self._programs.calls),
+                           PATH=f"{self._programs.directory}:{self.SYSTEM_PATH}", **failures)
+        return subprocess.run(["bash", str(PROJECT_ROOT / SETUP_SCRIPT)], capture_output=True, text=True,
+                              env=environment)
+
+
+class TestAFailedSetupStepStopsOnlyTheStepsThatNeedIt(unittest.TestCase):
+    MACHINE_CONFIG = Path(".research-vault/machine.json")
+    FAILING_EXIT = "1"
+
+    def setUp(self):
+        self.home = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        self.programs = StubPrograms(Path(self.enterContext(tempfile.TemporaryDirectory())))
+        self.setup = CloudSetup(self.home, self.programs)
+
+    def test_a_failed_sync_still_points_at_the_empty_vault(self):
+        self.setup.run(STUB_SYNC_EXIT=self.FAILING_EXIT)
+        self.assertTrue((self.home / self.MACHINE_CONFIG).exists())
+
+    def test_a_failed_sync_still_installs_pandoc(self):
+        self.setup.run(STUB_SYNC_EXIT=self.FAILING_EXIT)
+        self.assertTrue(self.programs.called("dpkg -i"))
+
+    def test_a_failed_sync_skips_the_tokenizer_that_needs_the_venv(self):
+        self.setup.run(STUB_SYNC_EXIT=self.FAILING_EXIT)
+        self.assertFalse(self.programs.called("python"))
+
+    def test_a_failed_pandoc_download_still_builds_the_venv(self):
+        self.setup.run(STUB_CURL_EXIT=self.FAILING_EXIT)
+        self.assertTrue(self.programs.called("uv pip sync"))
+
+    def test_a_failed_step_leaves_the_environment_unbuilt_and_names_the_step(self):
+        result = self.setup.run(STUB_SYNC_EXIT=self.FAILING_EXIT)
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("build_python_environment", result.stderr)
+        self.assertFalse((self.home / BUILT_MARK).exists())
+
+    def test_a_setup_whose_steps_all_pass_marks_the_environment_built(self):
+        result = self.setup.run()
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertTrue((self.home / BUILT_MARK).exists())
+
+
 if __name__ == "__main__":
     unittest.main()
