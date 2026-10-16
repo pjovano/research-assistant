@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
 from pathlib import Path
 
 import psutil
+from agent_core._ports.host import Level, SystemReadings
 
 from _health.readings import ProcessReading, Sample, SystemReading
 from _health.workloads import WorkloadLabels
@@ -13,51 +13,26 @@ from _health.workloads import WorkloadLabels
 BYTES_PER_MB = 1024 * 1024
 BYTES_PER_GB = BYTES_PER_MB * 1024
 PROCESS_ATTRIBUTES = ("pid", "create_time", "cmdline", "name", "memory_info", "num_threads")
-PRESSURE_COMMAND = ("sysctl", "-n", "kern.memorystatus_vm_pressure_level")
-PRESSURE_LEVELS = {"1": "normal", "2": "warn", "4": "critical"}
-PRESSURE_TIMEOUT_SECONDS = 5
-THERMAL_STATES = ("nominal", "fair", "serious", "critical")
-
-
-class ThermalState:
-    def reading(self) -> str | None:
-        level = self._level()
-        return THERMAL_STATES[level] if level in range(len(THERMAL_STATES)) else None
-
-    @staticmethod
-    def _level() -> int | None:
-        try:
-            from Foundation import NSProcessInfo
-        except ImportError:
-            return None
-        return int(NSProcessInfo.processInfo().thermalState())
+PRESSURE_SPELLINGS = {Level.NORMAL: "normal", Level.ELEVATED: "warn", Level.CRITICAL: "critical"}
+THERMAL_SPELLINGS = {Level.NORMAL: "nominal", Level.ELEVATED: "fair", Level.SERIOUS: "serious",
+                     Level.CRITICAL: "critical"}
 
 
 class SystemProbes:
-    def __init__(self, disk: Path, thermal: ThermalState | None = None) -> None:
+    def __init__(self, disk: Path, readings: SystemReadings) -> None:
         self._disk = disk
-        self._thermal = thermal or ThermalState()
+        self._readings = readings
 
     def reading(self) -> SystemReading:
         available_mb = psutil.virtual_memory().available / BYTES_PER_MB
         disk_free_gb = shutil.disk_usage(self._disk).free / BYTES_PER_GB
-        return SystemReading(available_mb, self._swap_used_mb(), self._pressure(), os.getloadavg()[0], disk_free_gb,
-                             self._thermal.reading())
+        pressure = PRESSURE_SPELLINGS.get(self._readings.memory_pressure())
+        thermal = THERMAL_SPELLINGS.get(self._readings.thermal())
+        return SystemReading(available_mb, self._swap_used_mb(), pressure, os.getloadavg()[0], disk_free_gb, thermal)
 
-    @staticmethod
-    def _swap_used_mb() -> float | None:
-        try:
-            return psutil.swap_memory().used / BYTES_PER_MB
-        except OSError:
-            return None
-
-    @staticmethod
-    def _pressure() -> str | None:
-        try:
-            result = subprocess.run(PRESSURE_COMMAND, capture_output=True, text=True, timeout=PRESSURE_TIMEOUT_SECONDS)
-        except (OSError, subprocess.SubprocessError):
-            return None
-        return PRESSURE_LEVELS.get(result.stdout.strip())
+    def _swap_used_mb(self) -> float | None:
+        swap_bytes = self._readings.swap_used()
+        return None if swap_bytes is None else swap_bytes / BYTES_PER_MB
 
 
 class Sampler:

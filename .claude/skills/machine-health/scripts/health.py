@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -16,18 +17,19 @@ def _lib_dir() -> Path:
 sys.path.insert(0, str(_lib_dir()))
 import machine_health as health
 from _vault.machine import load_machine_config
+from providers import Providers
 
 USAGE_EXIT_CODE = 2
 DEFAULT_REPORT_HOURS = 24.0
 SECONDS_PER_HOUR = 3600
-LOG_NAME = "launchd.log"
 
 Command = Callable[[argparse.Namespace], int]
 
 
 class HealthCli:
-    def __init__(self, settings: health.HealthSettings) -> None:
+    def __init__(self, settings: health.HealthSettings, providers: Providers) -> None:
         self._settings = settings
+        self._providers = providers
         self._journals = health.HealthJournals(settings)
         self._parser = self._build_parser()
 
@@ -49,20 +51,31 @@ class HealthCli:
         return 0
 
     def _run_install(self, arguments: argparse.Namespace) -> int:
-        agent = health.LaunchAgent(health.HEALTH_SCRIPT, self._settings.directory / LOG_NAME)
-        installer = health.LaunchAgentInstaller(agent, health.Launchctl())
-        needed = installer.needs_install()
+        health_job, scheduler = self._health_job(), self._providers.scheduler()()
+        job = health_job.job()
+        needed = health_job.script_exists and not scheduler.installed(job)
         if arguments.apply and needed:
-            installer.install()
-        self._print({"plist": str(agent.path), "needed": needed, "installed": arguments.apply and needed,
-                     "contents": agent.contents().decode(), "manual": agent.bootstrap_command()})
+            scheduler.install(job)
+        self._print({"plist": scheduler.location(job), "needed": needed, "installed": arguments.apply and needed,
+                     "contents": scheduler.definition(job), "manual": scheduler.manual_install(job)})
         return 0
+
+    def _run_uninstall(self, arguments: argparse.Namespace) -> int:
+        job, scheduler = self._health_job().job(), self._providers.scheduler()()
+        installed = scheduler.installed(job)
+        if arguments.apply:
+            scheduler.remove(job)
+        self._print({"label": job.label, "installed": installed, "removed": arguments.apply})
+        return 0
+
+    def _health_job(self) -> health.HealthJob:
+        return health.HealthJob(health.HEALTH_SCRIPT, self._settings.directory / health.LOG_NAME)
 
     def _watch(self) -> health.HealthWatch:
         detectors = [health.PressureDetector(), health.ThermalDetector()]
-        sampler = health.Sampler(health.SystemProbes(Path.home()), health.WorkloadLabels(),
-                                 self._settings.other_processes_kept)
-        notifiers = [health.DesktopNotifier(), health.RemindersNotifier()]
+        probes = health.SystemProbes(Path.home(), self._providers.system_readings()())
+        sampler = health.Sampler(probes, health.WorkloadLabels(), self._settings.other_processes_kept)
+        notifiers = [notifier(health.HEALTH_NOTICE_HEADING) for notifier in self._providers.notifier()]
         return health.HealthWatch(self._settings, sampler, health.Alarm(detectors, notifiers))
 
     def _build_parser(self) -> argparse.ArgumentParser:
@@ -71,8 +84,8 @@ class HealthCli:
         self._command(commands, "sample", self._run_sample)
         report = self._command(commands, "report", self._run_report)
         report.add_argument("--hours", type=float, default=DEFAULT_REPORT_HOURS)
-        install = self._command(commands, "install", self._run_install)
-        install.add_argument("--apply", action="store_true")
+        for name, run in (("install", self._run_install), ("uninstall", self._run_uninstall)):
+            self._command(commands, name, run).add_argument("--apply", action="store_true")
         return parser
 
     @staticmethod
@@ -86,5 +99,10 @@ class HealthCli:
         print(json.dumps(report, indent=2, ensure_ascii=False))
 
 
+def main(argv: list[str]) -> int:
+    machine = load_machine_config()
+    return HealthCli(health.HealthSettings(machine), Providers.from_machine(machine, os.environ)).run(argv)
+
+
 if __name__ == "__main__":
-    sys.exit(HealthCli(health.HealthSettings(load_machine_config())).run(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))

@@ -16,6 +16,7 @@ NEVER dispatch it to a worker.
 | --- | --- | --- |
 | `scripts/health.py` | the CLI, whose commands are tabled below | launchd for `sample`; the orchestrator for the rest |
 | `lib/machine_health.py` | the facade over `lib/_health/` | `health.py` |
+| core host adapters | the vendored core's launchd scheduler, macOS readings, and desktop and Reminders notifiers, which `lib/providers.py` resolves | `health.py`; `ensure-health-watcher`, for the launchd scheduler alone |
 | health journals | `~/.research-vault/cache/health/samples/` and `alerts/`, one JSON-lines file per day; on the primary, never synced | written by `sample` |
 | launch agent | `~/Library/LaunchAgents/com.research-assistant.machine-health.plist`, naming `health.py` in `~/Developer/research-assistant`, never in a worktree; NEVER write or unload `com.research-vault.machine-health`: that job is the frozen checkout's, which the rollback reloads | launchd |
 | `ensure-health-watcher` | the `lib/harness_hooks.py` subcommand a PreToolUse hook runs before every Bash command | the harness |
@@ -33,6 +34,7 @@ answer the prompt. `health.py` reads `machine.json` through
 | `sample` | take one sample, append it to the health journals, prune journal days past the retention, run the detectors on the sample, journal and notify each health alert not raised within the cooldown | the health journals; a desktop notification; a reminder |
 | `report [--hours N]` | the system's worst readings, each process's first, last, and peak memory and its growth per hour, and the health alerts of the last `N` hours, 24 by default | nothing |
 | `install [--apply]` | print the launch agent, whether it needs installing, and the `launchctl` command that loads it by hand; with `--apply`, write the launch agent if it is missing or stale and load it if it is not loaded | the launch agent |
+| `uninstall [--apply]` | print the launch agent's label and whether it is installed; with `--apply`, unload the launch agent and delete it | the launch agent |
 
 ## Samples
 

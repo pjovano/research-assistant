@@ -11,43 +11,13 @@ from _support import LiveTree
 LiveTree.activate()
 
 from _ports.compute import Cost, Segment, Turn
-from _ports.host import Device, Job, Level
+from _ports.host import Device
 from _rag.chunking import ChunkedDocument
 from _rag.fulltext import ManifestRecord, ManifestRow
 
 FAKE_CONFLICT_COPY = re.compile(r" \d+(\.[^.]+)$")
 FULLTEXT_TABLES = ("parents", "children", "manifest")
 WORD = re.compile(r"[^\W_]+", re.UNICODE)
-
-
-class FakeScheduler:
-    def __init__(self) -> None:
-        self._installed: set[str] = set()
-
-    def install(self, job: Job) -> None:
-        self._installed.add(job.label)
-
-    def installed(self, job: Job) -> bool:
-        return job.label in self._installed
-
-    def remove(self, job: Job) -> None:
-        self._installed.discard(job.label)
-
-
-class FakeSystemReadings:
-    def __init__(self, memory: Level = Level.NORMAL, thermal: Level = Level.NORMAL, swap_bytes: int = 0) -> None:
-        self._memory = memory
-        self._thermal = thermal
-        self._swap_bytes = swap_bytes
-
-    def memory_pressure(self) -> Level:
-        return self._memory
-
-    def thermal(self) -> Level:
-        return self._thermal
-
-    def swap_used(self) -> int:
-        return self._swap_bytes
 
 
 class FakeAccelerator:

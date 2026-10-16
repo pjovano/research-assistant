@@ -14,6 +14,7 @@ from _hooks.work_tree import without_repository_locating_variables
 
 PRE_PUSH = Path(".githooks/pre-push")
 HOOK_SCRIPT = Path("lib/harness_hooks.py")
+CORE_PATH_MODULE = Path("lib/core_path.py")
 LINTER_CONFIGURATION = Path("pyproject.toml")
 AUDIT_SCRIPT = Path(".claude/skills/vault-audit/scripts/audit.py")
 VENV = Path(".research-vault/venv")
@@ -58,6 +59,7 @@ class PushingTree:
         shutil.copy(PROJECT_ROOT / HOOK_SCRIPT, self._root / HOOK_SCRIPT)
         for package in (PROJECT_ROOT / HOOK_SCRIPT.parent).glob("_*"):
             (library / package.name).symlink_to(package, target_is_directory=True)
+        (library / CORE_PATH_MODULE.name).symlink_to(PROJECT_ROOT / CORE_PATH_MODULE)
 
     def _install_the_interpreter(self) -> None:
         environment = self._home / VENV

@@ -34,7 +34,8 @@ class it pins states its own coverage and is not listed.
 | `test_vault_frontmatter.py` | frontmatter round-trip, LF enforcement, PDF-link upsert, a byte-order mark stripped, `parse_note`, `StoredNote` |
 | `test_vault_citations.py` | the `source_type` and `source_role` vocabularies, `commentary_target`, citekeys |
 | `test_providers.py` | the composition root: each port's adapter under each profile, `mac-local` the default and today's classes, an override replacing the profile's entry for its port, a missing key named, the API key read from the variable `key_env` names and never shown, each adapter loaded on first call and kept, `lib/_ports` importing the standard library alone, the report `providers.py` prints |
-| `ports/test_*_contract.py` | one contract per port of `lib/_ports`, each a mixin an adapter's test case inherits, run here against the fakes of `_port_fakes.py`, `_rag_fakes.py`, `_health_fixtures.py`, and `_graph_fixtures.py`, and the full-text contract against the SQLite store besides |
+| `test_core_host_names_are_defined_in_the_core_alone.py` | no tracked file outside `vendor/` and `upgrade/` defines `Scheduler`, `Notifier`, `SystemReadings`, `Job`, `Notice`, or `Level` |
+| `ports/test_*_contract.py` | one contract per port of `lib/_ports`, each a mixin an adapter's test case inherits, run here against the fakes of `_port_fakes.py`, `_rag_fakes.py`, and `_graph_fixtures.py`, and the full-text contract against the SQLite store besides |
 | `test_vault_root_guard.py` | the vault is the directory `machine.json` names in `vault_dir`, `~/Documents` absent the key, and holds `research vault/`; a directory without it refuses to import; an unreadable `machine.json` stops the script with its path |
 | `test_vault_locate.py` | `locate_pdf` keeps a bare path only inside a searched directory; NFC basenames over NFD filenames; the directory listings and conflict copies |
 | `test_vault_markdown.py` | the shared heading, footnote-definition, and wikilink patterns; `BibliographySpan` |
@@ -42,6 +43,7 @@ class it pins states its own coverage and is not listed.
 | `test_harness_hooks.py` | the harness hooks: the Bash guard's prompts, the Write guard, the command line, and the catch-all that blocks when the hook itself fails |
 | `test_harness_hooks_checks_after_edit.py` | the checks after an edit: which files they cover, the audit linter's `works` check, the suite and the linter with their reports and time limits |
 | `test_harness_hooks_from_the_shell.py` | each hook command of `settings.json` through a real shell under a fabricated home, and the project root it runs from |
+| `test_harness_hooks_reach_the_vendored_core.py` | the health watcher hook run as the harness runs it, with only `lib/` on the module path, reaching the vendored core |
 | `test_page_marker.py` | the page-marker grammar: parsing a marker line, finding markers inline, rendering one, slicing a body by its markers |
 | `test_snapshots.py` | golden diffs over the frozen records: `vault` naming and citekeys, `zotero.build_item` |
 | `test_references.py` | reference-zone location and extraction, entry parsing, held works from card frontmatter |
@@ -58,7 +60,7 @@ class it pins states its own coverage and is not listed.
 | `test_pagetext_renders.py` | page renders to the scratch directory |
 | `test_verify.py` | Answer questions: `verify` over a temporary library PDF and corpus file: the deep link at the hit's file page, the folio from the page marker with the text-layer fallback, an exact hit before a near match, `AMBIGUOUS` with its exit code, a quotation across a page break, `locate` with its limit and its use of the quote cache, the two reasons a link is absent; `quality` reporting a sparse text layer; the CLI on a missing PDF |
 | `test_verify_exit_codes.py` | Answer questions: each outcome of `verify.py` under its own exit code, 0 verified, 1 not verified, 2 a usage error, 3 a poor text layer, 4 a failure |
-| `test_health_*.py` | the health watcher: the pressure and thermal detectors on each side of their thresholds; the cooldown, the retention, a journal line cut short, the desktop and Reminders notifiers, the workload labels, the thermal state, the report; the launch agent installed, refreshed, or left alone by the hook before a pipeline command |
+| `test_health_*.py` | the health watcher: the pressure and thermal detectors on each side of their thresholds; the cooldown, the retention, a journal line cut short, the desktop and Reminders notifiers' title and list, the workload labels, the core's levels kept in the journal's spellings, the report; the launch agent installed, refreshed, or left alone by the hook before a pipeline command; the launch agent byte for byte as the former code wrote it; `install` and `uninstall` through the scheduler |
 | `test_surya_servers.py` | the model servers' process handling, the idle reaper, and `surya_cache_dir` |
 | `test_font_repair.py` | Stage 0: CMap parsing and regeneration, the character a glyph name names |
 | `test_font_repair_identities.py` | Stage 0: the identity table, `fonts learn`, the resolver, and the code and name key spaces kept apart |

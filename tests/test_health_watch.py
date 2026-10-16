@@ -111,25 +111,6 @@ class TestHealthReport(unittest.TestCase):
         self.assertEqual("serious", health.HealthReport(samples, []).as_dict()["system"]["worst_thermal"])
 
 
-class FixedThermalLevel(health.ThermalState):
-    def __init__(self, level: int | None) -> None:
-        self._fixed = level
-
-    def _level(self) -> int | None:
-        return self._fixed
-
-
-class TestThermalState(unittest.TestCase):
-    def test_names_the_level_the_system_reports(self):
-        self.assertEqual("serious", FixedThermalLevel(2).reading())
-
-    def test_a_machine_that_reports_no_level_has_no_thermal_state(self):
-        self.assertIsNone(FixedThermalLevel(None).reading())
-
-    def test_an_unknown_level_has_no_thermal_state(self):
-        self.assertIsNone(FixedThermalLevel(7).reading())
-
-
 class TestHealthSettings(unittest.TestCase):
     def test_machine_values_override_the_defaults(self):
         settings = health.HealthSettings({"health": {"alert_cooldown_minutes": 5}})
