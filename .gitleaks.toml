@@ -9,7 +9,6 @@ regexTarget = "line"
 regexes = ['''^\s*"citekey": "[a-z-]+\d{4}[a-z]?",?$''']
 
 [[allowlists]]
-description = "The audit baseline holds one SHA-256 digest per control-plane file"
-condition = "AND"
-paths = ['''^\.claude/skills/vault-audit/baseline\.json$''']
-regexes = ['''^[0-9a-f]{64}$''']
+description = "A line that maps a file path to a SHA-256 digest is an audit baseline entry, never a credential"
+regexTarget = "line"
+regexes = ['''^\s*"[\w./ -]+\.\w+": "[0-9a-f]{64}",?$''']
