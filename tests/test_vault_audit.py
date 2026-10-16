@@ -46,7 +46,8 @@ BASENAME_PATTERN_RULE = "Name the PDF `<FirstCreator> - <Year> - <Title>.pdf`.\n
 PRESENT_PATH_NOTE = f"Run `{PRESENT_PATH}` first.\n"
 REPOSITORY_FILES = {
     "contract": ("AGENTS.md", "CLAUDE.md", ".mcp.json", "requirements.txt", ".claude/settings.json"),
-    "skills": (".claude/skills/one/SKILL.md", ".claude/skills/one/reference/table.md"),
+    "skills": (".claude/skills/one/SKILL.md", ".claude/skills/one/reference/table.md", ".claude/code-overlay.md",
+               ".claude/glossary.md"),
     "workers": (".claude/agents/worker.md",),
     "code": ("lib/vault.py", "lib/_vault/notes.py", ".claude/skills/one/scripts/run.py",
              ".claude/skills/one/scripts/_run/core.py"),
@@ -58,6 +59,14 @@ REPOSITORY_FILES = {
 CONFIGURATION_FILES = (*REPOSITORY_FILES["configuration"], "tests/fixtures/goldens/case.json")
 STRAY_FILES = ("README.md", ".claude/skills/one/notes.txt", "lib/data.json")
 INSTRUCTION_GROUPS = ("contract", "skills", "workers")
+OVERLAY_FILES = (".claude/code-overlay.md", ".claude/glossary.md")
+CORE_SKILL_FILE = "vendor/agent-core/skills/clean-code/SKILL.md"
+CORE_SKILL_LINK = ".claude/skills/clean-code"
+CORE_SKILL_TARGET = "../../vendor/agent-core/skills/clean-code"
+BROKEN_SKILL_LINK = ".claude/skills/gone"
+BROKEN_SKILL_TARGET = "../../vendor/agent-core/skills/gone"
+LINKED_PATH_NOTE = f"Read `{CORE_SKILL_LINK}/SKILL.md` first.\n"
+BROKEN_LINK_NOTE = f"Read `{BROKEN_SKILL_LINK}/SKILL.md` first.\n"
 VAULT_NOTE = "research vault/corpus/x.md"
 LIBRARY_PDF = "library/paper.pdf"
 HOME_NOTE = "notes.md"
@@ -197,6 +206,37 @@ class TestInstructionPointers(unittest.TestCase):
         self.assertEqual([], self._findings("past.md", PAST_DATE_NOTE))
 
 
+class TestInstructionPointersThroughACoreSymlink(unittest.TestCase):
+    def setUp(self) -> None:
+        self.files = TemporaryFiles(self)
+        self.files.written(CORE_SKILL_FILE, "")
+        self._linked(CORE_SKILL_LINK, CORE_SKILL_TARGET)
+        self._linked(BROKEN_SKILL_LINK, BROKEN_SKILL_TARGET)
+
+    def _linked(self, name: str, target: str) -> None:
+        link = self.files.root / name
+        link.parent.mkdir(parents=True, exist_ok=True)
+        link.symlink_to(target)
+
+    def _findings(self, text: str) -> list[dict]:
+        pointers = InstructionPointers([self.files.written("rule.md", text)], TODAY, root=self.files.root)
+        return pointers.findings()
+
+    def test_a_path_through_a_symlink_into_the_vendored_core_is_present(self) -> None:
+        self.assertEqual([], self._findings(LINKED_PATH_NOTE))
+
+    def test_a_path_through_a_broken_symlink_is_reported(self) -> None:
+        expected = [{"file": "rule.md", "line": 1, "finding": FINDING_MISSING_PATH,
+                     "detail": f"{BROKEN_SKILL_LINK}/SKILL.md"}]
+        self.assertEqual(expected, self._findings(BROKEN_LINK_NOTE))
+
+    def test_a_finding_in_a_linked_core_skill_is_labelled_by_its_vendored_path(self) -> None:
+        linked_skill = self.files.root / CORE_SKILL_LINK / "SKILL.md"
+        linked_skill.write_text(BROKEN_LINK_NOTE, encoding="utf-8")
+        findings = InstructionPointers([linked_skill], TODAY, root=self.files.root).findings()
+        self.assertEqual([CORE_SKILL_FILE], [finding["file"] for finding in findings])
+
+
 class TestNamedWorks(unittest.TestCase):
     def setUp(self) -> None:
         self.files = TemporaryFiles(self)
@@ -271,6 +311,10 @@ class TestControlPlaneFiles(unittest.TestCase):
         strays = {self.files.root / name for name in STRAY_FILES}
         self.assertEqual(set(), strays & set(self.control_plane.all()))
 
+    def test_the_code_overlay_and_the_glossary_are_instruction_files(self) -> None:
+        overlays = {self.files.root / name for name in OVERLAY_FILES}
+        self.assertEqual(overlays, overlays & set(self.control_plane.of_groups(INSTRUCTION_GROUPS)))
+
 
 class TestControlPlaneFilesNeitherInstructionNorCode(unittest.TestCase):
     def setUp(self) -> None:
@@ -329,7 +373,7 @@ class TestAuditSet(unittest.TestCase):
 
     def test_counts_name_the_three_totals(self) -> None:
         counts = AuditSet.of_changes(self.control_plane, self.baseline_path).counts()
-        self.assertEqual({"instructions": 8, "code": 6, "control_plane": 20}, counts)
+        self.assertEqual({"instructions": 10, "code": 6, "control_plane": 22}, counts)
 
 
 class TestRelatedFiles(unittest.TestCase):

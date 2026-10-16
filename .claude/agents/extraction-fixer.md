@@ -13,9 +13,10 @@ defect. Your prompt carries the path of a defects file, the path of the
 trial, the path of the library PDF, the name of the fix branch, and the
 repository's root. You fix the defects the file names, and nothing else.
 
-**Read `.claude/skills/clean-code/SKILL.md` before writing code, and
-`.claude/skills/clean-prose/SKILL.md` before writing a sentence of
-instruction text.** Every rule in each binds you.
+**Read `.claude/skills/clean-code/SKILL.md`, then `.claude/code-overlay.md`,
+before writing code, and `.claude/skills/clean-prose/SKILL.md`, then
+`.claude/glossary.md`, before writing a sentence of instruction text.** Every
+rule in each binds you.
 
 **The defects file is a JSON list of the defects the user named in a corpus
 file.** Each carries its `kind`, its `file_page`, its `observed` text, its
@@ -106,4 +107,5 @@ change is a special case, the suite fails. Then state the branch you
 committed on.
 
 You do not inherit the vault contract; your instructions are this file,
-`.claude/skills/clean-code/SKILL.md`, and `.claude/skills/clean-prose/SKILL.md`.
+`.claude/skills/clean-code/SKILL.md`, `.claude/code-overlay.md`,
+`.claude/skills/clean-prose/SKILL.md`, and `.claude/glossary.md`.

@@ -112,9 +112,10 @@ A duplicate whose copies have drifted apart outranks one that still agrees.
 
 ## Check 2b — Prose quality
 
-The standard is `.claude/skills/clean-prose/SKILL.md`; the contract's §5
-gates authoring against it, and this check audits conformance after the fact.
-Read the skill before running the check.
+The standard is `.claude/skills/clean-prose/SKILL.md` with its overlay
+`.claude/glossary.md`; the contract's §5 gates authoring against it, and this
+check audits conformance after the fact. Read the skill, then the overlay,
+before running the check.
 
 Apply to every instruction file in the audit set. Report the measures as
 numbers, ranked by consequence — measures 1 and 2 change what a reader does;
@@ -127,7 +128,7 @@ measure 6 costs tokens:
 4. Sentences with none of the five forms; compound obligations; action before
    condition; unbound antecedents.
 5. One concept under two or more terms across the file set — the canonical
-   terms are the `clean-prose` Vocabulary table.
+   terms are the Vocabulary tables of `clean-prose` and `.claude/glossary.md`.
 6. Economy and format: decoration, narrative, examples, throat-clearing,
    over-long qualification, always-loaded bytes, and enumerable rules left as
    flowing paragraphs where a table or numbered steps would serve.
@@ -178,7 +179,8 @@ a pass the new code makes redundant.
 over 500, more than three arguments, comments, and docstrings. Read its `code`
 rows as the measure; the judgment this check adds is what a script cannot
 count — duplicated knowledge, flag arguments, command-query mixing, magic
-numbers, free functions outside the three places `clean-code` permits, and
+numbers, free functions outside the three places `.claude/code-overlay.md`
+permits, and
 names that mislead.
 
 The standard has no standing exemptions: a comment recounting an incident is
@@ -241,9 +243,10 @@ handoff can destroy the only cleaned copy, and that judgment is the user's.
 
 ## Check 7 — Special cases
 
-The contract's §5 defines the defect class and the special case; `clean-code`
-and `clean-prose` §12 state the rule for code and for instruction text. Read
-both before running the check. The check asks one question of every rule,
+The contract's §5 defines the defect class and the special case;
+`.claude/code-overlay.md` and `clean-prose` §12 with `.claude/glossary.md`
+state the rule for code and for instruction text. Read all three before
+running the check. The check asks one question of every rule,
 branch, constant, and table entry in the audit set: **can a PDF not yet
 ingested meet it?** No second PDF, no rule.
 

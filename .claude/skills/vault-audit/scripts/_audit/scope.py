@@ -9,7 +9,8 @@ ROOT_FILES = ("AGENTS.md", "CLAUDE.md", ".mcp.json", "requirements.txt", "requir
 ENCODING = "utf-8"
 GROUP_PATTERNS = {
     "contract": ROOT_FILES + (".claude/settings.json",),
-    "skills": (".claude/skills/*/SKILL.md", ".claude/skills/*/reference/*"),
+    "skills": (".claude/skills/*/SKILL.md", ".claude/skills/*/reference/*", ".claude/code-overlay.md",
+               ".claude/glossary.md"),
     "workers": (".claude/agents/*.md",),
     "code": ("lib/*.py", "lib/_*/*.py", ".claude/skills/*/server.py", ".claude/skills/*/scripts/*.py",
              ".claude/skills/*/scripts/_*/*.py"),
