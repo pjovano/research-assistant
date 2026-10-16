@@ -78,6 +78,12 @@ class VaultTree:
     def conflict_copies(self) -> list[Path]:
         return [path for path in self._all_markdown() if ConflictCopy(path).is_copy]
 
+    def folders(self) -> list[Path]:
+        if not self._directory.exists():
+            return []
+        subfolders = [path for path in sorted(self._directory.rglob("*")) if path.is_dir() and not self._is_apart(path)]
+        return [self._directory, *subfolders]
+
     def _all_markdown(self) -> list[Path]:
         if not self._directory.exists():
             return []

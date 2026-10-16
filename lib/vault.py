@@ -105,6 +105,7 @@ __all__ = [
     "SOURCE_ROLES", "SOURCE_TYPES",
     "ScratchEntries", "StoredNote", "TRANSCRIPTS_DIR", "UNCITABLE_FIELD", "UNCITABLE_TOKEN", "VAULT_ROOT",
     "VOLUMES_DIR", "WIKILINK_RE", "WRITING_DIR", "basename_of", "bibliography_conflict_copies",
+    "bibliography_folders",
     "body_after_pdf_link", "body_after_source_link", "citekey", "citekey_year",
     "commentary_target", "conflict_copies", "corpus_path", "creator_surnames", "ensure_dirs", "field_topics",
     "format_creator", "held_note_exists", "held_note_path", "is_bibliography_heading", "is_notes_heading", "join_note",
@@ -187,6 +188,10 @@ class VaultListing:
         return VaultListing._bibliography_tree().conflict_copies()
 
     @staticmethod
+    def bibliography_folders() -> list[Path]:
+        return VaultListing._bibliography_tree().folders()
+
+    @staticmethod
     def _bibliography_tree() -> VaultTree:
         return VaultTree(BIBLIOGRAPHIES_DIR, folders_apart=(READING_LISTS_FOLDER,))
 
@@ -221,6 +226,7 @@ list_held_notes = VaultListing.held_notes
 list_bibliographies = VaultListing.bibliographies
 list_placed_writing = VaultListing.placed_writing
 bibliography_conflict_copies = VaultListing.bibliography_conflict_copies
+bibliography_folders = VaultListing.bibliography_folders
 list_markdown = VaultListing.markdown
 list_pdfs = VaultListing.pdfs
 conflict_copies = VaultListing.conflict_copies
