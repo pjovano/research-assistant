@@ -53,7 +53,7 @@ No Mac-only check.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-P1-1 | S | The primary's real `machine.json` resolves to today's classes | print each `Providers` accessor's class from a copy of the primary's `machine.json` | every accessor returns the class the old setup constructs | |
+| R-P1-1 | S | The primary's real `machine.json` resolves to today's classes | `~/.research-vault/venv/bin/python lib/providers.py --machine <copy of the primary's machine.json>` in the staging checkout | every port but `sync` and `locations` names the class the old setup constructs; `sync` and `locations` read `unconfigured`, naming `icloud` and `macos` | |
 | R-P1-2 | S | The old setup still reads a `machine.json` carrying `profile` and `providers` | run the frozen setup's `health.py report` with the two keys added to the staged `machine.json` | it runs as without the keys | |
 
 ### P2

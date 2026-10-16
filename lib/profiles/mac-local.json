@@ -1,0 +1,20 @@
+{
+  "providers": {
+    "scheduler": {"adapter": "launchd"},
+    "notifier": {"adapter": "macos"},
+    "system_readings": {"adapter": "macos"},
+    "accelerator": {"adapter": "metal"},
+    "trash": {"adapter": "trash-command"},
+    "sync": {"adapter": "icloud"},
+    "locations": {"adapter": "macos"},
+    "embedder": {"adapter": "ollama"},
+    "embedding_store": {"adapter": "chroma"},
+    "fulltext_store": {"adapter": "sqlite"},
+    "reranker": {"adapter": "llama-server"},
+    "layout_engine": {"adapter": "marker-local"},
+    "line_recognizer": {"adapter": "apple-vision"},
+    "transcriber": {"adapter": "whisper-cpp"},
+    "diarizer": {"adapter": "pyannote"},
+    "citation_parser": {"adapter": "hf-local"}
+  }
+}

@@ -1,0 +1,1 @@
+../../vendor/agent-core/agents/core-probe.md

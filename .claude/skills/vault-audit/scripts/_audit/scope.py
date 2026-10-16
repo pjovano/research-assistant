@@ -13,8 +13,8 @@ GROUP_PATTERNS = {
     "workers": (".claude/agents/*.md",),
     "code": ("lib/*.py", "lib/_*/*.py", ".claude/skills/*/server.py", ".claude/skills/*/scripts/*.py",
              ".claude/skills/*/scripts/_*/*.py"),
-    "tests": ("tests/*.py", "tests/README.md", "tests/fixtures/**/*"),
-    "configuration": ("pyproject.toml", ".github/workflows/*", ".github/actions/*/*"),
+    "tests": ("tests/*.py", "tests/*/*.py", "tests/README.md", "tests/fixtures/**/*"),
+    "configuration": ("pyproject.toml", "lib/profiles/*.json", ".github/workflows/*", ".github/actions/*/*"),
 }
 ALL_GROUPS = tuple(GROUP_PATTERNS)
 INSTRUCTION_GROUPS = ("contract", "skills", "workers")
