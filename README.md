@@ -120,7 +120,8 @@ heading tree and frontmatter, and walks the citation graph.
 | `tests/` | the suite, run with `python -m unittest discover -s tests` under the vault's own Python environment |
 | `requirements.txt`, `requirements.lock` | the dependencies and the exact versions both machines run |
 | `pyproject.toml` | the ruff configuration |
-| `.github/` | the CI workflow, a lint job, an audit job, and a test job, all on Ubuntu, on every pull request and push to `main`; and the composite action that points the vault at an empty directory |
+| `.github/` | the CI workflow, a lint job, an audit job, a publish-guard job, and a test job, all on Ubuntu, on every pull request and push to `main`; and the composite action that points the vault at an empty directory |
+| `.gitleaks.toml` | the publish guard's secret scan: gitleaks's default rules, less the citation keys and the audit baseline's digests |
 | `.mcp.json` | registers the `vault-rag` server |
 
 Two standards bind every change. `clean-code` holds the code to Robert

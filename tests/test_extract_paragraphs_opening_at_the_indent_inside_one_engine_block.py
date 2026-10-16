@@ -30,11 +30,11 @@ ABOVE_BASELINE = 9.0
 BELOW_BASELINE = 3.0
 SUBLEVEL = 1
 OPENS, RUNS_ON = True, False
-TURNS = [[(OPENS, "SOCRATES: Is it being loved because it is pious, or for some"), (RUNS_ON, "other reason?")],
-         [(OPENS, "EUTHYPHRO: For no other reason.")],
-         [(OPENS, "SOCRATES: It is being loved then because it is pious, and not"),
-          (RUNS_ON, "pious because it is being loved?")],
-         [(OPENS, "EUTHYPHRO: Apparently.")]]
+TURNS = [[(OPENS, "SOCRATES: Is the law kept because it is just, or for some"), (RUNS_ON, "other reason?")],
+         [(OPENS, "EUTHYPHRO: For that reason alone.")],
+         [(OPENS, "SOCRATES: Then it is kept because it is just, and it is not"),
+          (RUNS_ON, "just because it is being kept?")],
+         [(OPENS, "EUTHYPHRO: So it seems.")]]
 MARKED_ROW = 2
 MARGIN_MARK = "d"
 
