@@ -23,7 +23,7 @@ fields.
 | ZotMoov names and places the PDF. | NEVER rename or move a PDF into the library by hand. |
 | The connector only creates. | Every field MUST be right at creation. Repair routes: "Repairing a filed record". |
 | Stage 1 serializes on the single Zotero connector. | File one PDF at a time; NEVER two filing commands in one message. |
-| Zotero's Linked Attachment Base Directory MUST point at the library, on each machine. | If it points elsewhere, Zotero stores an absolute path that means nothing on the other machine: stop and ask the user to set it before filing. |
+| On the primary, Zotero's Linked Attachment Base Directory MUST point at the library. | If it points elsewhere, Zotero stores an absolute path, which breaks once a secondary becomes the primary: stop and ask the user to set it before filing. |
 | The `pdf-filer` worker runs on the model its worker instructions name in `model:`. | Its errors are silent and unrecoverable, so its behaviour NEVER changes under a model upgrade. NEVER dispatch it on another model, and NEVER override its model in the dispatch. |
 
 ## Definitions

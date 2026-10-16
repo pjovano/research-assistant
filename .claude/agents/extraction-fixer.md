@@ -85,10 +85,11 @@ table entry that only one work, or only the works of one batch, can meet.
   `git add -A` or `git add .`. The commit message's first line is
   `Extract: <the defect class>`; its body names the test that pins the fix
   and each changed reviewed work the regression check reported; its last
-  line is `Co-Authored-By: Claude <noreply@anthropic.com>`: you run on the
+  paragraph is two lines, `Defect-class: <the defect class>`, then
+  `Co-Authored-By: Claude <noreply@anthropic.com>`: you run on the
   session's model, which a fixed model name would misstate.
-- **NEVER install a package**: both machines run the versions
-  `requirements.lock` pins, and the suite passed on them.
+- **NEVER install a package**: the primary, CI, and the cloud sessions run
+  the versions `requirements.lock` pins, and the suite passed on them.
 - **NEVER push, NEVER merge, NEVER rebase, and NEVER check out another
   branch.** NEVER write into the vault: the library, the derived corpus, and
   the bibliographies are inside it. NEVER run `extract.py extract` without

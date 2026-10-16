@@ -6,7 +6,7 @@ allowed-tools: Read, Glob, Grep, Agent, Bash(~/.research-vault/venv/bin/python .
 
 # answer-questions (Research Retrieval, run by the orchestrator; passage graders for the hits; the work reader for a whole work)
 
-Answers a research question under the rules of `CLAUDE.md` §1. If the user asks for a document, write it to the session scratchpad and
+Answers a research question under the rules of `AGENTS.md` §1. If the user asks for a document, write it to the session scratchpad and
 deliver it with `SendUserFile`; if `SendUserFile` is unavailable, give the
 scratchpad path in chat.
 
@@ -26,7 +26,7 @@ step that names one of its sections runs as that section states.
    citable source is stated as such. NEVER present an answer as built from
    the vault when it was not.
 5. **Verify every direct quotation**, per "Verify every direct quotation".
-6. **Answer in chat.** Cite as `CLAUDE.md` §3 states. A claim
+6. **Answer in chat.** Cite as `AGENTS.md` §3 states. A claim
    cites the folio its corpus passage carries; a quotation cites the folio
    `verify` reported. Beside each verified quotation give the `link`
    `verify` reported. At the first citation of each work in the answer,

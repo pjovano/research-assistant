@@ -73,7 +73,7 @@ nothing.
 | none | reports a middle-band match in `to_confirm` | links an automatic match alone |
 
 NEVER move the verdicts record into the control plane: it changes with use,
-and iCloud carries it to both machines.
+and iCloud syncs it with the rest of the vault.
 
 **A work is matched by its longest title form.** Where one of a work's
 titles is the opening of another — its main title beside its whole title —
@@ -108,7 +108,7 @@ surfaces in `to_confirm`.
 **The citation parser is a token classifier `references.py` loads from the
 Hugging Face cache**: `SIRIS-Lab/citation-parser-ENTITY`, or the model
 `machine.json` names under `citation_parser_model`. Installing it is the
-user's step, once per machine: the harness sets `HF_HUB_OFFLINE=1`, so the
+user's step, once, on the primary: the harness sets `HF_HUB_OFFLINE=1`, so the
 download runs in a terminal with that variable unset:
 
     ~/.research-vault/venv/bin/python -c "from transformers import pipeline; pipeline('token-classification', model='SIRIS-Lab/citation-parser-ENTITY')"
