@@ -8,11 +8,13 @@ from collections.abc import Callable
 from pathlib import Path
 
 from _health.hook import HealthWatcherHook
+from _hooks.affected_tests import AffectedModules, AffectedTests, FullSuite
+from _hooks.work_tree import CheckedTree
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 INTERPRETER = Path("~/.research-vault/venv/bin/python").expanduser()
 LINTER = INTERPRETER.with_name("ruff")
-SUITE_ARGUMENTS = ("-m", "unittest", "discover", "-s", "tests")
+UNITTEST_ARGUMENTS = ("-m", "unittest")
 UNITTEST_BLOCK_SEPARATOR = "=" * 70
 LINT_ARGUMENTS = ("check", "--output-format", "concise", ".")
 AUDIT_SCRIPT = Path(".claude/skills/vault-audit/scripts/audit.py")
@@ -66,14 +68,20 @@ class EditedProjectFile:
         self._path = path
         self._project_root = project_root.resolve()
 
-    def checks(self) -> tuple[type[EditCheck], ...]:
-        if self._path is None or not self._is_inside_the_project():
+    def checks(self) -> tuple[EditCheck, ...]:
+        check_types = () if self._path is None else CHECKS_BY_SUFFIX.get(self._path.suffix, ())
+        if not check_types:
             return ()
-        return CHECKS_BY_SUFFIX.get(self._path.suffix, ())
+        return self._checks_in_its_tree(check_types, self._absolute())
 
-    def _is_inside_the_project(self) -> bool:
-        absolute = self._path if self._path.is_absolute() else self._project_root / self._path
-        return absolute.resolve().is_relative_to(self._project_root)
+    def _checks_in_its_tree(self, check_types: tuple[type[EditCheck], ...], edited: Path) -> tuple[EditCheck, ...]:
+        tree = CheckedTree(edited, self._project_root).root()
+        if tree is None:
+            return ()
+        return tuple(check_type.for_edit(tree, edited) for check_type in check_types)
+
+    def _absolute(self) -> Path:
+        return (self._path if self._path.is_absolute() else self._project_root / self._path).resolve()
 
 
 class EditCheck:
@@ -85,6 +93,10 @@ class EditCheck:
 
     def __init__(self, project_root: Path) -> None:
         self._project_root = project_root
+
+    @classmethod
+    def for_edit(cls, tree: Path, edited: Path) -> EditCheck:
+        return cls(tree)
 
     def failure_report(self) -> str | None:
         try:
@@ -137,12 +149,14 @@ class EditCheck:
         return captured.decode("utf-8", "replace") if isinstance(captured, bytes) else captured or ""
 
     def _completed(self) -> subprocess.CompletedProcess:
-        return subprocess.run(list(self.COMMAND), cwd=self._project_root, capture_output=True,
+        return subprocess.run(list(self._command()), cwd=self._project_root, capture_output=True,
                               encoding="utf-8", errors="replace", env=self._environment(),
                               timeout=self.TIMEOUT_SECONDS)
 
-    @staticmethod
-    def _environment() -> dict:
+    def _command(self) -> tuple[str, ...]:
+        return self.COMMAND
+
+    def _environment(self) -> dict:
         return {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
 
 
@@ -157,9 +171,39 @@ class LintCheck(EditCheck):
 class SuiteCheck(EditCheck):
     LABEL = "the test suite"
     INSTRUCTION = "the test suite fails after this edit; revert it or move the expectation with the fix:"
-    COMMAND = (str(INTERPRETER), *SUITE_ARGUMENTS)
+    COMMAND = (str(INTERPRETER), *UNITTEST_ARGUMENTS)
     TIMEOUT_SECONDS = SUITE_TIMEOUT_SECONDS
     REPORT_TAIL_BLOCKS = 10
+
+    def __init__(self, project_root: Path, edited: Path) -> None:
+        super().__init__(project_root)
+        self._edited = edited
+        self._selected: FullSuite | AffectedModules | None = None
+
+    @classmethod
+    def for_edit(cls, tree: Path, edited: Path) -> EditCheck:
+        return cls(tree, edited)
+
+    def failure_report(self) -> str | None:
+        if self._selection().runs_nothing():
+            return None
+        return super().failure_report()
+
+    def _selection(self) -> FullSuite | AffectedModules:
+        if self._selected is None:
+            self._selected = AffectedTests(self._project_root).selection(self._edited)
+        return self._selected
+
+    def _command(self) -> tuple[str, ...]:
+        return (*self.COMMAND, *self._selection().unittest_arguments())
+
+    def _environment(self) -> dict:
+        environment = super()._environment()
+        search = [str(directory) for directory in self._selection().search_directories()]
+        inherited = [environment["PYTHONPATH"]] if environment.get("PYTHONPATH") else []
+        if search:
+            environment["PYTHONPATH"] = os.pathsep.join([*search, *inherited])
+        return environment
 
     def _body(self, stdout: str | bytes | None, stderr: str | bytes | None) -> str:
         lines = super()._body(stdout, stderr).splitlines()
@@ -266,7 +310,7 @@ class HookCli:
 
     def _checks_after_edit(self, event: HookEvent) -> int:
         for check in EditedProjectFile(event.edited_path(), self._project_root).checks():
-            report = check(self._project_root).failure_report()
+            report = check.failure_report()
             if report is not None:
                 sys.stderr.write(f"{check.INSTRUCTION}\n{report}\n")
                 return BLOCKING_EXIT_CODE

@@ -131,9 +131,9 @@ class TestHookCli(unittest.TestCase):
 
     def test_an_edit_outside_the_project_runs_no_check(self):
         event = harness_hooks.HookEvent({"tool_input": {"file_path": "/tmp/x.md"}})
-        with mock.patch.object(harness_hooks.subprocess, "run") as run:
+        with mock.patch.object(harness_hooks.AuditCheck, "failure_report") as audit:
             self.assertEqual(harness_hooks.HookCli(Path.cwd()).run("checks-after-edit", event), 0)
-        run.assert_not_called()
+        audit.assert_not_called()
 
     def test_unknown_subcommand_blocks(self):
         err = io.StringIO()

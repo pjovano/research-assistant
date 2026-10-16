@@ -77,7 +77,7 @@ every note lives in it.
 | writing | `research vault/writing/` | the user's writing, a Zettelkasten in four flat folders the `take-notes`, `projects`, and `edit-drafts` skills state: `1 notes/`, one atomic note per idea of the user's, its one to three claims with their explications and their relations to other atomic notes, the verified quotations behind them, and their tasks; `2 projects/`, one project file per project, an Excalidraw board: its parents and children in its frontmatter, a card for each atomic note of the project and an arrow for each relation between two of them, and its research question, abstract, drafts, and project reading list shown on the board from its Markdown side, and no task; `3 drafts/`, every version of every draft; `4 published/`, the finished pieces; the research assistant writes there on the user's instruction, marks each line it writes in an atomic note for review, and NEVER changes the prose of a draft or a published piece unless the user asks | yes |
 | reading lists | `research vault/bibliographies/4 reading lists/` | one project reading list per project, `<Project> - Reading list.md`, the questions it was searched for, the works that bear on its questions as wanted or held, and a discover task for each neighbouring subject, written by the `manage-projects` skill, each wanted entry moved under `# Held` by a batch once its work is placed; and the reading lists the user keeps from Discover, written there by Discover on the user's instruction; a note of this folder is NEVER a bibliography and no part of the retrieval layer | yes |
 | inbox | `~/Desktop/inbox/` | new PDFs awaiting ingest; Stage 0 rewrites each in place, and Stage 1 keeps its draft card beside it until the PDF is filed; and Word files awaiting import by the `edit-drafts` skill, which a batch never reads | yes |
-| control plane | `~/Developer/research-tools`, the repository this contract loads from | this contract; `.claude/settings.json`; `.claude/skills/`, each with its `scripts/`; `.claude/agents/`, the worker instructions; `.claude/workflows/`, the saved workflows; `lib/`, the shared code; `tests/`; a skill's `reference/`, the files it loads; `.mcp.json`, which registers the `vault-rag` server; `pyproject.toml`, the ruff configuration; `obsidian/graph.json`, the default graph view; `.gitleaks.toml`, the secret scan's configuration; and `.github/`, the CI workflow and the composite action that points the vault at an empty directory | no; git |
+| control plane | `~/Developer/research-tools`, the repository this contract loads from | this contract; `.claude/settings.json`; `.claude/skills/`, each with its `scripts/`; `.claude/agents/`, the worker instructions; `.claude/workflows/`, the saved workflows; `lib/`, the shared code; `tests/`; a skill's `reference/`, the files it loads; `.mcp.json`, which registers the `vault-rag` server; `pyproject.toml`, the ruff configuration; `obsidian/graph.json`, the default graph view; `.gitleaks.toml`, the secret scan's configuration; `.githooks/`, the pre-push hook; and `.github/`, the CI workflow and the composite action that points the vault at an empty directory | no; git |
 | search stores | the path named in `machine.json` | the embedding store, the full-text store, the citation parser's cache, and the graph store, built over the corpus | no; rebuilt from what they are built over |
 | health journals | `~/.research-vault/cache/health/` | the samples and the health alerts the health watcher writes | no; per machine, pruned after the retention |
 
@@ -439,23 +439,32 @@ pandoc`, and CI installs the version its workflow names. `typst`, which
 typst`; CI does not install it, and the test that needs it is skipped
 there.
 
-* Run the test suite from the repository before and after every code change:
+* The hook below runs the test modules an edit affects after every edit, and
+  the full test suite runs before every push and in CI:
   `~/.research-vault/venv/bin/python -m unittest discover -s tests`.
-  If the suite fails after a change, revert the change; `clean-code` names
-  the one exception, an expectation moved with the fix.
+  If a test fails after a change, revert the change; `clean-code` names the
+  one exception, an expectation moved with the fix.
 * Run the linter from the repository after every code change:
   `~/.research-vault/venv/bin/ruff check .`, and fix every finding it names.
 * Run the audit linter from the repository after every change to code or
   instruction text:
   `~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py lint`,
   and fix every finding its `works` list names.
-* A hook in `.claude/settings.json` runs the checks after every edit in the
-  repository and reports a failure as an error: after an edit to a Python
-  file, the suite, the linter, and the audit linter's `works` check; after an
-  edit to a Markdown file, the audit linter's `works` check alone. CI fails a
-  pull request that fails the suite, the linter, the audit linter's `works`
-  check, or the secret scan, which runs gitleaks over the tree and every
-  commit.
+* A hook in `.claude/settings.json` runs the checks after every edit, in the
+  work tree that holds the edited file, the repository or a git worktree of
+  it, and reports a failure as an error: after an edit to a Python file, the
+  linter, the audit linter's `works` check, and the affected test modules,
+  each test module whose imports reach the edited file; after an edit to a
+  Markdown file, the audit linter's `works` check alone. If a source file
+  fails to parse, or the edited file is no module the tests can import, the
+  hook runs the full suite in place of the affected test modules.
+* `.githooks/pre-push` runs the full suite, the linter, and the audit
+  linter's `works` check in the pushing work tree, and refuses the push if
+  one fails. Point every checkout at it with `git config core.hooksPath
+  .githooks`; `bin/cloud-setup.sh` does so in a cloud session.
+* CI fails a pull request that fails the suite, the linter, the audit
+  linter's `works` check, or the secret scan, which runs gitleaks over the
+  tree and every commit.
 * **A cloud session builds its own environment.** If `CLAUDE_CODE_REMOTE`
   is `true`, the SessionStart hook in `.claude/settings.json` runs
   `bin/cloud-session-start.sh`, which runs `bin/cloud-setup.sh` until the

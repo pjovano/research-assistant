@@ -104,6 +104,10 @@ require_node() {
   node --version
 }
 
+use_repository_hooks() {
+  git -C "$REPOSITORY" config core.hooksPath .githooks
+}
+
 stop_unless_every_step_passed() {
   if [ -n "$FAILED_STEPS" ]; then
     echo "cloud-setup: the environment is not built; failed:$FAILED_STEPS" >&2
@@ -118,8 +122,11 @@ main() {
   run_step install_pandoc
   run_step build_python_environment
   run_step require_node
+  run_step use_repository_hooks
   stop_unless_every_step_passed
   touch "$BUILT_MARK"
 }
 
-main "$@"
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  main "$@"
+fi
