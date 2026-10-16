@@ -2,12 +2,15 @@
 
 | Field | Value |
 | --- | --- |
-| Status | planned |
-| Wave, lane | W3-b: P7a → … → P7f → **P7h** |
+| Status | deferred |
+| Wave, lane | W6: not in this round |
 | Repo | `research-assistant` |
 | Depends on | P7f |
 | Detail | `sources/hexagonal-ports-plan.md` §4 PR 7 step 7h, §5 row P7; `PLAN.md` §1 "Hexagonal ports plan" (92 test files patch the constants) |
 | Trailer | `Change-class: refactor — <what>` |
+
+**The item workflow MUST NOT build this item.** It is deferred: `PLAN.md` §3,
+"Deferred", names the need it waits for. It runs only if the user says so.
 
 ## Builds
 

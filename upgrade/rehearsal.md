@@ -28,6 +28,7 @@ This file holds every acceptance check that needs the primary Mac. §6 of
 | --- | --- | --- | --- | --- | --- |
 | R-all-1 | S | The full suite on macOS | `~/.research-vault/venv/bin/python -m unittest discover -s tests` in `~/Developer/research-assistant` | every test passes or skips for a named absent tool | |
 | R-all-2 | S | ruff and the audit linter on macOS | `~/.research-vault/venv/bin/ruff check .`; `… audit.py lint` (the core's path after A2) | no finding; `works` 0 | |
+| R-all-3 | S | A Stage 2 → 6 backfill of three works runs as before | the `ingest` workflow from Stage 2 over three works in the staging vault, old and new | the same corpus file bodies, classifications, and bibliography listings | |
 
 ## W1
 
@@ -95,28 +96,8 @@ No Mac-only check.
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
 | R-P6+M4-1 | S | No placeholder in the library or the inbox | the preflight's `SyncedFolder` check over the real library and inbox, read-only | no placeholder; if one is found, Optimize Mac Storage is on and the switch waits | |
-| R-P6+M4-2 | S | The accelerator is Metal | print `Accelerator.device()` and `reachable()` | `mps`; `reachable()` returns no cause | |
-| R-P6+M4-3 | S | `Trash.discard` uses the macOS Trash | discard a scratch file through the port | the file is in the Trash and recoverable | |
 
-### P3
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P3-1 | S | Search answers identically | a fixed query set through `search.py` under the old and the new setup, on the same search stores | the hits, their order, and their scores are identical | |
-
-### P4
-
-No Mac-only check: R-P3-1 covers `mac-local` search.
-
-### P9
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P9-1 | S | A talk's raw transcript is unchanged | transcribe one short recording to its raw transcript under the old and the new setup; first run the old setup twice to see whether its output varies | the new raw transcript equals the old; if the old varies between its own runs, the speakers and the utterance order agree | |
-
-### P10
-
-No Mac-only check.
+R-P6+M4-2 and R-P6+M4-3 are retired: `Accelerator` and `Trash` are deferred.
 
 ## W3
 
@@ -131,15 +112,14 @@ No Mac-only check.
 
 No Mac-only check.
 
-### P7a
+### G20
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-P7a-1 | S | Every path resolves as before | print every path the old `vault` constants name and every field of the new `Vault`, from the same `machine.json` | identical | |
-
-### P7b–P7f, P7h
-
-No Mac-only check: R-X3-1 and R-P11-2 run the moved code.
+| R-G20-1 | S | The generated settings blocks equal today's | `domain.py settings` over the real `~/Developer/*/domain.json`; diff with the old checkout's `.claude/settings.json` | equal apart from ordering and the folder rules G20 adds | |
+| R-G20-2 | S | The sandbox refuses a Bash write outside the `write` folders (the cloud's sandbox is inert, spike item 1) | in a research session, a Bash `touch` in a folder outside `library` and `research vault` | refused by the sandbox | |
+| R-G20-3 | S | A sensitive folder of another manifest is unreadable (spike item 7) | a fixture manifest listing a `sensitive: true` folder holding a canary file; regenerate the research settings; in a research session, read the canary with Bash `cat`, the Read tool, Grep, and Glob | all four refused; a control file beside the folder stays readable | |
+| R-G20-4 | S | The manifest reader reads every domain on the primary | `domain.py manifests` | every `~/Developer/*/domain.json` listed | |
 
 ## W4
 
@@ -151,7 +131,7 @@ No Mac-only check.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-U7-1 | S | Stage timings are recorded on a real backfill | the backfill of R-P11-2, then `audit.py costs` | each stage's duration and each lock wait appear; no vault file changed format | |
+| R-U7-1 | S | Stage timings are recorded on a real backfill | the backfill of R-all-3, then `audit.py costs` | each stage's duration and each lock wait appear; no vault file changed format | |
 | R-U7-2 | S | The health-journal measures are read | `audit.py costs` on the primary | the machine measures report from the health journals | |
 
 ### U8
@@ -160,26 +140,24 @@ No Mac-only check.
 | --- | --- | --- | --- | --- | --- |
 | R-U8-1 | S | The scout reads only the allowlisted hosts | dispatch the scout with a fixture source list naming one host outside the allowlist | the outside host is refused; the three allowlisted hosts are read | |
 
-### P7g
-
-No Mac-only check: R-X3-1 runs after the shim is gone.
-
-### P11
+### A5
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-P11-1 | S | `regress` records are byte-identical | `extract.py regress` under the old and the new setup, on the same sample | every extraction record byte-identical | |
-| R-P11-2 | S | A Stage 2 → 6 backfill of three works runs as before | the `ingest` workflow from Stage 2 over three works in the staging vault, old and new | the same corpus file bodies, classifications, and bibliography listings | |
+| R-A5-1 | S | The folder step creates a folder and an Obsidian vault | `new-domain`'s folder step in the staging home, with a new folder and the vault offer accepted | the folder exists under the staged `~/Documents` with the default `.obsidian/` config | |
 
-### P12
+### A3
+
+| ID | Phase | Check | Command or action | Passes when | Result |
+| --- | --- | --- | --- | --- | --- |
+| R-A3-1 | S | A library question routes to research | from a local session in `~/Developer/agent-core`: "what does my library say about X?" | a `research-assistant` session answers with verified quotations | |
+| R-A3-2 | S | A batch starts in the background in the research main checkout | "start a batch" (dry run) from the dispatcher | the batch runs in `~/Developer/research-assistant`; the dispatcher reports once, at the end | |
+| R-A3-3 | S | A request matching no domain is asked about | a request no `handles` entry covers | the dispatcher asks; it delegates nothing | |
+| R-A3-4 | S | A delegated session applies the project's allow rules (spike item 2) | inspect the delegated session's startup for "Ignoring … permissions.allow entries" | no such line; the research checkout is a trusted workspace | |
+
+### A4
 
 No Mac-only check.
-
-### P13
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P13-1 | S | The pixel check's verdicts are unchanged under Vision | `fonts scan` over a sample of filed PDFs, old and new | the same verdicts | |
 
 ### G17
 
@@ -197,22 +175,11 @@ No Mac-only check.
 | --- | --- | --- | --- | --- | --- |
 | R-G19-1 | S | The rendered worker files equal today's | `agents.py generate --host claude-code`; diff with the old checkout's `.claude/agents/` | equal apart from ordering | |
 
-### G20
-
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-G20-1 | S | The generated settings blocks equal today's | `domain.py settings` over the real `~/Developer/*/domain.json`; diff with the old checkout's `.claude/settings.json` | equal apart from ordering and the folder rules G20 adds | |
-| R-G20-2 | S | The sandbox refuses a Bash write outside the `write` folders (the cloud's sandbox is inert, spike item 1) | in a research session, a Bash `touch` in a folder outside `library` and `research vault` | refused by the sandbox | |
-| R-G20-3 | S | A sensitive folder of another manifest is unreadable (spike item 7) | a fixture manifest listing a `sensitive: true` folder holding a canary file; regenerate the research settings; in a research session, read the canary with Bash `cat`, the Read tool, Grep, and Glob | all four refused; a control file beside the folder stays readable | |
-| R-G20-4 | S | The manifest reader reads every domain on the primary | `domain.py manifests` | every `~/Developer/*/domain.json` listed | |
-
 ## W5
 
-### P14
+### U2b, G21
 
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-P14-1 | S | The venv builds from the new locks on macOS | the `mac-local` locks synced into the staging venv | the build succeeds; R-all-1 passes on it | |
+No Mac-only check.
 
 ### P15
 
@@ -221,34 +188,37 @@ No Mac-only check.
 | R-P15-1 | S | `doctor` is green on the primary | `setup.py doctor` | every line `ok`, the primary checks included; the health job reports as not yet installed until §6 step 4.6 | |
 | R-P15-2 | S | `bootstrap --no-jobs` installs no job | `setup.py bootstrap --profile mac-local --no-jobs` in the staging home | no launch agent added | |
 
-### P8
-
-No Mac-only check.
-
 ### P16
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
 | R-P16-1 | R | The laptop's former install retires by the README | follow "Retire a former full install" on the laptop | no launch agent of the old setup loaded; `~/.research-vault` gone; the vault still opens in Obsidian | |
+| R-P16-2 | S | A new install reaches `doctor` green by the README alone | in the staging home, follow the README's Install section from the clone step, with the apps already on the Mac counted as installed | every step runs as written; `doctor` is green, the health job reported as not yet installed | |
 
-### A5
+## W6: deferred
 
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-A5-1 | S | The folder step creates a folder and an Obsidian vault | `new-domain`'s folder step in the staging home, with a new folder and the vault offer accepted | the folder exists under the staged `~/Documents` with the default `.obsidian/` config | |
+Each section below belongs to a deferred item. Its lines are retired and keep
+their numbers.
 
-### A3
+### P3, P4
 
-| ID | Phase | Check | Command or action | Passes when | Result |
-| --- | --- | --- | --- | --- | --- |
-| R-A3-1 | S | A library question routes to research | from a local session in `~/Developer/agent-core`: "what does my library say about X?" | a `research-assistant` session answers with verified quotations | |
-| R-A3-2 | S | A batch starts in the background in the research main checkout | "start a batch" (dry run) from the dispatcher | the batch runs in `~/Developer/research-assistant`; the dispatcher reports once, at the end | |
-| R-A3-3 | S | A request matching no domain is asked about | a request no `handles` entry covers | the dispatcher asks; it delegates nothing | |
-| R-A3-4 | S | A delegated session applies the project's allow rules (spike item 2) | inspect the delegated session's startup for "Ignoring … permissions.allow entries" | no such line; the research checkout is a trusted workspace | |
+Deferred (`PLAN.md` §3). R-P3-1 retired.
 
-### A4, U2b, G21
+### P9, P10
 
-No Mac-only check.
+Deferred (`PLAN.md` §3). R-P9-1 retired.
+
+### P7a–P7h
+
+Deferred (`PLAN.md` §3). R-P7a-1 retired.
+
+### P11, P12, P13
+
+Deferred (`PLAN.md` §3). R-P11-1 and R-P13-1 retired; R-P11-2 moved to R-all-3.
+
+### P8, P14
+
+Deferred (`PLAN.md` §3). R-P14-1 retired.
 
 ## W7
 
