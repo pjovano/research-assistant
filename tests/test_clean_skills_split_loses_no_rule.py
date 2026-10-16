@@ -25,14 +25,14 @@ FRONTMATTER_KEY = re.compile(r"^[a-z]+: ")
 DOMAIN_CONTENT_IS_RESEARCH_CONTENT = ("**The vault's domain content is research content:** derived research notes, "
                                      "the substance of a research answer, or the user's own drafts.")
 NARRATION_NEEDS_ITS_REASON = ("NEVER narrate an action without its reason: a sentence that announces a step and cites "
-                              "no rule or fact is cut.")
+                              "no rule or fact withholds why the step is taken.")
 INPUT_IS_A_PDF = "**In the vault, `clean-prose` §12's input is a PDF and the work it holds, and its run is a batch.**"
 REWORDED = {
     "description: Enforces the vault's prose standard on instruction text, which is AGENTS.md, SKILL.md files, "
     "worker instructions, and any reference file a skill loads. Use this skill before adding or editing any "
     "instruction prose, including a one-sentence change; it also governs how the orchestrator explains its own "
     "work in chat. Not for research content.":
-        ("description: Enforces the prose standard on instruction text, which is AGENTS.md, SKILL.md files, "
+        ("description: Enforces the prose standard on instruction text, which is AGENTS.md, SOUL.md, SKILL.md files, "
          "worker instructions, and any reference file a skill loads. Use this skill before adding or editing any "
          "instruction prose, including a one-sentence change; it also governs how the orchestrator explains its own "
          "work in chat. Not for domain content.",
@@ -51,8 +51,8 @@ REWORDED = {
         ("This skill is the standard for instruction text, the counterpart to `clean-code` with the same force.",),
     "Applies to the vault contract, every `SKILL.md`, every set of worker instructions, and every reference file a "
     "skill loads.":
-        ("Applies to the repository's contract, every `SKILL.md`, every set of worker instructions, and every "
-         "reference file a skill loads.",),
+        ("Applies to the repository's contract, the soul file, every `SKILL.md`, every set of worker instructions, "
+         "and every reference file a skill loads.",),
     "| symlink | a relative symbolic link under `.claude/` that resolves to a core unit inside the vendored core | "
     "link (for a symlink), alias, shortcut |":
         ("| symlink | a relative symbolic link under `.claude/` that resolves to a core unit inside the vendored core, "
@@ -92,6 +92,15 @@ REWORDED = {
          "uncovered case, an undefined force, or an undefined term.", INPUT_IS_A_PDF),
     "NEVER append a sentence for the PDF.":
         ("NEVER append a sentence for the input.", INPUT_IS_A_PDF),
+    "**When an action fails, name the failure branch the instruction specifies.** NEVER improvise a recovery silently.":
+        ("**If an action fails, name the failure branch the instruction specifies.** NEVER improvise a recovery "
+         "silently.",),
+    "**Mark judgment as judgment.** If no rule governs a choice, say so: \"No rule covers this; choosing X because Y.\" "
+    "NEVER present a preference as a requirement, and NEVER present a requirement as a preference.":
+        ("**Mark judgment as judgment.** If no rule governs a choice, say so: \"No rule covers this; choosing X because "
+         "Y.\"", "NEVER present a preference as a requirement.", "NEVER present a requirement as a preference."),
+    "**When reversing a recommendation, name what changed:** the rule, the measurement, or the fact.":
+        ("If you reverse a recommendation, name what changed: the rule, the measurement, or the fact.",),
     "**Banned: narration that cites nothing.** *Let me go ahead and…*, *I'll just…*, *Now I'll…*.":
         (NARRATION_NEEDS_ITS_REASON,),
     "Each announces an action while withholding its reason.":
@@ -110,6 +119,10 @@ CONTRACT_REWORDED = {
     "**Never.** NEVER write to the session memory store; anything durable belongs in this contract or a skill.":
         ("**Never.** NEVER write to the session memory store; a rule belongs in this contract or a skill, and what is "
          "true of the user now belongs in `USER.md`, which the `remember` skill keeps.",),
+    "**ALWAYS invoke the `clean-prose` skill BEFORE writing or editing instruction text** — this contract, a skill, "
+    "worker instructions, a reference file a skill loads — including a one-sentence change.":
+        ("**ALWAYS invoke the `clean-prose` skill BEFORE writing or editing instruction text** — this contract, the "
+         "soul file, a skill, worker instructions, a reference file a skill loads — including a one-sentence change.",),
 }
 
 

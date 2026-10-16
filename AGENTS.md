@@ -78,19 +78,18 @@ every note lives in it.
 | reading lists | `research vault/bibliographies/4 reading lists/` | one project reading list per project, `<Project> - Reading list.md`, the questions it was searched for, the works that bear on its questions as wanted or held, and a discover task for each neighbouring subject, written by the `manage-projects` skill, each wanted entry moved under `# Held` by a batch once its work is placed; and the reading lists the user keeps from Discover, written there by Discover on the user's instruction; a note of this folder is NEVER a bibliography and no part of the retrieval layer | yes |
 | inbox | `~/Desktop/inbox/` | new PDFs awaiting ingest; Stage 0 rewrites each in place, and Stage 1 keeps its draft card beside it until the PDF is filed; and Word files awaiting import by the `edit-drafts` skill, which a batch never reads | yes |
 | control plane | `~/Developer/research-assistant`, the repository this contract loads from | this contract, `AGENTS.md`, which `CLAUDE.md` imports by its first line, `@AGENTS.md`, before the soul file, `@vendor/agent-core/SOUL.md`, and the user file, `@USER.md`; `.claude/settings.json`; `.claude/skills/`, each with its `scripts/`; `.claude/agents/`, the worker instructions; `.claude/workflows/`, the saved workflows; `vendor/agent-core/`, the vendored core, each core unit of which `.claude/` uses by a symlink; `lib/`, the shared code; `tests/`; a skill's `reference/`, the files it loads; `.mcp.json`, which registers the `vault-rag` server; `pyproject.toml`, the ruff configuration; `obsidian/graph.json`, the default graph view; `.gitleaks.toml`, the secret scan's configuration; `.githooks/`, the pre-push hook; and `.github/`, the CI workflow and the composite action that points the vault at an empty directory | no; git |
-| user file | `USER.md` at the control plane's root | what is true of the user now: the user's work, priorities, goals, and current interests under `## Standing`, each recent fact a dated entry under `## Recent`, and the user's few personal preferences, kept by the `remember` skill; never a rule | no; never versioned, and on the primary alone: `.gitignore` names it, and a test fails if git tracks it |
+| user file | `USER.md` at the control plane's root | what is true of the user now: the user's work, priorities, goals, and current interests in the Standing section, each recent fact a recent entry in the Recent section, and the user's few personal preferences, kept by the `remember` skill; never a rule | no; never versioned, and on the primary alone: `.gitignore` names it, and a test fails if git tracks it |
 | search stores | the path named in `machine.json` | the embedding store, the full-text store, the citation parser's cache, and the graph store, built over the corpus | no; rebuilt from what they are built over |
 | health journals | `~/.research-vault/cache/health/` | the samples and the health alerts the health watcher writes | no; on the primary, pruned after the retention |
 
 **The retrieval layer is the derived corpus, the transcripts, and the
 bibliographies.**
 
-**The soul file and the user file bind every session.** The soul file,
-`vendor/agent-core/SOUL.md`, states the conduct every session keeps; the user
-file, `USER.md`, states what is true of the user now. `CLAUDE.md` imports
-both after this contract. If a host reads only this contract, read the soul
-file whole after it, then the user file if it exists. A cloud session and CI
-have no user file, and a session starts without it.
+**The soul file and the user file bind every session.** `CLAUDE.md`
+imports the soul file, `vendor/agent-core/SOUL.md`, then the user file,
+`USER.md`, after this contract. If a host reads only this contract, read the
+soul file whole after it, then the user file if it exists. A cloud session
+and CI have no user file, and a session starts without it.
 
 **`~/Documents` holds folders side by side.** `library/` and `research
 vault/` are two of them. Each folder is assigned to the repositories whose
@@ -410,10 +409,10 @@ demand.
 ## 5. Standards
 
 **ALWAYS invoke the `clean-prose` skill BEFORE writing or editing instruction
-text** — this contract, a skill, worker instructions, a reference file a skill
-loads — including a one-sentence change. **ALWAYS invoke the `clean-code`
-skill BEFORE writing, modifying, or reviewing code**, including a one-line
-fix. Each skill states its own rules in full.
+text** — this contract, the soul file, a skill, worker instructions, a
+reference file a skill loads — including a one-sentence change. **ALWAYS
+invoke the `clean-code` skill BEFORE writing, modifying, or reviewing code**,
+including a one-line fix. Each skill states its own rules in full.
 
 **A change to the control plane serves the PDFs not yet ingested, never the
 PDF that exposed the defect.** A defect class is the property of a PDF that

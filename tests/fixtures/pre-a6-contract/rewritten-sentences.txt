@@ -4,3 +4,7 @@ loads this contract; `pdf-filer` still loads it, through the import
 
 **Never.** NEVER write to the session memory store; anything durable belongs
 in this contract or a skill.
+
+**ALWAYS invoke the `clean-prose` skill BEFORE writing or editing instruction
+text** — this contract, a skill, worker instructions, a reference file a skill
+loads — including a one-sentence change.
