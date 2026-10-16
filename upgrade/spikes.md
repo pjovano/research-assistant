@@ -10,7 +10,9 @@ for the plan. Item 7 runs on the Mac.
 policy denies `pypi.org` and `files.pythonhosted.org`, so the venv holds no
 packages. Every result below that needs the venv is either unmeasured or was
 taken with a named substitute. Items 3 to 6 and the subtree item do not need
-the venv, and each has a full answer.
+the venv, and each has a full answer. The section "Rerun after the network
+fix" records the same session after the network setting and PRs #3 and #4:
+the setup builds, and the suite and the post-edit hook are timed.
 
 ## Item 8 and item 1, setup
 
@@ -111,15 +113,21 @@ recreated the bare venv).
   `files.pythonhosted.org` (the package-manager defaults) beside
   `download.pytorch.org` and `openaipublic.blob.core.windows.net`. This is a
   change you make in the environment's network settings; no PR can make it.
+  The rerun found two more hosts the build and the suite need; the rerun
+  section lists the whole set.
 - X0.2's "every hook exits 2" sentence: restate it for a bare venv (Bash
   works, Write is blocked, each Edit reports a hook error).
 - `bin/cloud-setup.sh` leaves nothing usable after a failed sync. A later PR
   SHOULD order the steps that need no PyPI (`machine.json`, pandoc) before
   the sync, or build the venv in a temporary directory and move it into place
   only on success. This spike changes no file but this one, so the proposal
-  is left for that PR (P14, or a fix PR before W1).
+  is left for that PR (P14, or a fix PR before W1). Done in PR #3, which
+  took the first option: the temporary-directory option would leave no
+  interpreter after a first failed build, and every hook would then block
+  Bash as well.
 - Item 1 needs a rerun once the network allows PyPI: the build time, the
-  pandoc version, and the tiktoken cache are unmeasured.
+  pandoc version, and the tiktoken cache are unmeasured. Done: see the rerun
+  section.
 
 ## Item 1, hooks and checks
 
@@ -139,7 +147,7 @@ recreated the bare venv).
 
 - X1 holds and stays first. Its cost basis, the plan's "about 4,940 tests,
   single-process", is unmeasured here; measure the full suite in the first
-  session whose venv builds.
+  session whose venv builds. The rerun section measures it.
 - The audit linter's 33 `more-than-three-arguments` findings match §1's count
   of 33 too-many-arguments findings.
 - In the cloud the sandbox block of `.claude/settings.json` is inert, and
