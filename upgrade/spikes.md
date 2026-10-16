@@ -275,12 +275,62 @@ the core's own commit, so changes made in a domain can be carried back to
 **Runs on the Mac.** This session did not test it. The cloud cannot test it:
 its sandbox is not enforced (item 1).
 
+## Rerun after the network fix
+
+**Changes since the first run.**
+
+| Change | Effect |
+| --- | --- |
+| PR #3 | a failed setup step stops only the steps that need it: `machine.json` and pandoc no longer wait on the venv |
+| PR #4 | the setup sends every `NO_PROXY` host the container cannot resolve through the gateway; before it, `uv` took the direct route to `pypi.org`, which has no DNS, even after the network setting allowed the host |
+| network setting of `research` | set to Limited with the package-manager defaults; the allowed domains below added |
+
+**Hosts the environment must allow.** `pypi.org`, `files.pythonhosted.org`,
+`download-r2.pytorch.org`, and `models.datalab.to` were refused in this
+session until the setting allowed them. The other hosts were reachable
+throughout, and `astral.sh` was not needed.
+
+| Host | Needed by |
+| --- | --- |
+| `pypi.org`, `files.pythonhosted.org` | `uv pip sync` |
+| `download.pytorch.org` | the CPU torch index |
+| `download-r2.pytorch.org` | the torch wheels, to which the index redirects |
+| `openaipublic.blob.core.windows.net` | the tiktoken prefetch |
+| `github.com`, `objects.githubusercontent.com`, `release-assets.githubusercontent.com` | the pandoc 3.12 `.deb` |
+| `models.datalab.to` | a font the engine fetches during the suite (`test_engine_servers_refused_by_the_suite`) |
+| `astral.sh` | the uv installer, only if the image lacks uv |
+
+**Measurements**, on the same 4-vCPU VM:
+
+| Check | Command | Result |
+| --- | --- | --- |
+| setup | `CLAUDE_CODE_REMOTE=true bash bin/cloud-session-start.sh` | exit 0 in 13 s; 175 packages resolved, 15 downloaded (the rest were cached by the attempt before), 175 installed; built mark written. A cold build was not timed; the earlier attempt downloaded the remaining packages in about 14 s, so a cold build likely takes 25–35 s. That figure is an estimate. |
+| interpreter | `~/.research-vault/venv/bin/python -c "import vault, torch, pymupdf"` (with `lib/` on the path) | imports; torch 2.14.0+cpu |
+| pandoc | `pandoc --version` | 3.12 |
+| tiktoken cache | `ls ~/.research-vault/tiktoken` | one cached encoding |
+| full suite | `~/.research-vault/venv/bin/python -m unittest discover -s tests` | `Ran 4965 tests in 118.233s`, `OK (skipped=2)`; 129 s wall |
+| linter | `~/.research-vault/venv/bin/ruff check .` | `All checks passed!`, 0.02 s |
+| audit linter | `~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py lint` | 2.5 s; `code` 35; `pointers` 70, vault paths absent from the empty vault; `works` 0 |
+| post-edit hook, `.py` edit | `lib/harness_hooks.py checks-after-edit` on an event naming `lib/page_counts.py` | exit 0 in 2 min 10.5 s; the suite is 118 s of it |
+| Write guard | every Write call after the build | passes; the Write block of the first run is gone |
+
+**Consequences.**
+
+- X0.2 holds once the environment allows the hosts above. Add
+  `download-r2.pytorch.org` and `models.datalab.to` to its host list.
+- X1 holds and stays first: the suite has 4,965 tests and takes about two
+  minutes, and every Python edit waits 2 min 10 s for the post-edit hook.
+  Across about 50 PRs of several edits each, that is hours of waiting that the
+  affected-module hook removes.
+- The sandbox finding of item 1 stands: the rerun did not install
+  `bubblewrap` or `socat`.
+
 ## Summary
 
 | Item | Result | Consequence for PLAN.md |
 | --- | --- | --- |
 | 8 setup script sees the repo | no | the setup script is an `echo`; the SessionStart hook runs `bin/cloud-setup.sh`; P14 changes the setup by PR, no hand update |
-| 1 setup and hooks | partly | the hook runs, but the network denies PyPI: allow `pypi.org` and `files.pythonhosted.org` in `research`; a bare venv blocks Write; suite timing unmeasured; the sandbox is inert in the cloud, so sandbox checks go to `rehearsal.md` |
+| 1 setup and hooks | works, after the network fix and PRs #3 and #4 | allow the hosts the rerun section lists in `research`; the suite takes about 2 min and the post-edit hook 2 min 10 s, so X1 stays first; the sandbox is inert in the cloud, so sandbox checks go to `rehearsal.md` |
 | 2 settings edits | works | edit `.claude/settings.json` in the PRs; no `settings-patches/` |
 | 3 symlinked core files | works | A0's symlink layout holds; no generated copy |
 | 4 Workflow tool | partly | runs; 2 agents at once on 4 vCPU; the 3 refuters take two rounds; about 68,000 tokens per agent |
