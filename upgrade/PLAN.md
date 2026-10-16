@@ -244,16 +244,17 @@ percentage target. A cut that drops a rule, a failure branch, a guarding
 reason (`clean-prose` §8), or a rule restated for a worker is no cut. The
 existing audit already cuts (Check 2, redundancy; Check 2b, prose). The
 upgraded audit makes the goal binding, so that no item, fix, or practice
-grows the text a session loads without a stated reason.
+grows the text without a stated reason: a feature or a fix MAY add words,
+and states each one's rule.
 
 | Piece | Item | Content |
 | --- | --- | --- |
 | Word count | U3 | `audit.py lint` gains the `weight` row: the words of each instruction file and of the whole instruction text, against the counts in the audit baseline. The always-loaded text, the contract and every skill's and worker's `description`, is counted on its own |
-| Ratchet in CI | U3 | CI fails a PR that grows the always-loaded text. CI fails a PR that grows the whole instruction text unless the growth sits in a `Change-class: feature` commit and the PR body states the words added and the rule each serves. A fix or a refactor never grows the text. A merged PR that cuts the text lowers the baseline's counts |
+| Ratchet in CI | U3 | CI fails a PR that grows the instruction text, the always-loaded text or the rest, unless the growth sits in a `Change-class: feature` or a `Defect-class:` commit and the PR body states the words added and the rule each serves. A refactor, an audit fix, U2b's splits, G21's capability names, and Check 9's practices never grow the text. Each audit report names the always-loaded text's growth since the last run first. A merged PR that cuts the text lowers the baseline's counts |
 | Cuts first | U5 | Every run's report opens with the cuts: each as replacement text with the words it saves, ranked by how often the text is loaded (`clean-prose` §10), and the run's total saved. The prose reader judges each unit against `clean-prose` §7–8; the redundancy checker names each duplicate's single home |
 | Redundancy gates | U3, U5 | `redundancy` rows fail CI once the bench measures their precision at 0.9 or higher |
 | No rule lost | U6 | The fix loop applies a cut only with A1's diff check: every rule of the old text maps to a sentence of the new. A cut that drops a rule is reverted and reported |
-| No growth | U2b, U8, G21 | U2b's splits, Check 9's practices, and G21's capability names grow no file's word count |
+| No growth | U2b, U6, U8, G21 | U2b's splits, the fix loop's audit fixes, Check 9's practices, and G21's capability names grow no file's word count |
 | No percentage target | every run, X7.1 | A run cuts what `clean-prose` §7 calls decoration and §8 does not protect, and reports the words saved. Once the text holds only what keeps function, quality, and safety, a run finds no cut, and that is a pass |
 
 ### Hexagonal ports plan
