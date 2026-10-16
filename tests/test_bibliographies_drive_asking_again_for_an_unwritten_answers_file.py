@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import unittest
 
+from _support import LiveTree
+
+LiveTree.activate()
+
 import vault
 from _bibliographies.drive import ClassifyDriver
 from _bibliography_fixtures import HOULGATE

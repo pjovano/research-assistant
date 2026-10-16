@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+PYTHONDONTWRITEBYTECODE=1 exec "$HOME/.research-vault/venv/bin/python" lib/harness_hooks.py checks-before-push

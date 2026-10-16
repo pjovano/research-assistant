@@ -112,7 +112,8 @@ heading tree and frontmatter, and walks the citation graph.
 | Path | Holds |
 | --- | --- |
 | `CLAUDE.md` | the contract: the mandate, the architecture, the conventions, the operations, and the standards |
-| `.claude/settings.json` | permissions and hooks; one hook runs the checks after every edit to a Python or Markdown file, another turns every destructive command into a permission prompt |
+| `.claude/settings.json` | permissions and hooks; one hook runs the checks after every edit to a Python or Markdown file, the affected test modules among them, another turns every destructive command into a permission prompt |
+| `.githooks/` | the pre-push hook, which runs the test suite, the linter, and the audit linter before every push |
 | `.claude/skills/<skill>/` | one skill per operation: `SKILL.md`, its `scripts/`, and any `reference/` files it loads |
 | `.claude/agents/` | the worker instructions, one file per worker |
 | `.claude/workflows/` | the saved workflows: `ingest.js`, which runs a batch |

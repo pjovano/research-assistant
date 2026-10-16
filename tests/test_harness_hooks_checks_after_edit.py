@@ -13,6 +13,7 @@ from _support import LiveTree
 LiveTree.activate()
 
 import harness_hooks
+from _hooks.affected_tests import FullSuite
 
 
 def suite_output(failures: int) -> str:
@@ -30,7 +31,7 @@ RUFF_REINSTALL = "uv pip sync --reinstall-package ruff --python ~/.research-vaul
 
 class TestEditedProjectFile(unittest.TestCase):
     def setUp(self):
-        self.root = Path(tempfile.mkdtemp())
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
 
     def _check_labels(self, path: Path | None) -> list[str]:
         return [check.LABEL for check in harness_hooks.EditedProjectFile(path, self.root).checks()]
@@ -86,32 +87,32 @@ class TestEditCheckReport(unittest.TestCase):
     def test_a_failure_with_no_output_names_the_exit_code(self):
         silent = subprocess.CompletedProcess(args=[], returncode=-9, stdout="", stderr="")
         with mock.patch.object(harness_hooks.subprocess, "run", return_value=silent):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn("-9", report)
 
     def test_a_failure_whose_only_output_is_blank_names_the_exit_code(self):
         blank = subprocess.CompletedProcess(args=[], returncode=-9, stdout="\n \n", stderr="")
         with mock.patch.object(harness_hooks.subprocess, "run", return_value=blank):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn("-9", report)
 
     def test_a_check_killed_by_a_signal_names_the_code_beside_its_partial_output(self):
         killed = subprocess.CompletedProcess(args=[], returncode=-11, stdout="", stderr="....E...F..\n")
         with mock.patch.object(harness_hooks.subprocess, "run", return_value=killed):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn("-11", report)
         self.assertIn("....E...F..", report)
 
     def test_stdout_without_a_trailing_newline_does_not_splice_onto_stderr(self):
         unfinished = subprocess.CompletedProcess(args=[], returncode=1, stdout="Found 1 error.", stderr="warning: x\n")
         with mock.patch.object(harness_hooks.subprocess, "run", return_value=unfinished):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn("Found 1 error.\nwarning: x", report)
 
     def test_a_spawn_failure_names_its_cause(self):
         denied = PermissionError(13, "Permission denied", str(harness_hooks.INTERPRETER))
         with mock.patch.object(harness_hooks.subprocess, "run", side_effect=denied):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn("Permission denied", report)
 
     def test_a_failure_of_the_working_directory_does_not_prescribe_a_reinstall(self):
@@ -126,27 +127,27 @@ class TestSuiteCheck(unittest.TestCase):
     def test_a_suite_that_outruns_its_limit_is_reported_as_a_failure(self):
         expired = subprocess.TimeoutExpired(cmd="unittest", timeout=harness_hooks.SUITE_TIMEOUT_SECONDS)
         with mock.patch.object(harness_hooks.subprocess, "run", side_effect=expired):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn(f"within {harness_hooks.SUITE_TIMEOUT_SECONDS} seconds", report)
 
     def test_a_timeout_reports_the_output_the_check_wrote_before_it_was_killed(self):
         expired = subprocess.TimeoutExpired(cmd="unittest", timeout=harness_hooks.SUITE_TIMEOUT_SECONDS,
                                              output=b"FAIL: test_hangs\n")
         with mock.patch.object(harness_hooks.subprocess, "run", side_effect=expired):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn("test_hangs", report)
 
     def test_a_timeout_with_undecodable_output_still_reports(self):
         expired = subprocess.TimeoutExpired(cmd="unittest", timeout=harness_hooks.SUITE_TIMEOUT_SECONDS,
                                              output=b"\xff\xfe cannot decode\n")
         with mock.patch.object(harness_hooks.subprocess, "run", side_effect=expired):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn("cannot decode", report)
 
     def test_every_failure_the_bound_admits_is_reported_whole(self):
         failed = subprocess.CompletedProcess(args=[], returncode=1, stdout=suite_output(failures=3), stderr="")
         with mock.patch.object(harness_hooks.subprocess, "run", return_value=failed):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         for number in range(3):
             self.assertIn(f"FAIL: test_{number}", report)
         self.assertIn("FAILED (failures=3)", report)
@@ -155,14 +156,14 @@ class TestSuiteCheck(unittest.TestCase):
     def test_output_without_failure_blocks_is_kept_whole(self):
         crashed = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="Traceback:\n  frame\nBoom\n")
         with mock.patch.object(harness_hooks.subprocess, "run", return_value=crashed):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn("Traceback:\n  frame\nBoom", report)
 
     def test_the_tail_drops_the_oldest_failures_whole_and_keeps_the_summary(self):
         over = harness_hooks.SuiteCheck.REPORT_TAIL_BLOCKS + 2
         failed = subprocess.CompletedProcess(args=[], returncode=1, stdout=suite_output(failures=over), stderr="")
         with mock.patch.object(harness_hooks.subprocess, "run", return_value=failed):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertNotIn("FAIL: test_0 ", report)
         self.assertNotIn("FAIL: test_1 ", report)
         self.assertTrue(report.startswith(harness_hooks.UNITTEST_BLOCK_SEPARATOR))
@@ -172,7 +173,7 @@ class TestSuiteCheck(unittest.TestCase):
     def test_a_missing_interpreter_is_reported_without_a_repair_hint(self):
         missing = FileNotFoundError(2, "No such file or directory", str(harness_hooks.INTERPRETER))
         with mock.patch.object(harness_hooks.subprocess, "run", side_effect=missing):
-            report = harness_hooks.SuiteCheck(Path.cwd()).failure_report()
+            report = harness_hooks.SuiteCheck(Path.cwd(), FullSuite()).failure_report()
         self.assertIn(str(harness_hooks.INTERPRETER), report)
         self.assertNotIn("uv pip sync", report)
 
@@ -278,6 +279,15 @@ class TestChecksAfterEdit(unittest.TestCase):
         audit.assert_called_once()
         lint.assert_not_called()
         suite.assert_not_called()
+
+
+class TestCheckEnvironment(unittest.TestCase):
+    def test_a_check_runs_without_the_variables_that_locate_a_repository(self):
+        passed = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+        with (mock.patch.dict(harness_hooks.os.environ, {"GIT_DIR": "elsewhere.git"}),
+              mock.patch.object(harness_hooks.subprocess, "run", return_value=passed) as run):
+            harness_hooks.LintCheck(Path.cwd()).failure_report()
+        self.assertNotIn("GIT_DIR", run.call_args.kwargs["env"])
 
 
 class TestCheckTimeouts(unittest.TestCase):

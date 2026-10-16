@@ -5,14 +5,17 @@ import os
 import subprocess
 import sys
 from collections.abc import Callable
+from functools import cached_property
 from pathlib import Path
 
 from _health.hook import HealthWatcherHook
+from _hooks.affected_tests import EditSelection, FullSuite, TestSelection
+from _hooks.work_tree import CheckedTree, without_repository_locating_variables
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 INTERPRETER = Path("~/.research-vault/venv/bin/python").expanduser()
 LINTER = INTERPRETER.with_name("ruff")
-SUITE_ARGUMENTS = ("-m", "unittest", "discover", "-s", "tests")
+UNITTEST_ARGUMENTS = ("-m", "unittest")
 UNITTEST_BLOCK_SEPARATOR = "=" * 70
 LINT_ARGUMENTS = ("check", "--output-format", "concise", ".")
 AUDIT_SCRIPT = Path(".claude/skills/vault-audit/scripts/audit.py")
@@ -47,18 +50,33 @@ CORPUS_WRITE_REASON = ("the Write tool creates no note under the derived corpus:
 
 class HookEvent:
     def __init__(self, payload: dict) -> None:
-        self._payload = payload
+        self._given_payload = payload
 
     @classmethod
     def from_stdin(cls) -> "HookEvent":
-        return cls(json.load(sys.stdin))
+        return StdinHookEvent()
 
     def edited_path(self) -> Path | None:
-        given = self._payload.get("tool_input", {}).get("file_path")
+        given = self._payload().get("tool_input", {}).get("file_path")
         return None if given is None else Path(given)
 
     def command(self) -> str:
-        return self._payload.get("tool_input", {}).get("command", "")
+        return self._payload().get("tool_input", {}).get("command", "")
+
+    def _payload(self) -> dict:
+        return self._given_payload
+
+
+class StdinHookEvent(HookEvent):
+    def __init__(self) -> None:
+        super().__init__({})
+
+    def _payload(self) -> dict:
+        return self._stdin_payload
+
+    @cached_property
+    def _stdin_payload(self) -> dict:
+        return json.load(sys.stdin)
 
 
 class EditedProjectFile:
@@ -66,14 +84,20 @@ class EditedProjectFile:
         self._path = path
         self._project_root = project_root.resolve()
 
-    def checks(self) -> tuple[type[EditCheck], ...]:
-        if self._path is None or not self._is_inside_the_project():
+    def checks(self) -> tuple[EditCheck, ...]:
+        check_types = () if self._path is None else CHECKS_BY_SUFFIX.get(self._path.suffix, ())
+        if not check_types:
             return ()
-        return CHECKS_BY_SUFFIX.get(self._path.suffix, ())
+        return self._checks_in_its_tree(check_types, self._absolute())
 
-    def _is_inside_the_project(self) -> bool:
-        absolute = self._path if self._path.is_absolute() else self._project_root / self._path
-        return absolute.resolve().is_relative_to(self._project_root)
+    def _checks_in_its_tree(self, check_types: tuple[type[EditCheck], ...], edited: Path) -> tuple[EditCheck, ...]:
+        tree = CheckedTree(edited, self._project_root).root()
+        if tree is None:
+            return ()
+        return tuple(check_type.for_edit(tree, edited) for check_type in check_types)
+
+    def _absolute(self) -> Path:
+        return (self._path if self._path.is_absolute() else self._project_root / self._path).resolve()
 
 
 class EditCheck:
@@ -85,6 +109,10 @@ class EditCheck:
 
     def __init__(self, project_root: Path) -> None:
         self._project_root = project_root
+
+    @classmethod
+    def for_edit(cls, tree: Path, edited: Path) -> EditCheck:
+        return cls(tree)
 
     def failure_report(self) -> str | None:
         try:
@@ -137,13 +165,15 @@ class EditCheck:
         return captured.decode("utf-8", "replace") if isinstance(captured, bytes) else captured or ""
 
     def _completed(self) -> subprocess.CompletedProcess:
-        return subprocess.run(list(self.COMMAND), cwd=self._project_root, capture_output=True,
+        return subprocess.run(list(self._command()), cwd=self._project_root, capture_output=True,
                               encoding="utf-8", errors="replace", env=self._environment(),
                               timeout=self.TIMEOUT_SECONDS)
 
-    @staticmethod
-    def _environment() -> dict:
-        return {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+    def _command(self) -> tuple[str, ...]:
+        return self.COMMAND
+
+    def _environment(self) -> dict:
+        return {**without_repository_locating_variables(os.environ), "PYTHONDONTWRITEBYTECODE": "1"}
 
 
 class LintCheck(EditCheck):
@@ -157,9 +187,28 @@ class LintCheck(EditCheck):
 class SuiteCheck(EditCheck):
     LABEL = "the test suite"
     INSTRUCTION = "the test suite fails after this edit; revert it or move the expectation with the fix:"
-    COMMAND = (str(INTERPRETER), *SUITE_ARGUMENTS)
+    COMMAND = (str(INTERPRETER), *UNITTEST_ARGUMENTS)
     TIMEOUT_SECONDS = SUITE_TIMEOUT_SECONDS
     REPORT_TAIL_BLOCKS = 10
+
+    def __init__(self, project_root: Path, selection: TestSelection) -> None:
+        super().__init__(project_root)
+        self._selection = selection
+
+    @classmethod
+    def for_edit(cls, tree: Path, edited: Path) -> EditCheck:
+        return cls(tree, EditSelection(tree, edited))
+
+    def _command(self) -> tuple[str, ...]:
+        return (*self.COMMAND, *self._selection.unittest_arguments())
+
+    def _environment(self) -> dict:
+        environment = super()._environment()
+        search = [str(directory) for directory in self._selection.search_directories()]
+        inherited = [environment["PYTHONPATH"]] if environment.get("PYTHONPATH") else []
+        if search:
+            environment["PYTHONPATH"] = os.pathsep.join([*search, *inherited])
+        return environment
 
     def _body(self, stdout: str | bytes | None, stderr: str | bytes | None) -> str:
         lines = super()._body(stdout, stderr).splitlines()
@@ -255,6 +304,8 @@ class HookCli:
     def run(self, subcommand: str, event: HookEvent) -> int:
         if subcommand == "checks-after-edit":
             return self._checks_after_edit(event)
+        if subcommand == "checks-before-push":
+            return self._checks_before_push()
         if subcommand == "guard-bash":
             return self._emitted(BashGuard(event.command()).decision())
         if subcommand == "guard-write":
@@ -266,11 +317,21 @@ class HookCli:
 
     def _checks_after_edit(self, event: HookEvent) -> int:
         for check in EditedProjectFile(event.edited_path(), self._project_root).checks():
-            report = check(self._project_root).failure_report()
+            report = check.failure_report()
             if report is not None:
                 sys.stderr.write(f"{check.INSTRUCTION}\n{report}\n")
                 return BLOCKING_EXIT_CODE
         return 0
+
+    def _checks_before_push(self) -> int:
+        reports = [(check.LABEL, check.failure_report()) for check in self._checks_of_a_push()]
+        failures = [f"{label} fails; the push is refused:\n{report}\n" for label, report in reports if report]
+        sys.stderr.write("".join(failures))
+        return BLOCKING_EXIT_CODE if failures else 0
+
+    def _checks_of_a_push(self) -> tuple[EditCheck, ...]:
+        return (SuiteCheck(self._project_root, FullSuite()), LintCheck(self._project_root),
+                AuditCheck(self._project_root))
 
     @staticmethod
     def _emitted(decision: dict | None) -> int:
