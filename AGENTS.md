@@ -135,6 +135,16 @@ overwrites the edit or conflicts with it. Change a core unit in `core/` of
 `agent-core`. Reach each core unit `.claude/` uses through a symlink. NEVER
 copy a core unit into `.claude/`: a copy drifts from the vendored core.
 
+**`domain.json` at the control plane's root names the vault's folders and
+the domain's policy.** Its `folders` lists `library` and `research vault`,
+each with write access. The sandbox lets Bash write in `research vault` only
+under its `write_within` folders. The `policy` of `domain.json` holds the
+permission rules, the network hosts, and the commands excluded from the
+sandbox. The `policy` also holds the write paths outside `~/Documents` and
+the commands the Bash hook turns into a permission prompt.
+`vendor/agent-core/domain.py settings` generates the `permissions` and
+`sandbox` blocks of `.claude/settings.json` from `domain.json`.
+
 **The default graph view lives in the control plane.** `obsidian/graph.json`
 holds the Obsidian vault's graph view settings, its colour groups among them.
 If the user asks to restore the graph, ask the user to close the graph view,
@@ -530,6 +540,13 @@ there.
   Bash command.** The sandbox denies Bash every write to `.claude/skills/`,
   `.claude/agents/`, `.claude/workflows/`, and `.claude/settings.json`, and
   no setting lifts the denial.
+* **A settings change starts in `domain.json`.** If a change touches the
+  `permissions` or `sandbox` block of `.claude/settings.json`, edit
+  `domain.json` first. Then run
+  `~/.research-vault/venv/bin/python vendor/agent-core/domain.py settings`
+  from the repository root. Write the blocks the command prints into
+  `.claude/settings.json` with the Write tool. NEVER edit either block by
+  hand: the suite fails a block that differs from the printed one.
 
 **Writing notes.** Every note carries LF line endings. The frontmatter carries
 only what something reads: NEVER add a field without a reader.
