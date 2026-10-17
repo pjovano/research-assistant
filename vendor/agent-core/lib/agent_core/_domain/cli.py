@@ -6,21 +6,30 @@ import sys
 from pathlib import Path
 
 from agent_core._domain.fields import ManifestError
+from agent_core._domain.home import HomeRelative
 from agent_core._domain.manifest import MANIFEST_NAME, DomainManifest
+from agent_core._domain.registry import REFUSED, Registry
+from agent_core._domain.schema import ValidManifest
 from agent_core._domain.settings import FolderGuards, SettingsBlocks
 from agent_core._domain.shelf import DEVELOPER_ROOT, ManifestShelf
 
 PROGRAM = "domain.py"
-DESCRIPTION = "Read the domains' manifests, and generate a domain's settings blocks and folder guards from them."
+DESCRIPTION = ("Read the domains' manifests, validate them, list the registry the dispatcher routes by, and "
+               "generate a domain's settings blocks and folder guards from them.")
 EXIT_FAILURE = 1
 HELP_MANIFESTS = f"list every manifest: each named one, or every {DEVELOPER_ROOT}/*/{MANIFEST_NAME}"
+HELP_VALIDATE = ("check the domain's manifest against the schema: every key known, and the handles, entry skills, "
+                 "exposure, and unattended levels well formed")
+HELP_REGISTRY = ("list each manifest's domain with its handles and entry skills, after validating it and checking "
+                 "each entry skill's exposure: never all three risks, and untrusted content wherever the skill "
+                 "has the web capability; exits 1 if a manifest is refused")
 HELP_SETTINGS = "print the `permissions` and `sandbox` blocks of the domain's .claude/settings.json"
 HELP_GUARDS = ("print the guards of the domain's .claude/settings.local.json: for each sensitive folder of the "
                "other manifests, a Read and an Edit rule in `permissions.deny` and a `sandbox.filesystem.denyRead` "
                "entry")
 HELP_NAMED = f"the manifests to read; if none, every {MANIFEST_NAME} one level under the developer root"
 HELP_DEVELOPER = f"the directory whose subdirectories hold the domains; default {DEVELOPER_ROOT}"
-HELP_DOMAIN = f"the manifest of the domain whose settings to generate; default ./{MANIFEST_NAME}"
+HELP_DOMAIN = f"the domain's manifest; default ./{MANIFEST_NAME}"
 
 
 class CommandLine:
@@ -37,18 +46,22 @@ class CommandLine:
         if args.handler is None:
             parser.print_help()
             return
-        self._print(args.handler(args))
+        payload = args.handler(args)
+        self._print(payload)
+        if args.refuses(payload):
+            sys.exit(EXIT_FAILURE)
 
     def _parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(prog=PROGRAM, description=DESCRIPTION)
-        parser.set_defaults(handler=None)
+        parser.set_defaults(handler=None, refuses=lambda payload: False)
         commands = parser.add_subparsers(dest="command")
         self._shelf_command(commands, "manifests", HELP_MANIFESTS, self._manifests)
-        settings = commands.add_parser("settings", help=HELP_SETTINGS, description=HELP_SETTINGS)
-        settings.set_defaults(handler=self._settings)
+        registry = self._shelf_command(commands, "registry", HELP_REGISTRY, self._registry)
+        registry.set_defaults(refuses=lambda payload: bool(payload[REFUSED]))
+        self._domain_command(commands, "validate", HELP_VALIDATE, self._validate)
+        self._domain_command(commands, "settings", HELP_SETTINGS, self._settings)
         guards = self._shelf_command(commands, "guards", HELP_GUARDS, self._guards)
-        for command in (settings, guards):
-            command.add_argument("--domain", type=Path, default=Path(MANIFEST_NAME), help=HELP_DOMAIN)
+        guards.add_argument("--domain", type=Path, default=Path(MANIFEST_NAME), help=HELP_DOMAIN)
         return parser
 
     @staticmethod
@@ -60,9 +73,25 @@ class CommandLine:
         return command
 
     @staticmethod
+    def _domain_command(commands, name: str, help_text: str, handler) -> argparse.ArgumentParser:
+        command = commands.add_parser(name, help=help_text, description=help_text)
+        command.add_argument("--domain", type=Path, default=Path(MANIFEST_NAME), help=HELP_DOMAIN)
+        command.set_defaults(handler=handler)
+        return command
+
+    @staticmethod
     def _manifests(args: argparse.Namespace) -> list[dict]:
         manifests = ManifestShelf(args.named, args.developer).manifests()
         return [ManifestListing(manifest).as_dict() for manifest in manifests]
+
+    @staticmethod
+    def _registry(args: argparse.Namespace) -> dict:
+        return Registry(ManifestShelf(args.named, args.developer).paths()).as_dict()
+
+    @staticmethod
+    def _validate(args: argparse.Namespace) -> dict:
+        manifest = ValidManifest.read(args.domain)
+        return {"manifest": HomeRelative(args.domain).text(), "name": manifest.manifest.name, "valid": True}
 
     @staticmethod
     def _settings(args: argparse.Namespace) -> dict:
@@ -86,15 +115,4 @@ class ManifestListing:
         folders = [{"name": folder.name, "access": folder.access, "sensitive": folder.sensitive}
                    for folder in self._manifest.folders]
         return {"name": self._manifest.name, "summary": self._manifest.summary,
-                "path": HomeRelative(self._manifest.path).text(), "folders": folders}
-
-
-class HomeRelative:
-    def __init__(self, path: Path) -> None:
-        self._path = path.expanduser().resolve()
-
-    def text(self) -> str:
-        home = Path.home().resolve()
-        if self._path.is_relative_to(home):
-            return f"~/{self._path.relative_to(home).as_posix()}"
-        return self._path.as_posix()
+                "path": HomeRelative(self._manifest.path).text(), "folders": folders, "vault": self._manifest.vault}

@@ -13,9 +13,9 @@ class ManifestShelf:
         self._developer_root = developer_root
 
     def manifests(self) -> list[DomainManifest]:
-        return [DomainManifest.read(path) for path in self._paths()]
+        return [DomainManifest.read(path) for path in self.paths()]
 
-    def _paths(self) -> list[Path]:
+    def paths(self) -> list[Path]:
         if self._named:
             return list(self._named)
         return sorted(self._developer_root.expanduser().glob(f"*/{MANIFEST_NAME}"))

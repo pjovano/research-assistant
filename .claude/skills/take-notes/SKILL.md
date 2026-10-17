@@ -604,6 +604,38 @@ another note's entry shares keeps the colour it has. Pass the same
 **A reference that cites a transcript, or a corpus file by chapter and
 section, takes no highlight.**
 
+## Unattended runs
+
+**If a delegation's `Run:` reads `unattended (write)`, treat the run as an
+unattended run.** If a `resolve-tasks` run carries `unattended: true`, treat
+that run as an unattended run as well. If a rule below conflicts with a step
+of an operation, the rule wins.
+
+- **Write only in `writing/1 notes/`.** NEVER write a highlight into a PDF,
+  a project file, a bibliography, or any other file.
+- **Change or delete only a line that carries the review mark.** NEVER
+  change or delete a line with no mark or with the accepted mark. The review
+  mark shows what a run added or reworded, never what it removed. A
+  reference's source line and comment line take the mark of its quotation
+  line.
+- **Close every line the run writes with the review mark,** per "What is
+  written, and how it is marked". `note` and `chosen --apply` MAY write the
+  blank note of a new atomic note.
+- **Write no task.** A task takes no review mark. Name in the report each
+  task the passages read open.
+- **NEVER check or uncheck a task.**
+- **Write no field.** The frontmatter carries no review mark. Name in the
+  report the bibliographies the note's field would hold.
+- **NEVER run `accept`.**
+- **NEVER delete a resolved task's line.** A chosen task stays checked for
+  an attended run.
+- **Reword a claim only if it carries the review mark.** Name in the report
+  each claim left as it stands.
+
+**Tell each worker of an unattended run that the run is unattended.** Close
+its prompt with the line `This run is unattended: follow "# Unattended runs"
+of your instructions wherever it overrides a step.`
+
 ## Operations
 
 ### Creating a note
@@ -709,7 +741,8 @@ Precondition: the user names several atomic notes, or a set of rough claims.
 1. Create each note that does not exist, per "Creating a note".
 2. Dispatch one note researcher per note, at most four in one message: invoke
    the Agent tool with `subagent_type: note-researcher` and no `model`. The
-   prompt carries the note's title.
+   prompt carries the note's title, and the unattended line if the run is
+   unattended, per "Unattended runs".
 3. If a note researcher returns `{"error": …}` or no JSON object, dispatch it
    once more. If it fails again, name the note in the report and go on.
 4. Run `check` on each note.
@@ -723,12 +756,12 @@ stub notes to be researched, of every atomic note or of the notes the user
 names.
 
 **The `resolve-tasks` workflow, `.claude/workflows/resolve-tasks.js`, runs
-the operation unattended.** It takes two kinds of work, the chosen tasks
+the operation and asks the user nothing.** It takes two kinds of work, the chosen tasks
 first and the stub notes within what the limit leaves. Its steps:
 
 | # | Step | Run by |
 | --- | --- | --- |
-| 0 | `notes.py accept --apply`: each note whose accept task is checked accepted, so that no worker changes its lines | relay |
+| 0 | `notes.py accept --apply`: each note whose accept task is checked accepted, so that no worker changes its lines; an unattended run skips it | relay |
 | 1 | `notes.py chosen --limit <N> --apply`: every checked task of every note in the task form, each further note created with the task's claim as its first claim, the stub notes, and the tasks and stubs past the limit deferred | relay |
 | 2 | one note researcher per further note that holds no reference and per stub note, all at once; a further note two notes chose is researched once, and a stub note takes no note reviewer | note researcher |
 | 3 | one note reviewer per reviewed note, once each of its further notes is researched, its prompt carrying each task whose further note was researched and each chosen `enrich` task, which the reviewer resolves in the note itself and which takes no researcher | note reviewer |
@@ -738,19 +771,24 @@ A worker that returns `{"error": …}` or no JSON object is dispatched once
 more; a task whose note researcher fails twice stays checked for the next
 run, and its reviewed note is reviewed for its other tasks alone.
 
-1. If the user names tasks in chat, check each one. If the user names
-   notes, resolve only the checked tasks of those notes: pass no other note's
-   task to the workflow, by asking the user to uncheck the others first.
-2. Run `notes.py accept` and `notes.py chosen`, and read their plans. Reword
-   each task under `retagged` per "Tasks", then run `notes.py chosen` again.
-   If `accept` lists no note under `accepted` and `chosen` lists no task and
-   no stub, tell the user that no checked accept task, checked task, or stub
-   note stands, and name each line under `unparsed`.
+1. If the run is unattended, skip this step. If the user names tasks in
+   chat, check each one. If the user names notes, resolve only the checked
+   tasks of those notes: pass no other note's task to the workflow, by
+   asking the user to uncheck the others first.
+2. Unless the run is unattended, run `notes.py accept` and read its plan.
+   Run `notes.py chosen`, and read its plan. If the run is unattended, report
+   each task under `retagged` as it stands. Otherwise, reword each task under
+   `retagged` per "Tasks", then run `notes.py chosen` again. If `chosen`
+   lists no task and no stub, and `accept` lists no note under `accepted`,
+   tell the user that no checked accept task, checked task, or stub note
+   stands. Name each line under `unparsed` in that message.
 3. Invoke the Workflow tool with `name: "resolve-tasks"` and
    `args: {"limit": <N>}`, `N` the user's cap, or 8 if the user names none.
+   If the run is unattended, add `"unattended": true` to `args`.
 4. Run `check` on each note the run wrote.
-5. For each note the workflow returns under `accepted`, run steps 2 and 3 of
-   "Accepting notes", and report them with the rest of the run.
+5. If the run is unattended, skip this step. For each note the workflow
+   returns under `accepted`, run steps 2 and 3 of "Accepting notes", and
+   report them with the rest of the run.
 6. Report once, in chat, per reviewed note: each further note, with what its
    note researcher reports; then what the note reviewer reports, per
    "Reviewing a note"; then each stub note, with what its note researcher

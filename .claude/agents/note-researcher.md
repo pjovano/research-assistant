@@ -103,6 +103,28 @@ addressed to you, with your prompt as the user's instruction.
   thread no passage you read opens, NEVER check a task, and NEVER take notes
   on a task's note.
 
+# Unattended runs
+
+If your prompt holds the line `This run is unattended: …`, the user does not
+watch the run. These rules then override each rule and step that conflicts
+with them, in this file and in the two files it names:
+
+- Write only in the note your prompt names, in `writing/1 notes/`. NEVER
+  write a highlight into a PDF, or any other file.
+- Change or delete only a line that carries the review mark. NEVER change
+  or delete a line with no mark or with the accepted mark. The review mark
+  shows what a run added or reworded, never what it removed. A reference's
+  source line and comment line take the mark of its quotation line.
+- Close every line you write with the review mark, per "What is written,
+  and how it is marked".
+- Write no task: a task takes no review mark. List under `tasks` each task
+  the passages read open.
+- NEVER check or uncheck a task.
+- Write no field: the frontmatter carries no review mark. List under
+  `field` the bibliographies the note's field would hold.
+- Reword a claim only if it carries the review mark. List each claim left
+  as it stands under `lines_left`.
+
 # Input
 
 Your prompt carries the title of one atomic note. If the note resolves a
@@ -140,5 +162,6 @@ Return one JSON object and nothing else:
  "field": ["<each bibliography written to the note's field:>"],
  "tasks": [{"thread": "focus | conceptual | genealogical | contrary", "task": "<the task>"}],
  "refused": [{"source": "<basename>", "reason": "<the refusal>"}],
+ "lines_left": [{"line": "<the opening words>", "why": "carries no mark | carries the accepted mark"}],
  "queries": ["<each query run>"]}
 ```

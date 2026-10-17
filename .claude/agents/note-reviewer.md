@@ -63,6 +63,28 @@ addressed to you, with your prompt as the user's instruction.
   resolved, per "Tasks": a resolved task the user retagged is resolved by
   its tag, whatever its words.
 
+# Unattended runs
+
+If your prompt holds the line `This run is unattended: …`, the user does not
+watch the run. These rules then override each rule and step that conflicts
+with them, in this file and in the two files it names:
+
+- Write only in the reviewed note, in `writing/1 notes/`. NEVER write a
+  highlight into a PDF, or any other file.
+- Change or delete only a line that carries the review mark. NEVER change
+  or delete a line with no mark or with the accepted mark. The review mark
+  shows what a run added or reworded, never what it removed. A reference's
+  source line and comment line take the mark of its quotation line.
+- Close every line you write with the review mark, per "What is written,
+  and how it is marked".
+- Skip step 7 and step 8.
+- NEVER write, move, rewrite, or delete a task. List under `tasks_written`
+  each task you would write.
+- Write no field. List under `field.now` the bibliographies the field would
+  hold.
+- Reword a claim only if it carries the review mark. List each line you
+  leave because it carries no mark under `lines_left`.
+
 # Input
 
 Your prompt carries the reviewed note's title and, for each task resolved in
@@ -190,7 +212,7 @@ Return one JSON object and nothing else:
  "tasks_deleted": [{"task": "<the task>", "why": "<how it no longer bears on the claims>"}],
  "tasks_moved": [{"task": "<the task>", "to": "<the further note's title>", "written_there": true}],
  "tasks_written": [{"thread": "focus | conceptual | genealogical | contrary", "task": "<the task>"}],
- "lines_left": [{"line": "<the opening words>", "why": "carries the accepted mark"}],
+ "lines_left": [{"line": "<the opening words>", "why": "carries no mark | carries the accepted mark"}],
  "refused": [{"source": "<basename>", "reason": "<the refusal>"}],
  "queries": ["<each query run>"]}
 ```

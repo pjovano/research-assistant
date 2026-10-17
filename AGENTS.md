@@ -143,6 +143,19 @@ allow rules, the network hosts, and the commands excluded from the sandbox.
 The `policy` also holds the write paths outside `~/Documents` and the
 commands a hook in `.claude/settings.json` turns into a permission prompt.
 
+**`domain.json` also names the vault and what the dispatcher routes to the
+domain.** Its `vault` names `research vault`, the folder Obsidian opens as a
+vault. Its `handles` lists the kinds of request the domain takes. Its
+`entry_skills` lists the skills a delegation MAY name. Its `exposure` holds
+the risks of each entry skill. Its `unattended` holds each entry skill's
+level for an unattended run, `read-only` unless the entry skill's own rule
+for an unattended run permits `write`. `vendor/agent-core/domain.py registry`
+reads these keys.
+
+**A domain session reads a delegation by the `dispatch` core skill.** The
+`approvals` core skill states the risks, the unattended levels, and the
+user's yes.
+
 **`vendor/agent-core/domain.py settings` generates the `permissions` and
 `sandbox` blocks of `.claude/settings.json` from `domain.json`.**
 

@@ -7,13 +7,13 @@ after every merge to `main`, and a domain vendors that branch at
 | Part | Holds | Filled by |
 | --- | --- | --- |
 | `SOUL.md` | the soul file, which every `CLAUDE.md` imports | A6 |
-| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe`, `review-pr`, `clean-code`, `clean-prose`, `remember`, and `control-plane-audit`; `clean-code` reads a domain's `.claude/code-overlay.md`, `clean-prose` its `.claude/glossary.md`, `remember` keeps a domain's `USER.md`, and `control-plane-audit` runs the audit engine with a domain's `audit/checks.py` |
+| `skills/` | the shared skills, each linked into a domain's `.claude/skills/` | `core-probe`, `review-pr`, `clean-code`, `clean-prose`, `remember`, `control-plane-audit`, `new-domain`, `approvals`, and `dispatch`; `clean-code` reads a domain's `.claude/code-overlay.md`, `clean-prose` its `.claude/glossary.md`, `remember` keeps a domain's `USER.md`, `control-plane-audit` runs the audit engine with a domain's `audit/checks.py`, `new-domain` makes a domain from `templates/domain/`, `approvals` states the three risks and the unattended levels, and `dispatch` states the delegation the dispatcher sends a domain session |
 | `agents/` | the shared workers, each linked into a domain's `.claude/agents/` | `core-probe` now; the rendered workers in G19 |
 | `workflows/` | the shared saved workflows, each linked into a domain's `.claude/workflows/` | `core-probe` now |
 | `audit/` | the audit's committed data: the practices digest | U8 |
 | `lib/` | `agent_core/`, the core's one Python package: the control-plane audit engine, `_audit/`; the manifest reader and the settings generator, `_domain/`; the host ports `Scheduler`, `Notifier`, and `SystemReadings`, with their macOS adapters; the agent-host port and its adapters | the audit engine, `_domain/`, and the host ports now; the agent-host port in G19 |
-| `templates/domain/` | the domain template `new-domain` copies | A5 |
-| `domain.py` | the command line of the manifest reader, `domain.py manifests`, and of the settings generator, `domain.py settings` and `domain.py guards` | G20 |
+| `templates/domain/` | the domain template `new-domain` copies: a file whose name ends in `.template` loses the suffix in the copy, so that `core/` holds no contract | A5 |
+| `domain.py` | the command line of the manifest reader, `domain.py manifests`; of the settings generator, `domain.py settings` and `domain.py guards`; and of the schema check and the registry, `domain.py validate` and `domain.py registry` | G20; A3 for `validate` and `registry` |
 
 Every part exists from the start, and `agent-core`'s
 `tests/test_core_layout.py` pins it. Until an item fills a directory of the
@@ -25,13 +25,19 @@ item that fills it deletes the `.gitkeep`.
 Each domain keeps one `domain.json` at its root. `domain.py manifests` reads
 every `~/Developer/*/domain.json`, or the manifests named on its command line,
 and refuses a manifest with an unknown folder key or policy key, so that a
-misspelt `sensitive` never drops a guard.
+misspelt `sensitive` never drops a guard. It also refuses a `vault` that
+names no `write` folder of the manifest.
 
 | Field | Holds |
 | --- | --- |
 | `name` | the domain's name, the repository's name |
 | `summary` | one sentence on what the domain does |
 | `folders` | the folders directly in `~/Documents` the domain works on: each a `name`, an `access` of `read` or `write`, an optional `sensitive: true`, and, on a `write` folder, an optional `write_within`, the subfolders its sandboxed writes are limited to |
+| `vault` | the folder of `folders`, listed with `write` access, that is the domain's Obsidian vault; absent if the domain has no vault |
+| `handles` | the kinds of request the domain owns: each a `kind` with its `examples`, which the dispatcher's `route` matches a request against |
+| `entry_skills` | the skills the dispatcher may name in a delegation, each a skill of the domain's `.claude/skills/` |
+| `exposure` | for each entry skill, the list of risks it carries, of `private_data`, `untrusted_content`, and `sends_outward`; `[]` for none; every entry skill declares one, and only an entry skill |
+| `unattended` | what a scheduled or background run may do: one level for every entry skill, `read-only` by default or `none` for a sensitive domain; or an object whose `default` holds that level and whose `skills` maps an entry skill to its own level, `none`, `read-only`, or `write` |
 | `policy.allow` | the permission rules `permissions.allow` carries; an `Edit` or `Write` rule under `~/Documents` names a `write` folder |
 | `policy.prompt_on` | each command fragment the domain's own hook turns into a permission prompt, with the consequence the prompt names |
 | `policy.network_hosts` | the hosts the sandbox lets a command reach |
@@ -41,6 +47,32 @@ misspelt `sensitive` never drops a guard.
 
 No field names a path beginning with `/`: a path under `~` resolves on any
 machine.
+
+## `domain.py validate` and `domain.py registry`
+
+`domain.py validate` checks the manifest `--domain` names against the schema.
+It refuses an unknown top-level key, a malformed `handles` entry, an
+`exposure` entry for a skill `entry_skills` does not list, and an unknown
+risk. It refuses an entry skill without its `exposure`, and an unknown
+`unattended` level. `write` is an entry skill's own level, never a domain's
+default. `new-domain` runs the same check before it writes a manifest.
+
+`domain.py registry` reads the manifests `domain.py manifests` reads, and
+validates each. It lists each domain's directory, `handles`, and entry
+skills, each entry skill with its exposure, capabilities, and unattended
+level. It runs the two exposure checks `approvals` states:
+
+| Check | Refuses |
+| --- | --- |
+| the three risks | an entry skill whose `exposure` holds all three |
+| the `web` capability | an entry skill whose `.claude/skills/<skill>/SKILL.md` allows `WebSearch` or `WebFetch` and whose `exposure` lacks `untrusted_content` |
+
+The command lists each refused manifest under `refused`, with its error,
+and exits 1. It still lists every other domain under `domains`.
+
+**A skill's capabilities come from its `allowed-tools` frontmatter until
+G19 generates them.** A tool the skill uses without listing it there
+escapes the `web` check.
 
 ## `domain.py settings` and `domain.py guards`
 

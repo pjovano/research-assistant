@@ -1,6 +1,84 @@
 {
   "name": "research-assistant",
   "summary": "The research library's librarian and the user's research assistant: files and extracts PDFs, answers research questions from them, and keeps the user's research writing.",
+  "handles": [
+    {
+      "kind": "research questions",
+      "examples": [
+        "what does my library say about a subject?",
+        "where does an author define a term?"
+      ]
+    },
+    {
+      "kind": "discover",
+      "examples": [
+        "build a reading list on a question",
+        "what should I read next on a subject?"
+      ]
+    },
+    {
+      "kind": "notes",
+      "examples": [
+        "research my atomic note on an idea",
+        "resolve the checked tasks of my notes"
+      ]
+    },
+    {
+      "kind": "drafts",
+      "examples": [
+        "check the citations of my draft",
+        "export my draft as a PDF"
+      ]
+    },
+    {
+      "kind": "projects",
+      "examples": [
+        "scope a new project from these questions",
+        "refresh my project's reading list"
+      ]
+    },
+    {
+      "kind": "ingest",
+      "examples": [
+        "start a batch",
+        "ingest the inbox"
+      ]
+    }
+  ],
+  "entry_skills": [
+    "answer-questions",
+    "discover",
+    "take-notes",
+    "edit-drafts",
+    "manage-projects",
+    "ingest"
+  ],
+  "exposure": {
+    "answer-questions": [
+      "private_data",
+      "untrusted_content"
+    ],
+    "discover": [
+      "private_data",
+      "untrusted_content"
+    ],
+    "take-notes": [
+      "private_data",
+      "untrusted_content"
+    ],
+    "edit-drafts": [
+      "private_data",
+      "untrusted_content"
+    ],
+    "manage-projects": [
+      "private_data",
+      "untrusted_content"
+    ],
+    "ingest": [
+      "private_data",
+      "untrusted_content"
+    ]
+  },
   "folders": [
     {
       "name": "library",
@@ -16,6 +94,7 @@
       ]
     }
   ],
+  "vault": "research vault",
   "policy": {
     "allow": [
       "Bash(~/.research-vault/venv/bin/python -m unittest discover -s tests:*)",
@@ -137,5 +216,12 @@
       "~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/search/scripts/search.py *",
       "~/.research-vault/venv/bin/python ~/Developer/research-assistant/.claude/skills/ingest/scripts/ingest.py *"
     ]
+  },
+  "unattended": {
+    "default": "read-only",
+    "skills": {
+      "take-notes": "write",
+      "ingest": "write"
+    }
   }
 }
