@@ -49,16 +49,27 @@ prints and writes, and its failure branches.
 | --- | --- | --- |
 | `works`, a key of `audit.py lint` | one row per basename of a work in instruction text or in code outside `tests/`, with `file` and `line` | anywhere |
 | `audit.py residue` | the scratch directory's size and age, the conflict copies, the corpus files with no PDF, the bytecode directories, the orphans, and the inbox's contents | on the primary alone |
+| `audit.py staleness` | `on_disk`, the vault's counts; `figures`, one row per count in instruction text that differs from its `on_disk` count, with `file` and `line` | on the primary alone |
 
-If `machine.json` names `vault_dir`, `audit.py residue` prints
-`{"skipped": …}`: only CI and a test container name it. Then report the
-residue sites as unaudited.
+**`audit.py staleness` reads a count as a numeral beside one of three nouns.**
+
+| Noun | Counted on disk |
+| --- | --- |
+| `works` | the corpus files and the transcripts |
+| `PDFs` | the PDFs of the library and of its volumes |
+| `corpus files` | the corpus files |
+
+**If `audit.py residue` prints `{"skipped": …}`, report the residue sites as
+unaudited.** **If `audit.py staleness` prints `{"skipped": …}`, report the
+counts as unaudited.** Each report prints `{"skipped": …}` where
+`machine.json` names `vault_dir`.
 
 ## Procedure
 
 1. Run `audit.py changed`. If `accepted` is null, no audit has been accepted:
    the audit set is every file, and the report says so.
-2. Run `audit.py lint` and `audit.py residue`. Read both outputs before
+2. Run `audit.py lint`, `audit.py residue`, and `audit.py staleness`. Read
+   the three outputs before
    reading any file: they place the findings a file read would have to search
    for.
 3. Run the test suite:
@@ -217,7 +228,7 @@ Two questions remain for the reader:
 
 | Question | Against |
 | --- | --- |
-| Counts — every corpus figure quoted anywhere | what is on disk |
+| Counts — every corpus figure quoted anywhere | what is on disk; `audit.py staleness` reports each numeral beside works, PDFs, or corpus files in instruction text that differs |
 | Standing claims about mutable state (*currently*, *now*, *still*, *empty*) | whether they hold today; else re-date or reformulate |
 
 Rank by blast radius, not age. No consequence, no finding.

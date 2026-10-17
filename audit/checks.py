@@ -11,9 +11,12 @@ import vault
 from _vault.paths import MACHINE, VAULT_DIR_KEY
 from agent_core._audit.checks import DomainChecks, PrimaryOnly
 from agent_core._audit.cli import AuditSet
-from agent_core._audit.scope import ENCODING, RepositoryPath, Scope
+from agent_core._audit.scope import CORE_SCOPE, ENCODING, INSTRUCTION_GROUPS, ControlPlaneFiles, RepositoryPath, Scope
 
 WORK_BASENAME = re.compile(r"[^\s`\"'(\[][^\n`\"']{0,60}? - (?:1[5-9]|20)\d{2}[a-z]? - [^\n`\"']{1,80}")
+QUOTED_COUNT = re.compile(r"\b(\d[\d,]*) (works|PDFs|corpus files)\b")
+DIGIT_GROUP_SEPARATOR = ","
+HELP_STALENESS = "each count of works, PDFs, or corpus files in instruction text that differs from the vault's count"
 FINDING_NAMED_WORK = "work-named"
 ORPHAN_PATTERNS = ("*.tmp", "*.bak", "*~", "*.part", "*.partial")
 SECONDS_PER_DAY = 86400
@@ -109,6 +112,45 @@ class DirectoryPile:
         return int((time.time() - oldest) / SECONDS_PER_DAY)
 
 
+class Staleness:
+    name = "staleness"
+    help = HELP_STALENESS
+
+    def report(self, root: Path) -> dict:
+        on_disk = VaultCounts.counted()
+        instructions = ControlPlaneFiles(root, CORE_SCOPE.extended_by(RESEARCH_SCOPE)).of_groups(INSTRUCTION_GROUPS)
+        return {"on_disk": on_disk, "figures": QuotedCounts(instructions, root).differing_from(on_disk)}
+
+
+class VaultCounts:
+    @staticmethod
+    def counted() -> dict[str, int]:
+        pdfs = vault.list_pdfs(vault.LIBRARY_DIR) + vault.list_pdfs(vault.VOLUMES_DIR)
+        return {"works": len(vault.list_held_notes()), "PDFs": len(pdfs),
+                "corpus files": len(vault.list_corpus_files())}
+
+
+class QuotedCounts:
+    def __init__(self, paths: list[Path], root: Path) -> None:
+        self._paths = paths
+        self._root = root
+
+    def differing_from(self, on_disk: dict[str, int]) -> list[dict]:
+        figures = [figure for path in self._paths for figure in self._of_file(path)]
+        return [{**figure, "on_disk": on_disk[figure["noun"]]} for figure in figures
+                if figure["quoted"] != on_disk[figure["noun"]]]
+
+    def _of_file(self, path: Path) -> list[dict]:
+        label = RepositoryPath(path, self._root).label()
+        numbered = enumerate(path.read_text(encoding=ENCODING).splitlines(), start=1)
+        return [{"file": label, "line": number, "quoted": self._number(match.group(1)), "noun": match.group(2)}
+                for number, line in numbered for match in QUOTED_COUNT.finditer(line)]
+
+    @staticmethod
+    def _number(numeral: str) -> int:
+        return int(numeral.replace(DIGIT_GROUP_SEPARATOR, ""))
+
+
 class RealVault:
     def __init__(self, machine: dict) -> None:
         self._machine = machine
@@ -127,5 +169,7 @@ RESEARCH_SCOPE = Scope(
     named_roots=(VaultRoot("library/"), VaultRoot("research vault/")),
 )
 
+REAL_VAULT = RealVault(MACHINE)
+
 DOMAIN = DomainChecks(scope=RESEARCH_SCOPE, lint=(WorksCheck(),),
-                      reports=(PrimaryOnly(Residue(), RealVault(MACHINE)),))
+                      reports=(PrimaryOnly(Residue(), REAL_VAULT), PrimaryOnly(Staleness(), REAL_VAULT)))

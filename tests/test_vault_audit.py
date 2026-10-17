@@ -33,6 +33,7 @@ VAULT_NOTE = "research vault/corpus/x.md"
 LIBRARY_PDF = "library/paper.pdf"
 TEST_CONTAINER_MACHINE = {"vault_dir": "~/.research-vault/empty-vault"}
 UPGRADE_DIRECTORY = "upgrade/"
+STALENESS_CONTRACT = "The library holds 3 PDFs and 2 corpus files.\nThe batch filed 1,065 works.\n"
 REPOSITORY_FILES = {
     "contract": ("AGENTS.md", "CLAUDE.md", ".mcp.json", "requirements.txt", ".claude/settings.json"),
     "skills": (".claude/skills/one/SKILL.md", ".claude/skills/one/reference/table.md", ".claude/code-overlay.md",
@@ -151,9 +152,14 @@ class TestResidueOnlyOnThePrimary(unittest.TestCase):
                               self.checks.RealVault(TEST_CONTAINER_MACHINE))
         self.assertEqual({SKIPPED_KEY: self.checks.NO_REAL_VAULT}, residue.report(self.files.root))
 
-    def test_the_residue_subcommand_is_wired_through_the_primary_only_check(self) -> None:
-        self.assertEqual(["residue"], [report.name for report in self.checks.DOMAIN.reports])
-        self.assertIsInstance(self.checks.DOMAIN.reports[0], PrimaryOnly)
+    def test_staleness_reports_itself_skipped_where_machine_json_names_vault_dir(self) -> None:
+        staleness = PrimaryOnly(self.checks.Staleness(), self.checks.RealVault(TEST_CONTAINER_MACHINE))
+        self.assertEqual({SKIPPED_KEY: self.checks.NO_REAL_VAULT}, staleness.report(self.files.root))
+
+    def test_each_report_subcommand_is_wired_through_the_primary_only_check(self) -> None:
+        reports = self.checks.DOMAIN.reports
+        self.assertEqual([("residue", True), ("staleness", True)],
+                         [(report.name, isinstance(report, PrimaryOnly)) for report in reports])
 
 
 class TestResidueOnARealVault(unittest.TestCase):
@@ -177,6 +183,28 @@ class TestResidueOnARealVault(unittest.TestCase):
                     "corpus_without_pdf": ["unheld"], "inbox_files": ["waiting.pdf"],
                     "orphans": ["library/torn.partial"]}
         self.assertEqual(expected, {key: value for key, value in self.report.items() if key != "scratch"})
+
+
+class TestStalenessOnARealVault(unittest.TestCase):
+    def setUp(self) -> None:
+        self.vault = TempVault("LIBRARY_DIR", "VOLUMES_DIR", "CORPUS_DIR").activate()
+        self.addCleanup(self.vault.discard)
+        for name in ("one.pdf", "two.pdf"):
+            (vault.LIBRARY_DIR / name).write_bytes(b"")
+        (vault.VOLUMES_DIR / "volume.pdf").write_bytes(b"")
+        for directory, name in ((vault.CORPUS_DIR, "one.md"), (vault.CORPUS_DIR, "two.md"),
+                                (vault.TRANSCRIPTS_DIR, "talk.md")):
+            (directory / name).write_text("", encoding="utf-8")
+        self.files = TemporaryFiles(self)
+        self.files.written("AGENTS.md", STALENESS_CONTRACT)
+        self.report = ResearchChecks.module().Staleness().report(self.files.root)
+
+    def test_the_vault_counts_its_works_pdfs_and_corpus_files(self) -> None:
+        self.assertEqual({"works": 3, "PDFs": 3, "corpus files": 2}, self.report["on_disk"])
+
+    def test_only_a_quoted_count_that_differs_from_the_vault_is_reported(self) -> None:
+        expected = [{"file": "AGENTS.md", "line": 2, "quoted": 1065, "noun": "works", "on_disk": 3}]
+        self.assertEqual(expected, self.report["figures"])
 
 
 class TestTheVerdictsOfTheOldEngine(unittest.TestCase):
