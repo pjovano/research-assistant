@@ -12,13 +12,8 @@ Audits the control plane — `AGENTS.md`, the `CLAUDE.md` that imports it, `.cla
 code, and the test fixtures — against itself and against the disk. The audit changes nothing but the
 audit baseline, so it MAY run at any time, including mid-batch.
 
-Two definitions fix the scale of a run:
-
-* **Audit baseline.** `audit/baseline.json` holds one digest per
-  control-plane file, as of the last accepted audit.
-* **Audit set.** The audit set is the files this run reads whole: every file
-  changed since the last accepted audit, plus every control-plane file whose
-  text names one of them.
+**The audit baseline and the audit set fix what an audit reads.**
+`.claude/skills/control-plane-audit/SKILL.md` defines both.
 
 ## Arguments
 
@@ -48,7 +43,7 @@ prints and writes, and its failure branches.
 | Check | Prints | Runs |
 | --- | --- | --- |
 | `works`, a key of `audit.py lint` | one row per basename of a work in instruction text or in code outside `tests/`, with `file` and `line` | anywhere |
-| `special`, a key of `audit.py lint` | the core's rows, and one row per comparison of a page with a literal page other than the first or the last, or of a font with a literal name | anywhere |
+| `special`, a key of `audit.py lint` | the core's rows, and one row per comparison of a page or a font with a literal other than the first or last page | anywhere |
 | `audit.py residue` | the scratch directory's size and age, the conflict copies, the corpus files with no PDF, the bytecode directories, the orphans, and the inbox's contents | on the primary alone |
 | `audit.py staleness` | `on_disk`, the vault's counts; `figures`, one row per count in instruction text that differs from its `on_disk` count, with `file` and `line` | on the primary alone |
 
@@ -83,9 +78,9 @@ counts as unaudited.** Each report prints `{"skipped": …}` where
    text in full, names the files in scope, and asks for findings as
    `file:line` rows; the orchestrator assembles the report.
 6. Report in chat, in the six sections under Output.
-7. Run `audit.py accept` ONLY on the user's instruction, after the findings are
-   fixed or dismissed: accepting records every file as audited, and a finding
-   left unfixed then goes unread until that file changes again.
+7. Run `audit.py accept` ONLY on the user's instruction, once the user has
+   fixed or declined each finding. Accepting records every file as audited,
+   and a finding left unfixed then goes unread until its file changes again.
 
 **NEVER report a file outside the audit set as correct.** The report states
 the audit set and the counts, so the user reads coverage rather than assuming
@@ -187,13 +182,16 @@ a pass the new code makes redundant.
 
 ## Check 4b — Clean Code conformance
 
-`audit.py lint` counts the mechanical measures: functions over 20 lines, files
-over 500, more than three arguments, comments, and docstrings. Read its `code`
-rows as the measure; the judgment this check adds is what a script cannot
-count — duplicated knowledge, flag arguments, command-query mixing, magic
-numbers, free functions outside the three places `.claude/code-overlay.md`
-permits, and
-names that mislead.
+**`audit.py lint` counts the mechanical measures.** The core skill's row
+types name each measure its `code` rows count. Read the `code` rows as the
+measure. The judgment this check adds is what a script cannot count:
+
+- duplicated knowledge other than a function that repeats a helper of `lib`;
+- an argument that selects what a function does, which ruff's `FBT` rules do not name;
+- a magic string;
+- command-query mixing;
+- a free function outside the three places `.claude/code-overlay.md` permits;
+- a name that misleads.
 
 The standard has no standing exemptions: a comment recounting an incident is
 a finding like any other comment, and a bug found while refactoring is fixed,
@@ -313,5 +311,5 @@ throughout; where you infer intent rather than read it, say so:
 - **F. Fix list** — prioritized, each `[settings]` / `[docs]` / `[code]`,
   each with the smallest change that resolves it.
 
-Close by naming the next step: the user fixes or dismisses the findings, and
+Close by naming the next step: the user fixes or declines each finding, and
 then instructs `audit.py accept`.

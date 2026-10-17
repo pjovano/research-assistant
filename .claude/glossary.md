@@ -173,7 +173,7 @@ bind every row.
 | folder guard | a `Read(...)` and an `Edit(...)` rule of `permissions.deny` and a `denyRead` entry of the sandbox, all for one sensitive folder of another domain, which `domain.py guards` prints | read guard, deny pair, read denial |
 | checkout | the files of the control plane in one directory: the main checkout, or a worktree | work tree, clone (for a checkout) |
 | worktree | a checkout `git worktree add` made beside the main checkout, sharing its repository | git worktree, linked work tree |
-| audit baseline | `audit/baseline.json`, one digest per control-plane file as of the last accepted audit | manifest, snapshot (for the baseline) |
+| audit baseline | `audit/baseline.json`, as `control-plane-audit` defines it | manifest, snapshot (for the baseline) |
 | audit set | the files one audit reads whole: those changed since the last accepted audit, plus every control-plane file that names one | audit scope, changed set, delta |
 | audit engine | the core's `control-plane-audit` skill and its code, which audit one root's control plane | audit tool, auditor, audit script (for the engine) |
 | research checks | the checks `audit/checks.py` adds to the audit engine: `works`, `residue`, and `staleness` | vault checks, domain audit, research audit |
