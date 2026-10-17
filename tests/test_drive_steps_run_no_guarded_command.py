@@ -38,7 +38,7 @@ class TestDriversRunNoGuardedCommand(unittest.TestCase):
         self.assertGreater(len(DriverModule.all()), 10)
 
     def test_no_driver_names_a_guarded_command_the_contract_does_not_authorize(self) -> None:
-        guarded = [fragment for fragment in harness_hooks.GUARDED_COMMANDS
+        guarded = [fragment for fragment in harness_hooks.PROJECT_PROMPT_ON.consequences()
                    if fragment not in harness_hooks.DRIVER_AUTHORIZED_COMMANDS]
         for module in DriverModule.all():
             for fragment in guarded:
