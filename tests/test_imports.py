@@ -35,7 +35,7 @@ ENTRY_SCRIPTS = (
     "search/server.py",
     "take-notes/scripts/notes.py",
     "transcribe-talks/scripts/transcribe.py",
-    "vault-audit/scripts/audit.py",
+    "control-plane-audit/scripts/audit.py",
 )
 
 VAULT_PUBLIC_NAMES = (

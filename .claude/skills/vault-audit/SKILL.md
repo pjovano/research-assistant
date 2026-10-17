@@ -1,7 +1,7 @@
 ---
 name: vault-audit
 description: "Vault Maintenance — audit the vault's control plane (the contract, the skills, the worker instructions, the code) for contract drift, staleness, redundancy, special cases, and code quality, reading what changed since the last audit and what depends on it. Reports in chat and writes only the audit baseline. Use when asked to audit, review, or trim the vault's own control plane — never research content."
-allowed-tools: Read, Glob, Grep, Bash(~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py:*), Bash(~/.research-vault/venv/bin/python -m unittest discover:*), Bash(git log:*), Bash(ls:*), Bash(find:*), Bash(du:*), Bash(wc:*)
+allowed-tools: Read, Glob, Grep, Bash(~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py:*), Bash(~/.research-vault/venv/bin/python -m unittest discover:*), Bash(git log:*), Bash(ls:*), Bash(find:*), Bash(du:*), Bash(wc:*)
 ---
 
 # vault-audit (Vault Maintenance, run inline by the orchestrator)
@@ -14,8 +14,8 @@ audit baseline, so it MAY run at any time, including mid-batch.
 
 Two definitions fix the scale of a run:
 
-* **Audit baseline.** `.claude/skills/vault-audit/baseline.json` holds one
-  digest per control-plane file, as of the last accepted audit.
+* **Audit baseline.** `audit/baseline.json` holds one digest per
+  control-plane file, as of the last accepted audit.
 * **Audit set.** The audit set is the files this run reads whole: every file
   changed since the last accepted audit, plus every control-plane file whose
   text names one of them.
@@ -38,27 +38,38 @@ full read finds that.
 ## Commands
 
 Every command is `~/.research-vault/venv/bin/python
-.claude/skills/vault-audit/scripts/audit.py <subcommand>`.
+.claude/skills/control-plane-audit/scripts/audit.py <subcommand>`, run from
+the repository's root. Read `.claude/skills/control-plane-audit/SKILL.md`
+before the first command: the core skill states each command, what it
+prints and writes, and its failure branches.
 
-| Command | Prints | Writes |
+`audit/checks.py` adds the research checks to the core's:
+
+| Check | Prints | Runs |
 | --- | --- | --- |
-| `audit.py changed` | `accepted`, the audit set as `changed` and `related`, the `removed` files, and `counts` | nothing |
-| `audit.py lint` | `code`, one row per Clean Code measure; `pointers`, one row per dead path or future date; and `works`, one row per basename of a work in instruction text or in code outside `tests/`; each with `file` and `line` | nothing |
-| `audit.py residue` | the scratch directory's size and age, the conflict copies, the corpus files with no PDF, the bytecode directories, the orphans, and the inbox's contents | nothing |
-| `audit.py accept` | the date recorded and the number of files | the audit baseline |
+| `works`, a key of `audit.py lint` | one row per basename of a work in instruction text or in code outside `tests/`, with `file` and `line` | anywhere |
+| `audit.py residue` | the scratch directory's size and age, the conflict copies, the corpus files with no PDF, the bytecode directories, the orphans, and the inbox's contents | on the primary alone |
+| `audit.py staleness` | `on_disk`, the vault's counts; `figures`, one row per count in instruction text that differs from its `on_disk` count, with `file` and `line` | on the primary alone |
 
-If the audit baseline is not valid JSON, every command prints `{"error": …}`
-and exits 1: restore the baseline from git and run the command again.
+**`audit.py staleness` reads a count as a numeral beside one of three nouns.**
 
-`audit.py lint` reads every control-plane file whatever the audit set, because
-a script's coverage costs no judgment; `--changed` narrows it. `audit.py
-changed --all` prints every file as the audit set.
+| Noun | Counted on disk |
+| --- | --- |
+| `works` | the corpus files and the transcripts |
+| `PDFs` | the PDFs of the library and of its volumes |
+| `corpus files` | the corpus files |
+
+**If `audit.py residue` prints `{"skipped": …}`, report the residue sites as
+unaudited.** **If `audit.py staleness` prints `{"skipped": …}`, report the
+counts as unaudited.** Each report prints `{"skipped": …}` where
+`machine.json` names `vault_dir`.
 
 ## Procedure
 
 1. Run `audit.py changed`. If `accepted` is null, no audit has been accepted:
    the audit set is every file, and the report says so.
-2. Run `audit.py lint` and `audit.py residue`. Read both outputs before
+2. Run `audit.py lint`, `audit.py residue`, and `audit.py staleness`. Read
+   the three outputs before
    reading any file: they place the findings a file read would have to search
    for.
 3. Run the test suite:
@@ -217,7 +228,7 @@ Two questions remain for the reader:
 
 | Question | Against |
 | --- | --- |
-| Counts — every corpus figure quoted anywhere | what is on disk |
+| Counts — every corpus figure quoted anywhere | what is on disk; `audit.py staleness` reports each numeral beside works, PDFs, or corpus files in instruction text that differs |
 | Standing claims about mutable state (*currently*, *now*, *still*, *empty*) | whether they hold today; else re-date or reformulate |
 
 Rank by blast radius, not age. No consequence, no finding.

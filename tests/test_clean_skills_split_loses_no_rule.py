@@ -116,6 +116,10 @@ REWORDED = {
     "grows by one per batch.":
         ("- If a rule carries more than two exceptions, restate the rule so that it covers them: a list of exceptions "
          "grows by one per run.", INPUT_IS_A_PDF),
+    "| audit baseline | `.claude/skills/vault-audit/baseline.json`, one digest per control-plane file as of the last "
+    "accepted audit | manifest, snapshot (for the baseline) |":
+        ("| audit baseline | `audit/baseline.json`, one digest per control-plane file as of the last accepted audit | "
+         "manifest, snapshot (for the baseline) |",),
 }
 
 CONTRACT_REWORDED = {

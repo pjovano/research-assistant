@@ -48,7 +48,7 @@ table entry that only one work, or only the works of one batch, can meet.
   order, and fix every finding**: the suite,
   `~/.research-vault/venv/bin/python -m unittest discover -s tests`; the
   linter, `~/.research-vault/venv/bin/ruff check .`; the audit linter,
-  `~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py lint`,
+  `~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py lint`,
   whose `works` list MUST be empty. If an expectation of the suite moves with
   the fix, rename that test so its name states the corrected behaviour. If
   the suite fails otherwise, revert the change and report the defect
