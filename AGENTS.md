@@ -516,21 +516,20 @@ there.
   the post-edit hook runs the linter, the audit linter's `works` check, and
   the affected test modules. After an edit to a Markdown file, the post-edit
   hook runs the audit linter's `works` check, then `audit.py prose --new` on
-  the edited file. If a source file fails to
-  parse, or no test module reaches the edited file, the post-edit hook runs
-  the test suite in place of the affected test modules.
+  the edited file. If a source file fails to parse, or no test module
+  reaches the edited file, the post-edit hook runs the test suite in place
+  of the affected test modules.
 * If a checkout's `core.hooksPath` names `.githooks`, the pre-push hook runs
   the test suite, the linter, and the audit linter's `works` check in that
   checkout before every push. If one of the three fails, the pre-push hook
   refuses the push. In a cloud session, `bin/cloud-setup.sh` sets
   `core.hooksPath` to `.githooks`.
-* CI fails a pull request that fails the test suite, the linter, the audit
-  linter's `works` check, the audit linter's gate, the word ratchet, or the
-  secret scan, which runs gitleaks over the tree and every commit. The audit
-  linter's gate fails on an `xref` or a `special` row that the audit
-  baseline does not acknowledge, and on a lint run past 60 seconds. The word
-  ratchet, `audit.py ratchet`, fails on instruction text grown without its
-  stated reason.
+* CI fails a pull request on a failure of the test suite, the linter, the
+  audit linter, the word ratchet, or the secret scan. In CI the audit linter
+  fails on a `works` row and when it takes over 60 seconds. It also fails
+  on an unacknowledged `xref` or `special` row. The word ratchet,
+  `audit.py ratchet`, fails on instruction text grown without its stated
+  reason. The secret scan runs gitleaks over the tree and every commit.
 * **A cloud session builds its own environment.** If `CLAUDE_CODE_REMOTE`
   is `true`, the SessionStart hook in `.claude/settings.json` runs
   `bin/cloud-session-start.sh`, which runs `bin/cloud-setup.sh` until the
