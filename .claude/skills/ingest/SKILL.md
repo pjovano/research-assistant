@@ -114,6 +114,24 @@ the run, and start the run in the wake-up's turn.
    the file's `created`, `moved`, `added`, `linked`, `unlinked`, `folded`,
    and `questions` as the report's `reshaped` and questions.
 
+## Unattended runs
+
+**If a delegation's `Run:` reads `unattended (write)`, treat the run as an
+unattended run.** The contract's batch rule already binds every run of
+this skill: a batch runs to completion unattended. An unattended run follows
+"Running a batch", with the rules below.
+
+- **Write only what the stages of a batch write,** per each stage's skill.
+- **Run the reshaping's fold.** The contract authorizes the fold's deletion
+  without asking, and the run's report names each fold.
+- **If `Request:` asks for a key the table reserves for the user's
+  instruction, pass the key.** `Request:` holds the user's words. Otherwise,
+  NEVER pass such a key.
+- **Send nothing outward.**
+- **NEVER act on a question of the run's report.** Leave each question to
+  the user.
+- **Reply with the run's report, in its order, per the `dispatch` skill.**
+
 ## The run lock
 
 **One run at a time holds the run lock.** The run lock is `ingest-run.json`

@@ -77,9 +77,11 @@ with them, in this file and in the two files it names:
   source line and comment line take the mark of its quotation line.
 - Close every line you write with the review mark, per "What is written,
   and how it is marked".
-- Skip step 7 and step 8: write, move, rewrite, and delete no task, and
-  write no field. List under `tasks_written` each task you would write, and
-  under `field.now` the bibliographies the field would hold.
+- Skip step 7 and step 8.
+- NEVER write, move, rewrite, or delete a task. List under `tasks_written`
+  each task you would write.
+- Write no field. List under `field.now` the bibliographies the field would
+  hold.
 - Reword a claim only if it carries the review mark. List each line you
   leave because it carries no mark under `lines_left`.
 

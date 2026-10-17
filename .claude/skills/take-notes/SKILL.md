@@ -606,10 +606,10 @@ section, takes no highlight.**
 
 ## Unattended runs
 
-**An unattended run of this skill is a run the user does not watch.** It is
-a delegation whose `Run:` reads `unattended (write)`, or a `resolve-tasks`
-run with `unattended: true`. Its rules override each step of an operation
-that conflicts with them.
+**If a delegation's `Run:` reads `unattended (write)`, treat the run as an
+unattended run.** If a `resolve-tasks` run carries `unattended: true`, treat
+that run as an unattended run as well. If a rule below conflicts with a step
+of an operation, the rule wins.
 
 - **Write only in `writing/1 notes/`.** NEVER write a highlight into a PDF,
   a project file, a bibliography, or any other file.
@@ -621,12 +621,14 @@ that conflicts with them.
 - **Close every line the run writes with the review mark,** per "What is
   written, and how it is marked". `note` and `chosen --apply` MAY write the
   blank note of a new atomic note.
-- **Write no task, and NEVER check or uncheck one.** A task takes no review
-  mark. Name in the report each task the passages read open.
+- **Write no task.** A task takes no review mark. Name in the report each
+  task the passages read open.
+- **NEVER check or uncheck a task.**
 - **Write no field.** The frontmatter carries no review mark. Name in the
   report the bibliographies the note's field would hold.
-- **NEVER run `accept`, and NEVER delete a resolved task's line.** A chosen
-  task stays checked for an attended run.
+- **NEVER run `accept`.**
+- **NEVER delete a resolved task's line.** A chosen task stays checked for
+  an attended run.
 - **Reword a claim only if it carries the review mark.** Name in the report
   each claim left as it stands.
 
@@ -754,7 +756,7 @@ stub notes to be researched, of every atomic note or of the notes the user
 names.
 
 **The `resolve-tasks` workflow, `.claude/workflows/resolve-tasks.js`, runs
-the operation unattended.** It takes two kinds of work, the chosen tasks
+the operation and asks the user nothing.** It takes two kinds of work, the chosen tasks
 first and the stub notes within what the limit leaves. Its steps:
 
 | # | Step | Run by |
@@ -769,23 +771,24 @@ A worker that returns `{"error": …}` or no JSON object is dispatched once
 more; a task whose note researcher fails twice stays checked for the next
 run, and its reviewed note is reviewed for its other tasks alone.
 
-1. If the user names tasks in chat, check each one. If the user names
-   notes, resolve only the checked tasks of those notes: pass no other note's
-   task to the workflow, by asking the user to uncheck the others first.
-2. Run `notes.py accept` and `notes.py chosen`, and read their plans. Reword
-   each task under `retagged` per "Tasks", then run `notes.py chosen` again.
-   If `accept` lists no note under `accepted` and `chosen` lists no task and
-   no stub, tell the user that no checked accept task, checked task, or stub
-   note stands, and name each line under `unparsed`.
+1. If the run is unattended, skip this step. If the user names tasks in
+   chat, check each one. If the user names notes, resolve only the checked
+   tasks of those notes: pass no other note's task to the workflow, by
+   asking the user to uncheck the others first.
+2. Unless the run is unattended, run `notes.py accept` and read its plan.
+   Run `notes.py chosen`, and read its plan. If the run is unattended, report
+   each task under `retagged` as it stands. Otherwise, reword each task under
+   `retagged` per "Tasks", then run `notes.py chosen` again. If `chosen`
+   lists no task and no stub, and `accept` lists no note under `accepted`,
+   tell the user that no checked accept task, checked task, or stub note
+   stands. Name each line under `unparsed` in that message.
 3. Invoke the Workflow tool with `name: "resolve-tasks"` and
    `args: {"limit": <N>}`, `N` the user's cap, or 8 if the user names none.
    If the run is unattended, add `"unattended": true` to `args`.
 4. Run `check` on each note the run wrote.
-5. For each note the workflow returns under `accepted`, run steps 2 and 3 of
-   "Accepting notes", and report them with the rest of the run.
-
-**An unattended run skips step 1, `accept` and the rewording of step 2, and
-step 5.** It reports each retagged task as it stands.
+5. If the run is unattended, skip this step. For each note the workflow
+   returns under `accepted`, run steps 2 and 3 of "Accepting notes", and
+   report them with the rest of the run.
 6. Report once, in chat, per reviewed note: each further note, with what its
    note researcher reports; then what the note reviewer reports, per
    "Reviewing a note"; then each stub note, with what its note researcher

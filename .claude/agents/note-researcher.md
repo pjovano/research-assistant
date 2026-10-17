@@ -117,8 +117,9 @@ with them, in this file and in the two files it names:
   source line and comment line take the mark of its quotation line.
 - Close every line you write with the review mark, per "What is written,
   and how it is marked".
-- Write no task, and NEVER check or uncheck one: a task takes no review
-  mark. List under `tasks` each task the passages read open.
+- Write no task: a task takes no review mark. List under `tasks` each task
+  the passages read open.
+- NEVER check or uncheck a task.
 - Write no field: the frontmatter carries no review mark. List under
   `field` the bibliographies the note's field would hold.
 - Reword a claim only if it carries the review mark. List each claim left
