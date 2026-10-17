@@ -4,7 +4,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
@@ -40,8 +40,8 @@ class TestEditedProjectFile(unittest.TestCase):
         self.assertEqual(["the linter", "the audit linter", "the test suite"],
                          self._check_labels(self.root / "lib/x.py"))
 
-    def test_a_markdown_file_runs_the_audit_linter_alone(self):
-        self.assertEqual(["the audit linter"], self._check_labels(self.root / "CLAUDE.md"))
+    def test_a_markdown_file_runs_the_audit_linter_then_the_prose_linter(self):
+        self.assertEqual(["the audit linter", "the prose linter"], self._check_labels(self.root / "CLAUDE.md"))
 
     def test_a_relative_project_path_runs_checks(self):
         self.assertTrue(self._check_labels(Path("tests/test_x.py")))
@@ -74,6 +74,9 @@ class TestAuditCheck(unittest.TestCase):
         crashed = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="Traceback: boom\n")
         self.assertIn("Traceback: boom", self._report_of(crashed))
 
+    def test_the_check_computes_the_works_row_alone(self):
+        self.assertEqual(("lint", "--only", "works"), harness_hooks.AuditCheck.COMMAND[-3:])
+
     def test_the_audit_script_exists_at_the_path_the_check_runs(self):
         self.assertTrue((harness_hooks.PROJECT_ROOT / harness_hooks.AUDIT_SCRIPT).is_file())
 
@@ -81,6 +84,29 @@ class TestAuditCheck(unittest.TestCase):
         under_this_interpreter = (sys.executable, *harness_hooks.AUDIT_ARGUMENTS)
         with mock.patch.object(harness_hooks.AuditCheck, "COMMAND", under_this_interpreter):
             self.assertIsNone(harness_hooks.AuditCheck(harness_hooks.PROJECT_ROOT).failure_report())
+
+
+class TestProseCheck(unittest.TestCase):
+    EDITED = Path("/project/.claude/skills/one/SKILL.md")
+
+    def _report(self, stdout: str, returncode: int = 0) -> str | None:
+        completed = subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr="")
+        with mock.patch.object(harness_hooks.subprocess, "run", return_value=completed):
+            return harness_hooks.ProseCheck(Path.cwd(), self.EDITED).failure_report()
+
+    def test_the_check_runs_prose_new_on_the_edited_file(self):
+        command = harness_hooks.ProseCheck.for_edit(Path.cwd(), self.EDITED)._command()
+        self.assertEqual(("prose", "--new", str(self.EDITED)), command[-3:])
+
+    def test_a_file_without_unacknowledged_rows_reports_nothing(self):
+        self.assertIsNone(self._report(json.dumps({"prose": []})))
+
+    def test_each_row_is_reported_with_its_file_line_and_rule(self):
+        row = {"rule": "bare-should", "file": "AGENTS.md", "line": 4, "detail": "write SHOULD"}
+        self.assertEqual("AGENTS.md:4: bare-should: write SHOULD", self._report(json.dumps({"prose": [row]})))
+
+    def test_a_prose_linter_that_crashes_is_reported_with_its_output(self):
+        self.assertIn("exited with code 1", self._report("", returncode=1))
 
 
 class TestEditCheckReport(unittest.TestCase):
@@ -270,15 +296,37 @@ class TestChecksAfterEdit(unittest.TestCase):
         self.assertEqual(code, 0)
         suite.assert_called_once()
 
-    def test_a_markdown_edit_runs_the_audit_linter_and_nothing_else(self):
+    def test_a_markdown_edit_runs_the_audit_linter_and_the_prose_linter_alone(self):
         with mock.patch.object(harness_hooks.LintCheck, "failure_report") as lint, \
                 mock.patch.object(harness_hooks.AuditCheck, "failure_report", return_value=None) as audit, \
+                mock.patch.object(harness_hooks.ProseCheck, "failure_report", return_value=None) as prose, \
                 mock.patch.object(harness_hooks.SuiteCheck, "failure_report") as suite:
             code = harness_hooks.HookCli(harness_hooks.PROJECT_ROOT).run("checks-after-edit", self.MARKDOWN_EVENT)
         self.assertEqual(code, 0)
         audit.assert_called_once()
+        prose.assert_called_once()
         lint.assert_not_called()
         suite.assert_not_called()
+
+    def _markdown_edit_with_a_prose_row(self, audit_report: str | None) -> tuple[int, str, str]:
+        with mock.patch.object(harness_hooks.AuditCheck, "failure_report", return_value=audit_report), \
+                mock.patch.object(harness_hooks.ProseCheck, "failure_report", return_value="CLAUDE.md:1: x"), \
+                redirect_stderr(io.StringIO()) as err, redirect_stdout(io.StringIO()) as out:
+            code = harness_hooks.HookCli(harness_hooks.PROJECT_ROOT).run("checks-after-edit", self.MARKDOWN_EVENT)
+        return code, err.getvalue(), out.getvalue()
+
+    def test_a_prose_row_of_a_markdown_edit_does_not_block_the_edit(self):
+        code, err, _out = self._markdown_edit_with_a_prose_row(None)
+        self.assertEqual((0, ""), (code, err))
+
+    def test_a_prose_row_of_a_markdown_edit_reaches_the_session_as_context(self):
+        _code, _err, out = self._markdown_edit_with_a_prose_row(None)
+        context = json.loads(out)["hookSpecificOutput"]
+        self.assertEqual(("PostToolUse", True), (context["hookEventName"], "CLAUDE.md:1: x" in context["additionalContext"]))
+
+    def test_an_audit_linter_failure_still_blocks_a_markdown_edit(self):
+        code, err, out = self._markdown_edit_with_a_prose_row("AGENTS.md:1: Doe - 2020 - A Work")
+        self.assertEqual((harness_hooks.BLOCKING_EXIT_CODE, True, ""), (code, "Doe - 2020" in err, out))
 
 
 class TestCheckEnvironment(unittest.TestCase):

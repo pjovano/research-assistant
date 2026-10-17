@@ -15,6 +15,7 @@ from _support import PROJECT_ROOT, LiveTree
 LiveTree.activate()
 
 import vault
+import yaml
 from _audit_plane import COMPARED_ROWS, NAMED_WORK, OLD_ENGINE_LINT, AuditPlane
 from _vaults import TempVault
 
@@ -33,6 +34,13 @@ VAULT_NOTE = "research vault/corpus/x.md"
 LIBRARY_PDF = "library/paper.pdf"
 TEST_CONTAINER_MACHINE = {"vault_dir": "~/.research-vault/empty-vault"}
 UPGRADE_DIRECTORY = "upgrade/"
+LINT_SECONDS = 60
+AUDIT_RELATIVE = ".claude/skills/control-plane-audit/scripts/audit.py"
+RENAMED_RULES = {"more-than-three-arguments": "PLR0913"}
+BASELINE_WRITERS = ("accept", "acknowledge", "dismiss")
+PAGE_LITERAL = "def is_the_plate(page_number):\n    return page_number == 37\n"
+FIRST_PAGE = "def is_the_cover(page_number):\n    return page_number == 1\n"
+FONT_LITERAL = "def is_the_bad_font(font_name):\n    return font_name == \"TimesNewRomanPSMT\"\n"
 STALENESS_CONTRACT = "The library holds 3 PDFs and 2 corpus files.\nThe batch filed 1,065 works.\n"
 REPOSITORY_FILES = {
     "contract": ("AGENTS.md", "CLAUDE.md", ".mcp.json", "requirements.txt", ".claude/settings.json"),
@@ -87,7 +95,7 @@ class TestNamedWorks(unittest.TestCase):
         return named_works([self.files.written(name, text)], self.files.root).findings()
 
     def test_a_basename_in_instruction_text_is_reported_with_its_line(self) -> None:
-        expected = [{"file": "rule.md", "line": 1, "finding": "work-named", "detail": f"{NAMED_WORK}.pdf"}]
+        expected = [{"rule": "work-named", "file": "rule.md", "line": 1, "detail": f"{NAMED_WORK}.pdf"}]
         self.assertEqual(expected, self._findings("rule.md", NAMED_WORK_RULE))
 
     def test_a_basename_in_a_string_constant_is_reported(self) -> None:
@@ -218,9 +226,12 @@ class TestTheVerdictsOfTheOldEngine(unittest.TestCase):
                                    env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
         self.lint = json.loads(completed.stdout)
 
-    def test_the_core_engine_with_the_research_checks_gives_the_old_engines_rows(self) -> None:
+    def test_every_verdict_of_the_old_engine_stands_in_the_core_engines_rows(self) -> None:
         old = json.loads(OLD_ENGINE_LINT.read_text(encoding="utf-8"))
-        self.assertEqual(old, {row: self.lint[row] for row in COMPARED_ROWS})
+        verdicts = {(key, RENAMED_RULES.get(row.get("measure") or row["finding"], row.get("measure") or row["finding"]),
+                     row["file"], row["line"]) for key in COMPARED_ROWS for row in old[key]}
+        rows = {(key, row["rule"], row["file"], row["line"]) for key in COMPARED_ROWS for row in self.lint[key]}
+        self.assertEqual(set(), verdicts - rows)
 
 
 class TestTheBaselineOfTheResearchDomain(unittest.TestCase):
@@ -234,6 +245,80 @@ class TestTheBaselineOfTheResearchDomain(unittest.TestCase):
         subprocess.run([sys.executable, str(AUDIT_SCRIPT), "--root", str(plane), "accept"], cwd=PROJECT_ROOT,
                        capture_output=True, check=True)
         self.assertTrue((plane / "audit" / "baseline.json").is_file())
+
+
+class TestTheResearchContractLocations(unittest.TestCase):
+    def setUp(self) -> None:
+        self.contract = ResearchChecks.module().DOMAIN.contract
+
+    def test_the_stage_table_is_found_in_the_contract(self) -> None:
+        self.assertEqual(1, len(self.contract.stage_table.tables(PROJECT_ROOT)))
+
+    def test_the_operation_tables_are_found_in_the_contract(self) -> None:
+        self.assertEqual(2, len(self.contract.operation_tables.tables(PROJECT_ROOT)))
+
+    def test_every_table_xref_reads_carries_a_model_column(self) -> None:
+        self.assertTrue(all(table.column("Model") is not None for table in self.contract.tables(PROJECT_ROOT)))
+
+    def test_the_hook_list_names_every_command_the_hook_prompts_on(self) -> None:
+        hook_list = self.contract.hook_list
+        named = hook_list.named(PROJECT_ROOT, ResearchChecks.control_plane(PROJECT_ROOT).scope)
+        self.assertEqual(sorted(hook_list.hooks.named(PROJECT_ROOT)), sorted(named))
+
+    def test_the_hook_list_names_at_least_one_command(self) -> None:
+        self.assertTrue(self.contract.hook_list.hooks.named(PROJECT_ROOT))
+
+
+class TestThePdfKeyedSigns(unittest.TestCase):
+    def setUp(self) -> None:
+        self.files = TemporaryFiles(self)
+
+    def _rules(self, source: str) -> list[str]:
+        comparisons = ResearchChecks.module().PdfKeyedComparisons
+        return [row["rule"] for row in comparisons(self.files.written("lib/pages.py", source), self.files.root).rows()]
+
+    def test_a_comparison_with_a_literal_file_page_is_a_row(self) -> None:
+        self.assertEqual(["literal-file-page"], self._rules(PAGE_LITERAL))
+
+    def test_a_comparison_with_the_first_page_is_no_row(self) -> None:
+        self.assertEqual([], self._rules(FIRST_PAGE))
+
+    def test_a_comparison_with_an_exact_font_name_is_a_row(self) -> None:
+        self.assertEqual(["exact-font-name"], self._rules(FONT_LITERAL))
+
+    def test_the_signs_are_rows_of_the_special_key(self) -> None:
+        self.assertIn("special", [check.name for check in ResearchChecks.module().DOMAIN.lint])
+
+
+class TestTheBaselineWritingSubcommands(unittest.TestCase):
+    def test_each_baseline_writer_is_excluded_from_the_sandbox(self) -> None:
+        settings = json.loads((PROJECT_ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"))
+        excluded = settings["sandbox"]["excludedCommands"]
+        missing = [name for name in BASELINE_WRITERS
+                   if not any(entry.endswith(f"audit.py {name}*") for entry in excluded)]
+        self.assertEqual([], missing)
+
+
+class TestTheAuditJob(unittest.TestCase):
+    def setUp(self) -> None:
+        workflow = yaml.safe_load((PROJECT_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8"))
+        self.jobs = workflow["jobs"]
+        self.audit = " ".join(step.get("run", "") for step in self.jobs["audit"]["steps"])
+
+    def test_the_lint_runs_within_sixty_seconds(self) -> None:
+        self.assertIn(f"timeout {LINT_SECONDS} uv run --no-project python {AUDIT_RELATIVE} lint --new", self.audit)
+
+    def test_the_job_fails_on_an_unacknowledged_xref_or_special_row(self) -> None:
+        self.assertIn("(.xref | length) == 0 and (.special | length) == 0", self.audit)
+
+    def test_the_job_reads_the_whole_history_for_the_commit_signs(self) -> None:
+        steps = self.jobs["audit"]["steps"]
+        checkout = next(step for step in steps if step.get("uses", "").startswith("actions/checkout"))
+        self.assertEqual(0, checkout["with"]["fetch-depth"])
+
+    def test_a_pull_request_runs_the_word_ratchet(self) -> None:
+        ratchet = " ".join(step.get("run", "") for step in self.jobs["word-ratchet"]["steps"])
+        self.assertIn(f"{AUDIT_RELATIVE} ratchet", ratchet)
 
 
 class TestTheCoreAuditLink(unittest.TestCase):

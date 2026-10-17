@@ -127,6 +127,8 @@
       "git worktree *",
       "uv pip *",
       "~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py accept*",
+      "~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py acknowledge*",
+      "~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py dismiss*",
       "~/.research-vault/venv/bin/python .claude/skills/clean-pdfs/scripts/clean.py *",
       "~/.research-vault/venv/bin/python .claude/skills/extract-corpus/scripts/extract.py *",
       "~/.research-vault/venv/bin/python .claude/skills/search/scripts/search.py *",

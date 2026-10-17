@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import re
 import sys
 import time
@@ -11,6 +12,8 @@ import vault
 from _vault.paths import MACHINE, VAULT_DIR_KEY
 from agent_core._audit.checks import DomainChecks, PrimaryOnly
 from agent_core._audit.cli import AuditSet
+from agent_core._audit.contract import ContractLocations, ContractTables, HookList, JsonKeys
+from agent_core._audit.rows import Row
 from agent_core._audit.scope import CORE_SCOPE, ENCODING, INSTRUCTION_GROUPS, ControlPlaneFiles, RepositoryPath, Scope
 
 WORK_BASENAME = re.compile(r"[^\s`\"'(\[][^\n`\"']{0,60}? - (?:1[5-9]|20)\d{2}[a-z]? - [^\n`\"']{1,80}")
@@ -18,6 +21,16 @@ QUOTED_COUNT = re.compile(r"\b(\d[\d,]*) (works|PDFs|corpus files)\b")
 DIGIT_GROUP_SEPARATOR = ","
 HELP_STALENESS = "each count of works, PDFs, or corpus files in instruction text that differs from the vault's count"
 FINDING_NAMED_WORK = "work-named"
+RULE_FILE_PAGE = "literal-file-page"
+RULE_FONT_NAME = "exact-font-name"
+PAGE_WORD = "page"
+FONT_WORD = "font"
+COMPARISONS = (ast.Eq, ast.NotEq, ast.In, ast.NotIn)
+COLLECTIONS = (ast.Tuple, ast.List, ast.Set)
+CONTRACT = "AGENTS.md"
+OPERATION_SECTION = "## 4. Operation"
+HOOK_LIST_MARKER = "turns `"
+FIRST_AND_LAST_PAGES = (0, 1, -1)
 ORPHAN_PATTERNS = ("*.tmp", "*.bak", "*~", "*.part", "*.partial")
 SECONDS_PER_DAY = 86400
 BYTES_PER_MEGABYTE = 1048576
@@ -48,8 +61,7 @@ class NamedWorks:
                 for number, line in numbered for match in WORK_BASENAME.finditer(line)]
 
     def _finding(self, path: Path, line: int, detail: str) -> dict:
-        return {"file": RepositoryPath(path, self._root).label(), "line": line, "finding": FINDING_NAMED_WORK,
-                "detail": detail}
+        return Row(FINDING_NAMED_WORK, RepositoryPath(path, self._root).label(), line, detail).as_dict()
 
 
 class WorksCheck:
@@ -57,6 +69,56 @@ class WorksCheck:
 
     def findings(self, audit_set: AuditSet) -> list[dict]:
         return NamedWorks(audit_set.instructions() + audit_set.pipeline_code(), audit_set.root).findings()
+
+
+class PdfKeyedSigns:
+    name = "special"
+
+    def findings(self, audit_set: AuditSet) -> list[dict]:
+        return [row for path in audit_set.pipeline_code() for row in PdfKeyedComparisons(path, audit_set.root).rows()]
+
+
+class PdfKeyedComparisons:
+    def __init__(self, path: Path, root: Path) -> None:
+        self._path = path
+        self._label = RepositoryPath(path, root).label()
+
+    def rows(self) -> list[dict]:
+        try:
+            tree = ast.parse(self._path.read_text(encoding=ENCODING))
+        except (OSError, SyntaxError, UnicodeDecodeError, ValueError):
+            return []
+        return [row for node in ast.walk(tree) if isinstance(node, ast.Compare)
+                and any(isinstance(operator, COMPARISONS) for operator in node.ops) for row in self._of(node)]
+
+    def _of(self, node: ast.Compare) -> list[dict]:
+        operands = [node.left, *node.comparators]
+        named = " ".join(self._name_of(operand) for operand in operands).lower()
+        literals = [value for operand in operands for value in self._literals(operand)]
+        if PAGE_WORD in named and any(self._is_a_page_number(value) for value in literals):
+            return [Row(RULE_FILE_PAGE, self._label, node.lineno, f"compares a page with {literals!r}").as_dict()]
+        if FONT_WORD in named and any(isinstance(value, str) for value in literals):
+            return [Row(RULE_FONT_NAME, self._label, node.lineno, f"compares a font with {literals!r}").as_dict()]
+        return []
+
+    @staticmethod
+    def _is_a_page_number(value: object) -> bool:
+        return isinstance(value, int) and not isinstance(value, bool) and value not in FIRST_AND_LAST_PAGES
+
+    @staticmethod
+    def _name_of(operand: ast.expr) -> str:
+        if isinstance(operand, ast.Name):
+            return operand.id
+        if isinstance(operand, ast.Attribute):
+            return operand.attr
+        if isinstance(operand, ast.Call):
+            return PdfKeyedComparisons._name_of(operand.func)
+        return ""
+
+    @staticmethod
+    def _literals(operand: ast.expr) -> list[object]:
+        elements = operand.elts if isinstance(operand, COLLECTIONS) else [operand]
+        return [element.value for element in elements if isinstance(element, ast.Constant)]
 
 
 class Residue:
@@ -171,5 +233,12 @@ RESEARCH_SCOPE = Scope(
 
 REAL_VAULT = RealVault(MACHINE)
 
-DOMAIN = DomainChecks(scope=RESEARCH_SCOPE, lint=(WorksCheck(),),
-                      reports=(PrimaryOnly(Residue(), REAL_VAULT), PrimaryOnly(Staleness(), REAL_VAULT)))
+RESEARCH_CONTRACT = ContractLocations(
+    stage_table=ContractTables(CONTRACT, OPERATION_SECTION, ("Stage", "Skill", "Model")),
+    operation_tables=ContractTables(CONTRACT, OPERATION_SECTION, ("Operation", "Skill")),
+    hook_list=HookList(CONTRACT, HOOK_LIST_MARKER, JsonKeys("domain.json", ("policy", "prompt_on"))),
+)
+
+DOMAIN = DomainChecks(scope=RESEARCH_SCOPE, lint=(WorksCheck(), PdfKeyedSigns()),
+                      reports=(PrimaryOnly(Residue(), REAL_VAULT), PrimaryOnly(Staleness(), REAL_VAULT)),
+                      contract=RESEARCH_CONTRACT)

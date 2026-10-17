@@ -118,7 +118,7 @@ REWORDED = {
          "grows by one per run.", INPUT_IS_A_PDF),
     "| audit baseline | `.claude/skills/vault-audit/baseline.json`, one digest per control-plane file as of the last "
     "accepted audit | manifest, snapshot (for the baseline) |":
-        ("| audit baseline | `audit/baseline.json`, one digest per control-plane file as of the last accepted audit | "
+        ("| audit baseline | `audit/baseline.json`, as `control-plane-audit` defines it | "
          "manifest, snapshot (for the baseline) |",),
 }
 

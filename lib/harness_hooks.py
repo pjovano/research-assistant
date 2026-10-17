@@ -19,8 +19,10 @@ UNITTEST_ARGUMENTS = ("-m", "unittest")
 UNITTEST_BLOCK_SEPARATOR = "=" * 70
 LINT_ARGUMENTS = ("check", "--output-format", "concise", ".")
 AUDIT_SCRIPT = Path(".claude/skills/control-plane-audit/scripts/audit.py")
-AUDIT_ARGUMENTS = (str(AUDIT_SCRIPT), "lint")
 AUDIT_WORKS_KEY = "works"
+AUDIT_ARGUMENTS = (str(AUDIT_SCRIPT), "lint", "--only", AUDIT_WORKS_KEY)
+PROSE_ARGUMENTS = (str(AUDIT_SCRIPT), "prose", "--new")
+PROSE_KEY = "prose"
 PYTHON_SUFFIX = ".py"
 MARKDOWN_SUFFIX = ".md"
 BLOCKING_EXIT_CODE = 2
@@ -28,6 +30,7 @@ HOOK_TIMEOUT_SECONDS = 900
 HOOK_OVERHEAD_SECONDS = 60
 LINT_TIMEOUT_SECONDS = 60
 AUDIT_TIMEOUT_SECONDS = 60
+PROSE_TIMEOUT_SECONDS = 60
 SUITE_TIMEOUT_SECONDS = HOOK_TIMEOUT_SECONDS - LINT_TIMEOUT_SECONDS - AUDIT_TIMEOUT_SECONDS - HOOK_OVERHEAD_SECONDS
 REPAIR_COMMAND = ("uv pip sync --reinstall-package {package} --python ~/.research-vault/venv/bin/python "
                   "requirements.lock")
@@ -95,6 +98,7 @@ class EditCheck:
     COMMAND: tuple[str, ...]
     TIMEOUT_SECONDS: int
     REPAIR_PACKAGE: str | None = None
+    BLOCKS_THE_EDIT = True
 
     def __init__(self, project_root: Path) -> None:
         self._project_root = project_root
@@ -225,9 +229,37 @@ class AuditCheck(EditCheck):
         return "\n".join(f"{work['file']}:{work['line']}: {work['detail']}" for work in works)
 
 
+class ProseCheck(EditCheck):
+    LABEL = "the prose linter"
+    INSTRUCTION = ("the prose linter names rows in the edited file that the audit baseline does not acknowledge; "
+                   "restate each sentence this edit wrote that it names:")
+    COMMAND = (str(INTERPRETER), *PROSE_ARGUMENTS)
+    TIMEOUT_SECONDS = PROSE_TIMEOUT_SECONDS
+    BLOCKS_THE_EDIT = False
+
+    def __init__(self, project_root: Path, edited: Path) -> None:
+        super().__init__(project_root)
+        self._edited = edited
+
+    @classmethod
+    def for_edit(cls, tree: Path, edited: Path) -> EditCheck:
+        return cls(tree, edited)
+
+    def _command(self) -> tuple[str, ...]:
+        return (*self.COMMAND, str(self._edited))
+
+    def _finding(self, completed: subprocess.CompletedProcess) -> str | None:
+        if completed.returncode != 0:
+            return self._report(completed)
+        rows = json.loads(completed.stdout)[PROSE_KEY]
+        if not rows:
+            return None
+        return "\n".join(f"{row['file']}:{row['line']}: {row['rule']}: {row['detail']}" for row in rows)
+
+
 CHECKS_BY_SUFFIX: dict[str, tuple[type[EditCheck], ...]] = {
     PYTHON_SUFFIX: (LintCheck, AuditCheck, SuiteCheck),
-    MARKDOWN_SUFFIX: (AuditCheck,),
+    MARKDOWN_SUFFIX: (AuditCheck, ProseCheck),
 }
 CHECKS_AFTER_EDIT = CHECKS_BY_SUFFIX[PYTHON_SUFFIX]
 
@@ -301,6 +333,12 @@ def permission_decision(permission: str, reason: str) -> dict:
                                    "permissionDecisionReason": reason}}
 
 
+def post_edit_context(notes: list[str]) -> dict | None:
+    if not notes:
+        return None
+    return {"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "\n".join(notes)}}
+
+
 class HookCli:
     def __init__(self, project_root: Path) -> None:
         self._project_root = project_root
@@ -321,12 +359,16 @@ class HookCli:
 
 
     def _checks_after_edit(self, event: HookEvent) -> int:
+        notes = []
         for check in EditedProjectFile(event.edited_path(), self._project_root).checks():
             report = check.failure_report()
-            if report is not None:
+            if report is None:
+                continue
+            if check.BLOCKS_THE_EDIT:
                 sys.stderr.write(f"{check.INSTRUCTION}\n{report}\n")
                 return BLOCKING_EXIT_CODE
-        return 0
+            notes.append(f"{check.INSTRUCTION}\n{report}")
+        return self._emitted(post_edit_context(notes))
 
     def _checks_before_push(self) -> int:
         reports = [(check.LABEL, check.failure_report()) for check in self._checks_of_a_push()]

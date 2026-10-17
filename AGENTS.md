@@ -74,7 +74,7 @@ every note lives in it.
 | derived corpus | `research vault/corpus/` | one corpus file per Zotero record: the frontmatter Stage 1 writes and Stage 4 classifies, and the body Stage 2 writes, the work's own content structured by its own headings, a page marker where each page begins, without front matter, index, or publisher's pages; a corpus file sits in `corpus/` itself, NEVER in a subfolder | yes |
 | talk transcripts | `research vault/corpus/talk transcripts/` | one transcript per Zotero record of a recorded talk: the frontmatter `file` writes and Stage 4 classifies, and the body the transcript reviewer wrote, the talk's words with a time marker where each utterance begins, without the chair's introductions; the audio is never kept; a transcript is never a corpus file | yes |
 | bibliographies | `research vault/bibliographies/` | one bibliography per topic, and one per author the user has approved, listing the works in the library on that topic or by that author, each with its gloss, under an introduction; each sits in the folder of its kind, `1 historical periods/`, `2 authors/`, or `3 topics/`, and lists the bibliographies one level beneath it under `## Maps`; a bibliography MAY sit beneath several, and none beneath itself; their frontmatter and their subfolders never carry that shape | yes |
-| writing | `research vault/writing/` | the user's writing, a Zettelkasten in four flat folders the `take-notes`, `projects`, and `edit-drafts` skills state: `1 notes/`, one atomic note per idea of the user's, its one to three claims with their explications and their relations to other atomic notes, the verified quotations behind them, and their tasks; `2 projects/`, one project file per project, an Excalidraw board: its parents and children in its frontmatter, a card for each atomic note of the project and an arrow for each relation between two of them, and its research question, abstract, drafts, and project reading list shown on the board from its Markdown side, and no task; `3 drafts/`, every version of every draft; `4 published/`, the finished pieces; the research assistant writes there on the user's instruction, marks each line it writes in an atomic note for review, and NEVER changes the prose of a draft or a published piece unless the user asks | yes |
+| writing | `research vault/writing/` | the user's writing, a Zettelkasten in four flat folders the `take-notes`, `manage-projects`, and `edit-drafts` skills state: `1 notes/`, one atomic note per idea of the user's, its one to three claims with their explications and their relations to other atomic notes, the verified quotations behind them, and their tasks; `2 projects/`, one project file per project, an Excalidraw board: its parents and children in its frontmatter, a card for each atomic note of the project and an arrow for each relation between two of them, and its research question, abstract, drafts, and project reading list shown on the board from its Markdown side, and no task; `3 drafts/`, every version of every draft; `4 published/`, the finished pieces; the research assistant writes there on the user's instruction, marks each line it writes in an atomic note for review, and NEVER changes the prose of a draft or a published piece unless the user asks | yes |
 | reading lists | `research vault/bibliographies/4 reading lists/` | one project reading list per project, `<Project> - Reading list.md`, the questions it was searched for, the works that bear on its questions as wanted or held, and a discover task for each neighbouring subject, written by the `manage-projects` skill, each wanted entry moved under `# Held` by a batch once its work is placed; and the reading lists the user keeps from Discover, written there by Discover on the user's instruction; a note of this folder is NEVER a bibliography and no part of the retrieval layer | yes |
 | inbox | `~/Desktop/inbox/` | new PDFs awaiting ingest; Stage 0 rewrites each in place, and Stage 1 keeps its draft card beside it until the PDF is filed; and Word files awaiting import by the `edit-drafts` skill, which a batch never reads | yes |
 | control plane | `~/Developer/research-assistant`, the repository this contract loads from | this contract, `AGENTS.md`, which `CLAUDE.md` imports by its first line, `@AGENTS.md`, before the soul file, `@vendor/agent-core/SOUL.md`, and the user file, `@USER.md`; `.claude/settings.json`; `.claude/skills/`, each with its `scripts/`; `.claude/agents/`, the worker instructions; `.claude/workflows/`, the saved workflows; `vendor/agent-core/`, the vendored core, each core unit of which `.claude/` uses by a symlink; `lib/`, the shared code; `audit/`, the research checks the core's audit engine runs, and the audit baseline; `tests/`; a skill's `reference/`, the files it loads; `.mcp.json`, which registers the `vault-rag` server; `pyproject.toml`, the ruff configuration; `obsidian/graph.json`, the default graph view; `.gitleaks.toml`, the secret scan's configuration; `.githooks/`, the pre-push hook; and `.github/`, the CI workflow and the composite action that points the vault at an empty directory | no; git |
@@ -323,7 +323,7 @@ demand.
 | Annotate | `annotate-pdfs` | a request | highlights with notes, written into a library PDF | orchestrator; a worker for a whole work | the session's |
 | Take notes | `take-notes` | a request about an atomic note | the claims, explications, relations, verified references, and tasks of atomic notes in `writing/1 notes/`, each line marked for review; the chosen tasks resolved into further atomic notes, and each note they came from related to them and revised | orchestrator; the `resolve-tasks` workflow, `.claude/workflows/resolve-tasks.js`, for the chosen tasks: a note researcher for each further note, then a note reviewer for each reviewed note; a note researcher for each note of a batch | the session's |
 | Edit drafts | `edit-drafts` | a request about a draft | a draft checked for terminology, citations, quotations, and language, its findings reported or marked in it; approved fixes applied to a new version; a draft's claims matched to atomic notes; draft versions and published pieces in `writing/`; a Word file of the inbox imported as a draft; a note of `writing/` exported as a styled `.docx` or PDF | orchestrator | the session's |
-| Manage projects | `projects` | a request about a project; the questions and claims of a new one | a project scoped: the state of the literature on its questions, its project reading list, its proposed abstract, and its next steps; project files in `writing/2 projects/`, each board kept in step with its atomic notes; each project reading list refreshed against the library | orchestrator; the workers of the skills it invokes | the session's |
+| Manage projects | `manage-projects` | a request about a project; the questions and claims of a new one | a project scoped: the state of the literature on its questions, its project reading list, its proposed abstract, and its next steps; project files in `writing/2 projects/`, each board kept in step with its atomic notes; each project reading list refreshed against the library | orchestrator; the workers of the skills it invokes | the session's |
 
 * **Every librarian operation runs on demand, on a target the user names.**
   A batch runs the stages in order and without asking; outside a batch each
@@ -515,17 +515,22 @@ there.
   hook reports a failing check as an error. After an edit to a Python file,
   the post-edit hook runs the linter, the audit linter's `works` check, and
   the affected test modules. After an edit to a Markdown file, the post-edit
-  hook runs the audit linter's `works` check alone. If a source file fails to
-  parse, or no test module reaches the edited file, the post-edit hook runs
-  the test suite in place of the affected test modules.
+  hook runs the audit linter's `works` check, then `audit.py prose --new` on
+  the edited file. The post-edit hook passes the prose rows to the session
+  and never blocks on them. If a source file fails to parse, or no test
+  module reaches the edited file, the post-edit hook runs the test suite in
+  place of the affected test modules.
 * If a checkout's `core.hooksPath` names `.githooks`, the pre-push hook runs
   the test suite, the linter, and the audit linter's `works` check in that
   checkout before every push. If one of the three fails, the pre-push hook
   refuses the push. In a cloud session, `bin/cloud-setup.sh` sets
   `core.hooksPath` to `.githooks`.
-* CI fails a pull request that fails the test suite, the linter, the audit
-  linter's `works` check, or the secret scan, which runs gitleaks over the
-  tree and every commit.
+* CI fails a pull request on a failure of the test suite, the linter, the
+  audit linter, the word ratchet, or the secret scan. In CI the audit linter
+  fails on a `works` row and when it takes over 60 seconds. It also fails
+  on an unacknowledged `xref` or `special` row. The word ratchet,
+  `audit.py ratchet`, fails on instruction text grown without its stated
+  reason. The secret scan runs gitleaks over the tree and every commit.
 * **A cloud session builds its own environment.** If `CLAUDE_CODE_REMOTE`
   is `true`, the SessionStart hook in `.claude/settings.json` runs
   `bin/cloud-session-start.sh`, which runs `bin/cloud-setup.sh` until the
