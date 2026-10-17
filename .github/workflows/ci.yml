@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read
@@ -36,14 +37,41 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv venv
+      - run: uv pip install pyyaml ruff -c requirements.lock
+      - uses: ./.github/actions/empty-vault
+      - name: Run the audit's lint within 60 seconds, without the rows the audit baseline acknowledges
+        run: |
+          timeout 60 uv run --no-project python .claude/skills/control-plane-audit/scripts/audit.py lint --new > audit.json
+          jq '{code, prose, redundancy, staleness, weight}' audit.json
+      - name: Fail on an unacknowledged xref or special row, or on a lint check that could not run
+        run: |
+          jq '{xref, special, skipped}' audit.json
+          jq -e '(.xref | length) == 0 and (.special | length) == 0 and .skipped == null' audit.json
+
+  word-ratchet:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v10.2.0
       - run: uv venv
       - run: uv pip install pyyaml -c requirements.lock
       - uses: ./.github/actions/empty-vault
-      - name: Report the Clean Code measures
+      - name: Fail if the instruction text grew without a stated reason
+        env:
+          PULL_REQUEST_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          uv run --no-project python .claude/skills/control-plane-audit/scripts/audit.py lint > audit.json
-          jq '.code' audit.json
+          printf '%s\n' "$PULL_REQUEST_BODY" > "$RUNNER_TEMP/body.md"
+          uv run --no-project python .claude/skills/control-plane-audit/scripts/audit.py ratchet \
+            --base "$BASE_SHA" --body-file "$RUNNER_TEMP/body.md"
 
   publish-guard:
     runs-on: ubuntu-latest

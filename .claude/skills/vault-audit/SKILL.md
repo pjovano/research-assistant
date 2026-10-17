@@ -48,6 +48,7 @@ prints and writes, and its failure branches.
 | Check | Prints | Runs |
 | --- | --- | --- |
 | `works`, a key of `audit.py lint` | one row per basename of a work in instruction text or in code outside `tests/`, with `file` and `line` | anywhere |
+| `special`, a key of `audit.py lint` | the core's rows, and one row per comparison of a page with a literal page other than the first or the last, or of a font with a literal name | anywhere |
 | `audit.py residue` | the scratch directory's size and age, the conflict copies, the corpus files with no PDF, the bytecode directories, the orphans, and the inbox's contents | on the primary alone |
 | `audit.py staleness` | `on_disk`, the vault's counts; `figures`, one row per count in instruction text that differs from its `on_disk` count, with `file` and `line` | on the primary alone |
 

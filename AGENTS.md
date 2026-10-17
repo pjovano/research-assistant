@@ -515,7 +515,8 @@ there.
   hook reports a failing check as an error. After an edit to a Python file,
   the post-edit hook runs the linter, the audit linter's `works` check, and
   the affected test modules. After an edit to a Markdown file, the post-edit
-  hook runs the audit linter's `works` check alone. If a source file fails to
+  hook runs the audit linter's `works` check, then `audit.py prose --new` on
+  the edited file. If a source file fails to
   parse, or no test module reaches the edited file, the post-edit hook runs
   the test suite in place of the affected test modules.
 * If a checkout's `core.hooksPath` names `.githooks`, the pre-push hook runs
@@ -524,8 +525,12 @@ there.
   refuses the push. In a cloud session, `bin/cloud-setup.sh` sets
   `core.hooksPath` to `.githooks`.
 * CI fails a pull request that fails the test suite, the linter, the audit
-  linter's `works` check, or the secret scan, which runs gitleaks over the
-  tree and every commit.
+  linter's `works` check, the audit linter's gate, the word ratchet, or the
+  secret scan, which runs gitleaks over the tree and every commit. The audit
+  linter's gate fails on an `xref` or a `special` row that the audit
+  baseline does not acknowledge, and on a lint run past 60 seconds. The word
+  ratchet, `audit.py ratchet`, fails on instruction text grown without its
+  stated reason.
 * **A cloud session builds its own environment.** If `CLAUDE_CODE_REMOTE`
   is `true`, the SessionStart hook in `.claude/settings.json` runs
   `bin/cloud-session-start.sh`, which runs `bin/cloud-setup.sh` until the

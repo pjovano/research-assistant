@@ -21,6 +21,8 @@ LINT_ARGUMENTS = ("check", "--output-format", "concise", ".")
 AUDIT_SCRIPT = Path(".claude/skills/control-plane-audit/scripts/audit.py")
 AUDIT_ARGUMENTS = (str(AUDIT_SCRIPT), "lint")
 AUDIT_WORKS_KEY = "works"
+PROSE_ARGUMENTS = (str(AUDIT_SCRIPT), "prose", "--new")
+PROSE_KEY = "prose"
 PYTHON_SUFFIX = ".py"
 MARKDOWN_SUFFIX = ".md"
 BLOCKING_EXIT_CODE = 2
@@ -28,6 +30,7 @@ HOOK_TIMEOUT_SECONDS = 900
 HOOK_OVERHEAD_SECONDS = 60
 LINT_TIMEOUT_SECONDS = 60
 AUDIT_TIMEOUT_SECONDS = 60
+PROSE_TIMEOUT_SECONDS = 60
 SUITE_TIMEOUT_SECONDS = HOOK_TIMEOUT_SECONDS - LINT_TIMEOUT_SECONDS - AUDIT_TIMEOUT_SECONDS - HOOK_OVERHEAD_SECONDS
 REPAIR_COMMAND = ("uv pip sync --reinstall-package {package} --python ~/.research-vault/venv/bin/python "
                   "requirements.lock")
@@ -225,9 +228,36 @@ class AuditCheck(EditCheck):
         return "\n".join(f"{work['file']}:{work['line']}: {work['detail']}" for work in works)
 
 
+class ProseCheck(EditCheck):
+    LABEL = "the prose linter"
+    INSTRUCTION = ("the prose linter names rows in the edited file that the audit baseline does not acknowledge; "
+                   "restate each sentence it names:")
+    COMMAND = (str(INTERPRETER), *PROSE_ARGUMENTS)
+    TIMEOUT_SECONDS = PROSE_TIMEOUT_SECONDS
+
+    def __init__(self, project_root: Path, edited: Path) -> None:
+        super().__init__(project_root)
+        self._edited = edited
+
+    @classmethod
+    def for_edit(cls, tree: Path, edited: Path) -> EditCheck:
+        return cls(tree, edited)
+
+    def _command(self) -> tuple[str, ...]:
+        return (*self.COMMAND, str(self._edited))
+
+    def _finding(self, completed: subprocess.CompletedProcess) -> str | None:
+        if completed.returncode != 0:
+            return self._report(completed)
+        rows = json.loads(completed.stdout)[PROSE_KEY]
+        if not rows:
+            return None
+        return "\n".join(f"{row['file']}:{row['line']}: {row['rule']}: {row['detail']}" for row in rows)
+
+
 CHECKS_BY_SUFFIX: dict[str, tuple[type[EditCheck], ...]] = {
     PYTHON_SUFFIX: (LintCheck, AuditCheck, SuiteCheck),
-    MARKDOWN_SUFFIX: (AuditCheck,),
+    MARKDOWN_SUFFIX: (AuditCheck, ProseCheck),
 }
 CHECKS_AFTER_EDIT = CHECKS_BY_SUFFIX[PYTHON_SUFFIX]
 

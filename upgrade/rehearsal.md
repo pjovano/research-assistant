@@ -118,7 +118,9 @@ R-P6+M4-2 and R-P6+M4-3 are retired: `Accelerator` and `Trash` are deferred.
 
 ### U1, U3, U4
 
-No Mac-only check.
+| ID | Phase | Check | Command or action | Passes when | Result |
+| --- | --- | --- | --- | --- | --- |
+| R-U3-1 | S | The audit's lint on the primary, after the user's bulk acknowledgement of today's rows | `time ~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py lint --new` in the new checkout | it finishes in 60 s or less; `xref` and `special` are empty lists; the output holds no `skipped` key | |
 
 ### G20
 
