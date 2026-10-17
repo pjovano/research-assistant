@@ -121,6 +121,7 @@ R-P6+M4-2 and R-P6+M4-3 are retired: `Accelerator` and `Trash` are deferred.
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
 | R-U3-1 | S | The audit's lint on the primary, after the user's bulk acknowledgement of today's rows | `time ~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py lint --new` in the new checkout | it finishes in 60 s or less; `xref` and `special` are empty lists; the output holds no `skipped` key | |
+| R-U3-2 | S | The post-edit hook after a Markdown edit, on the primary | in each checkout, `time` a run of `printf '{"tool_input":{"file_path":"%s/AGENTS.md"}}' "$PWD" \| ~/.research-vault/venv/bin/python lib/harness_hooks.py checks-after-edit` | it exits 0 in the new checkout and prints the prose rows as `additionalContext`; it takes no longer there than in the old checkout | |
 
 ### G20
 

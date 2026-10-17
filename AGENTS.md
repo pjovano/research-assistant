@@ -516,9 +516,10 @@ there.
   the post-edit hook runs the linter, the audit linter's `works` check, and
   the affected test modules. After an edit to a Markdown file, the post-edit
   hook runs the audit linter's `works` check, then `audit.py prose --new` on
-  the edited file. If a source file fails to parse, or no test module
-  reaches the edited file, the post-edit hook runs the test suite in place
-  of the affected test modules.
+  the edited file. The post-edit hook passes the prose rows to the session
+  and never blocks on them. If a source file fails to parse, or no test
+  module reaches the edited file, the post-edit hook runs the test suite in
+  place of the affected test modules.
 * If a checkout's `core.hooksPath` names `.githooks`, the pre-push hook runs
   the test suite, the linter, and the audit linter's `works` check in that
   checkout before every push. If one of the three fails, the pre-push hook
