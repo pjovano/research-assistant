@@ -12,6 +12,7 @@ LiveTree.activate()
 
 import harness_hooks
 from agent_core._domain.fields import ManifestError
+from agent_core._domain.manifest import MANIFEST_NAME
 
 
 class TestBashGuard(unittest.TestCase):
@@ -38,12 +39,12 @@ class TestBashGuard(unittest.TestCase):
 class TestBashGuardReadsTheDomainManifest(unittest.TestCase):
     def setUp(self):
         self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
-        self.manifest = self.root / harness_hooks.MANIFEST_NAME
+        self.manifest = self.root / MANIFEST_NAME
 
     def _write_manifest(self, prompt_on: dict) -> harness_hooks.PromptOnPatterns:
         manifest = {"name": "probe", "summary": "Probes the guard.", "policy": {"prompt_on": prompt_on}}
         self.manifest.write_text(json.dumps(manifest), encoding="utf-8")
-        return harness_hooks.PromptOnPatterns(self.manifest)
+        return harness_hooks.PromptOnPatterns(self.root)
 
     def test_a_fragment_the_manifest_names_asks_with_its_consequence(self):
         patterns = self._write_manifest({"purge --all": "empties the probe store"})
@@ -67,7 +68,7 @@ class TestBashGuardReadsTheDomainManifest(unittest.TestCase):
     def test_a_malformed_manifest_fails_the_guard_naming_the_manifest(self):
         self.manifest.write_text("{not json", encoding="utf-8")
         event = harness_hooks.HookEvent({"tool_input": {"command": "ls"}})
-        with self.assertRaisesRegex(ManifestError, harness_hooks.MANIFEST_NAME):
+        with self.assertRaisesRegex(ManifestError, MANIFEST_NAME):
             harness_hooks.HookCli(self.root).run("guard-bash", event)
 
     def test_the_project_manifest_names_every_fragment_the_contract_guards(self):

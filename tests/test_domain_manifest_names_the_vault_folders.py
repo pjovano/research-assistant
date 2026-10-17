@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import unittest
 
-from _domain_settings import DOMAIN_MANIFEST, DocumentsFolders, GeneratedSettings
+from _domain_settings import DOMAIN_MANIFEST, DocumentsFolders, DomainCommand, GeneratedSettings
 from _support import LiveTree
 
 LiveTree.activate()
@@ -24,8 +24,13 @@ class TheManifestThePathsAndTheSandboxNameTheSameFolders(unittest.TestCase):
                         for directory in (paths.LIBRARY_DIR, paths.OBSIDIAN_VAULT_DIR)}
         self.assertEqual(path_folders, self.manifest_folders)
 
+    def test_the_reader_reads_the_write_folders_the_manifest_lists(self) -> None:
+        [listing] = DomainCommand("manifests", DOMAIN_MANIFEST).output()
+        read_folders = {folder["name"] for folder in listing["folders"] if folder["access"] == WRITE_ACCESS}
+        self.assertEqual(self.manifest_folders, read_folders)
+
     def test_the_generated_sandbox_writes_in_exactly_the_manifest_folders(self) -> None:
-        allowed = GeneratedSettings.blocks()["sandbox"]["filesystem"]["allowWrite"]
+        allowed = GeneratedSettings().blocks()["sandbox"]["filesystem"]["allowWrite"]
         self.assertEqual(self.manifest_folders, DocumentsFolders(allowed).names())
 
 

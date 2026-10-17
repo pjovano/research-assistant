@@ -31,7 +31,6 @@ AUDIT_TIMEOUT_SECONDS = 60
 SUITE_TIMEOUT_SECONDS = HOOK_TIMEOUT_SECONDS - LINT_TIMEOUT_SECONDS - AUDIT_TIMEOUT_SECONDS - HOOK_OVERHEAD_SECONDS
 REPAIR_COMMAND = ("uv pip sync --reinstall-package {package} --python ~/.research-vault/venv/bin/python "
                   "requirements.lock")
-MANIFEST_NAME = "domain.json"
 DRIVER_AUTHORIZED_COMMANDS = ("labels --apply",)
 CORPUS_WRITE_REASON = ("the Write tool creates no note under the derived corpus: Stage 1, `file.py`, is the only "
                        "writer of a new corpus file, `transcribe.py file` of a new transcript, and Stage 4, "
@@ -234,17 +233,17 @@ CHECKS_AFTER_EDIT = CHECKS_BY_SUFFIX[PYTHON_SUFFIX]
 
 
 class PromptOnPatterns:
-    def __init__(self, manifest: Path) -> None:
-        self._manifest = manifest
+    def __init__(self, project_root: Path) -> None:
+        self._project_root = project_root
 
     def consequences(self) -> dict[str, str]:
         from core_path import VendoredCore
         VendoredCore.join_module_path()
-        from agent_core._domain.manifest import DomainManifest
-        return DomainManifest.read(self._manifest).policy.prompt_on
+        from agent_core._domain.manifest import MANIFEST_NAME, DomainManifest
+        return DomainManifest.read(self._project_root / MANIFEST_NAME).policy.prompt_on
 
 
-PROJECT_PROMPT_ON = PromptOnPatterns(PROJECT_ROOT / MANIFEST_NAME)
+PROJECT_PROMPT_ON = PromptOnPatterns(PROJECT_ROOT)
 
 
 class BashGuard:
@@ -312,7 +311,7 @@ class HookCli:
         if subcommand == "checks-before-push":
             return self._checks_before_push()
         if subcommand == "guard-bash":
-            return self._emitted(BashGuard(event.command(), self._prompt_on()).decision())
+            return self._emitted(BashGuard(event.command(), PromptOnPatterns(self._project_root)).decision())
         if subcommand == "guard-write":
             return self._emitted(WriteGuard(event.edited_path(), corpus_directory).decision())
         if subcommand == "ensure-health-watcher":
@@ -320,8 +319,6 @@ class HookCli:
         sys.stderr.write(f"harness_hooks: unknown subcommand {subcommand!r}\n")
         return BLOCKING_EXIT_CODE
 
-    def _prompt_on(self) -> PromptOnPatterns:
-        return PromptOnPatterns(self._project_root / MANIFEST_NAME)
 
     def _checks_after_edit(self, event: HookEvent) -> int:
         for check in EditedProjectFile(event.edited_path(), self._project_root).checks():
