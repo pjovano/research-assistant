@@ -98,7 +98,7 @@ PDF.
 | Answer questions | `answer-questions` | searches the corpus (embeddings and full text fused, optionally reranked), grades the hits, builds the answer from the corpus files, and verifies every direct quotation against the PDF before delivering it; cites by the printed page number, never the file page |
 | Discover | `discover` | builds a reading list from what the held works cite and from a literature search outside the vault (Google Scholar, publishers, PhilPapers), grades it against a rubric, and delivers it as a document, which the user keeps under `bibliographies/4 reading lists/` |
 | Annotate | `annotate-pdfs` | writes highlights with notes into a library PDF, on a question or across a whole work; the highlights are real PDF annotations, editable in any reader |
-| Manage projects | `projects` | keeps an atomic note for each idea the user keeps, its claims with their sources and tasks, and a project file for each writing project, cuts a draft's next version when asked, builds a project file from a draft, carries the claims and passages agreed in discussion into atomic notes, and publishes a finished draft |
+| Manage projects | `manage-projects` | keeps an atomic note for each idea the user keeps, its claims with their sources and tasks, and a project file for each writing project, cuts a draft's next version when asked, builds a project file from a draft, carries the claims and passages agreed in discussion into atomic notes, and publishes a finished draft |
 
 Two rules govern all four. The tools report what each author argues and
 never evaluate it. And nothing is written into the library or the retrieval
