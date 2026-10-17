@@ -18,7 +18,7 @@ const PUSH_TIMEOUT_MS = 600000
 const CHECK_COMMANDS = [
   '~/.research-vault/venv/bin/python -m unittest discover -s tests',
   '~/.research-vault/venv/bin/ruff check .',
-  '~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py lint',
+  '~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py lint',
 ]
 
 const STRINGS = { type: 'array', items: { type: 'string' } }

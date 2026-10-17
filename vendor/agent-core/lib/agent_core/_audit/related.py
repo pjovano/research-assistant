@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from _audit.scope import ENCODING, ControlPlaneFiles
+from agent_core._audit.scope import ENCODING, ControlPlaneFiles
 
 
 class RelatedFiles:

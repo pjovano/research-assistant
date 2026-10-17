@@ -42,7 +42,7 @@ jobs:
       - uses: ./.github/actions/empty-vault
       - name: Report the Clean Code measures
         run: |
-          uv run --no-project python .claude/skills/vault-audit/scripts/audit.py lint > audit.json
+          uv run --no-project python .claude/skills/control-plane-audit/scripts/audit.py lint > audit.json
           jq '.code' audit.json
 
   publish-guard:
@@ -72,7 +72,7 @@ jobs:
       - uses: ./.github/actions/empty-vault
       - name: Fail if code or instruction text names a library work
         run: |
-          uv run --no-project python .claude/skills/vault-audit/scripts/audit.py lint > audit.json
+          uv run --no-project python .claude/skills/control-plane-audit/scripts/audit.py lint > audit.json
           jq '.works' audit.json
           jq -e '.works == []' audit.json
 

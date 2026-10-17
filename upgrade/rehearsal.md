@@ -113,8 +113,8 @@ R-P6+M4-2 and R-P6+M4-3 are retired: `Accelerator` and `Trash` are deferred.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-A2-1 | S | `residue` runs on a real vault | `vault-audit`'s `residue` against the staging vault, old and new | the same report | |
-| R-A2-2 | S | The count-against-disk `staleness` runs on a real vault | the research `staleness` check against the staging vault | it runs and is not reported skipped | |
+| R-A2-1 | S | `residue` runs on a real vault | against the staging vault, with no `vault_dir` in the staging `machine.json`: `~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py residue` in the old checkout, and `~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py residue` in the new one | every key but `bytecode_directories` the same, and no `skipped` key; in each checkout, `bytecode_directories` lists the directories `find . -type d -name __pycache__` prints there after the run, each without its leading `./`. The key reports the checkout the command runs in, not the vault, so it differs between the two checkouts | |
+| R-A2-2 | S | The count-against-disk `staleness` runs on a real vault | against the staging vault, with no `vault_dir` in the staging `machine.json`: `~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py staleness` in the new checkout | no `skipped` key; `on_disk` holds the staging vault's counts of works, PDFs, and corpus files | |
 
 ### U1, U3, U4
 

@@ -1,0 +1,116 @@
+{
+  "code": [
+    {
+      "detail": "# serves the stage",
+      "file": ".claude/skills/one/server.py",
+      "line": 1,
+      "measure": "comment"
+    },
+    {
+      "detail": "joined, 4 arguments",
+      "file": "lib/engine.py",
+      "line": 5,
+      "measure": "more-than-three-arguments"
+    },
+    {
+      "detail": "joined",
+      "file": "lib/engine.py",
+      "line": 5,
+      "measure": "docstring"
+    },
+    {
+      "detail": "counted, 26 lines",
+      "file": "lib/engine.py",
+      "line": 10,
+      "measure": "function-over-20-lines"
+    },
+    {
+      "detail": "# a note to the reader",
+      "file": "lib/engine.py",
+      "line": 1,
+      "measure": "comment"
+    },
+    {
+      "detail": "# the test of Roe - 2021 - A Split Sentence",
+      "file": "tests/test_one.py",
+      "line": 1,
+      "measure": "comment"
+    }
+  ],
+  "pointers": [
+    {
+      "detail": ".claude/skills/gone/SKILL.md",
+      "file": "AGENTS.md",
+      "finding": "path-does-not-exist",
+      "line": 3
+    },
+    {
+      "detail": "lib/missing.py",
+      "file": "AGENTS.md",
+      "finding": "path-does-not-exist",
+      "line": 4
+    },
+    {
+      "detail": "requirements.txt",
+      "file": "AGENTS.md",
+      "finding": "path-does-not-exist",
+      "line": 4
+    },
+    {
+      "detail": "library/no-such.pdf",
+      "file": "AGENTS.md",
+      "finding": "path-does-not-exist",
+      "line": 5
+    },
+    {
+      "detail": "research vault/corpus/no such note.md",
+      "file": "AGENTS.md",
+      "finding": "path-does-not-exist",
+      "line": 5
+    },
+    {
+      "detail": "~/no-such-audit-fixture/machine.json",
+      "file": "AGENTS.md",
+      "finding": "path-does-not-exist",
+      "line": 6
+    },
+    {
+      "detail": "2999-01-01",
+      "file": "AGENTS.md",
+      "finding": "date-in-the-future",
+      "line": 7
+    },
+    {
+      "detail": "tests/README.md",
+      "file": ".claude/glossary.md",
+      "finding": "path-does-not-exist",
+      "line": 1
+    },
+    {
+      "detail": "agents/none.md",
+      "file": ".claude/skills/one/SKILL.md",
+      "finding": "path-does-not-exist",
+      "line": 1
+    }
+  ],
+  "works": [
+    {
+      "detail": "Roe - 2021 - A Split Sentence.pdf",
+      "file": "AGENTS.md",
+      "finding": "work-named",
+      "line": 8
+    },
+    {
+      "detail": "Never open Roe - 2021 - A Split Sentence first.",
+      "file": ".claude/agents/worker.md",
+      "finding": "work-named",
+      "line": 1
+    },
+    {
+      "detail": "Roe - 2021 - A Split Sentence",
+      "file": "lib/engine.py",
+      "finding": "work-named",
+      "line": 2
+    }
+  ]
+}

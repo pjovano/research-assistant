@@ -3,7 +3,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from _audit.scope import ENCODING, RepositoryPath
+from agent_core._audit.scope import ENCODING, RepositoryPath
 
 MAX_FUNCTION_LINES = 20
 MAX_FILE_LINES = 500
@@ -18,16 +18,18 @@ _COMMENT_MARK = "#"
 
 
 class CodeMeasures:
-    def __init__(self, paths: list[Path]) -> None:
+    def __init__(self, paths: list[Path], root: Path) -> None:
         self._paths = paths
+        self._root = root
 
     def findings(self) -> list[dict]:
-        return [finding for path in self._paths for finding in FileMeasures(path).findings()]
+        return [finding for path in self._paths for finding in FileMeasures(path, self._root).findings()]
 
 
 class FileMeasures:
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, root: Path) -> None:
         self._path = path
+        self._root = root
         self._source = path.read_text(encoding=ENCODING)
 
     def findings(self) -> list[dict]:
@@ -72,7 +74,8 @@ class FileMeasures:
                 for number, line in numbered if line.lstrip().startswith(_COMMENT_MARK)]
 
     def _finding(self, line: int, measure: str, detail: str) -> dict:
-        return {"file": RepositoryPath(self._path).label(), "line": line, "measure": measure, "detail": detail}
+        return {"file": RepositoryPath(self._path, self._root).label(), "line": line, "measure": measure,
+                "detail": detail}
 
     @staticmethod
     def _name_of(node: ast.AST) -> str:

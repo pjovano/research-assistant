@@ -18,7 +18,7 @@ LINTER = INTERPRETER.with_name("ruff")
 UNITTEST_ARGUMENTS = ("-m", "unittest")
 UNITTEST_BLOCK_SEPARATOR = "=" * 70
 LINT_ARGUMENTS = ("check", "--output-format", "concise", ".")
-AUDIT_SCRIPT = Path(".claude/skills/vault-audit/scripts/audit.py")
+AUDIT_SCRIPT = Path(".claude/skills/control-plane-audit/scripts/audit.py")
 AUDIT_ARGUMENTS = (str(AUDIT_SCRIPT), "lint")
 AUDIT_WORKS_KEY = "works"
 PYTHON_SUFFIX = ".py"

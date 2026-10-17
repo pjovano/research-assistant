@@ -5,11 +5,10 @@ import json
 from datetime import date
 from pathlib import Path
 
-import vault
+from agent_core._audit.replacement import ReplacementFile
+from agent_core._audit.scope import ENCODING, RepositoryPath
 
-from _audit.scope import ENCODING, RepositoryPath
-
-BASELINE_NAME = "baseline.json"
+BASELINE_PATH = Path("audit") / "baseline.json"
 STATUS_NEW = "new"
 STATUS_CHANGED = "changed"
 STATUS_REMOVED = "removed"
@@ -21,8 +20,9 @@ class CorruptBaseline(ValueError):
 
 
 class Baseline:
-    def __init__(self, path: Path, today: date | None = None) -> None:
+    def __init__(self, path: Path, root: Path, today: date | None = None) -> None:
         self._path = path
+        self._root = root
         self._today = date.today() if today is None else today
 
     def accepted_on(self) -> str | None:
@@ -45,13 +45,12 @@ class Baseline:
 
     def _write(self, recorded: dict) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        with vault.ReplacementFile(self._path, _PARTIAL_SUFFIX) as replacement:
+        with ReplacementFile(self._path, _PARTIAL_SUFFIX) as replacement:
             replacement.path.write_text(json.dumps(recorded, indent=2, sort_keys=True) + "\n", encoding=ENCODING)
             replacement.commit()
 
-    @staticmethod
-    def _present(paths: list[Path]) -> dict[str, str]:
-        return {RepositoryPath(path).label(): Baseline._digest(path) for path in paths}
+    def _present(self, paths: list[Path]) -> dict[str, str]:
+        return {RepositoryPath(path, self._root).label(): self._digest(path) for path in paths}
 
     @staticmethod
     def _digest(path: Path) -> str:
