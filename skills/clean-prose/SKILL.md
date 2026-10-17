@@ -106,6 +106,8 @@ in its place.
 | code overlay | `.claude/code-overlay.md` in a domain: the domain's rules on code, which `clean-code` reads after its own text | overlay (for the code overlay), code rules file, clean-code addendum |
 | glossary | `.claude/glossary.md` in a domain: the domain's Vocabulary rows and its rules on instruction text, which `clean-prose` reads after its own text | overlay (for the glossary), prose overlay, vocabulary file |
 | domain content | what a domain writes for the user to read, and the user's own writing, as the domain's glossary names them | user content, output (for domain content) |
+| domain template | `templates/domain/` of the core: the files `new-domain` copies into a new domain | the core's template, domain skeleton, starter repository |
+| folder step | the step of `new-domain` that creates in `~/Documents` each folder a domain's `domain.json` lists | folder setup, documents step |
 | soul file | `SOUL.md` of the core, which the repository's `CLAUDE.md` imports: the standard of conduct every session that loads it keeps | persona, personality file, character file, system prompt (for the soul file) |
 | user file | `USER.md` at a domain's root, never versioned: what is true of the user now in that domain, which `remember` keeps | memory file, profile, user profile, preferences file |
 | Standing section | the `## Standing` section of the user file: what stays true of the user for months | permanent section, long-term memory, profile section |
@@ -118,6 +120,13 @@ in its place.
 | force word | one of §2's words: MUST, ALWAYS, NEVER, SHOULD, MAY, PREFER | modal (for a force word), keyword (for a force word), strength word |
 | main clause | a clause that could stand as a sentence on its own; §15 states where one ends | independent clause, sentence (for a main clause) |
 | noun cluster | a run of nouns with no other word between them | noun stack, noun string, compound (for a noun cluster) |
+| dispatcher | the session started at `agent-core`'s root, which routes each request to the domain that owns it | router, front desk, master session |
+| domain session | a session started in a domain's repository, under that domain's contract, settings, and sandbox | child session, sub-session |
+| delegation | one request the dispatcher sends to one domain session, in the shape `dispatch` states | handoff, task (for a delegation), dispatch (for a delegation) |
+| ledger | `ledger.md` of the dispatcher's state directory: each open and closed delegation | log (for the ledger), journal (for the ledger) |
+| entry skill | a skill a domain's manifest lists in `entry_skills`, which a delegation MAY name | public skill, exported skill |
+| exposure | the risks an entry skill carries, of `private_data`, `untrusted_content`, and `sends_outward`, as its manifest declares them | capabilities (for exposure), permissions (for exposure) |
+| unattended run | a scheduled run, or a run in a background session the user does not watch | headless run, autonomous run |
 
 Three exceptions bind: `subagent_type` is the Agent tool's literal parameter
 name and stays as written; a code or configuration identifier stays as
