@@ -152,7 +152,7 @@ No Mac-only check.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-A5-1 | S | The folder step creates a folder and an Obsidian vault | `new-domain`'s folder step in the staging home, with a new folder and the vault offer accepted | the folder exists under the staged `~/Documents` with the default `.obsidian/` config | |
+| R-A5-1 | S | The folder step makes the new domain an Obsidian vault by default | `new-domain`'s folder step in the staging home, every default accepted | the domain's folder exists under the staged `~/Documents` with the default `.obsidian/` config; `domain.json` lists it with `write` and names it in `vault` | |
 
 ### A3
 
@@ -162,6 +162,7 @@ No Mac-only check.
 | R-A3-2 | S | A batch starts in the background in the research main checkout | "start a batch" (dry run) from the dispatcher | the batch runs in `~/Developer/research-assistant`; the dispatcher reports once, at the end | |
 | R-A3-3 | S | A request matching no domain is asked about | a request no `handles` entry covers | the dispatcher asks; it delegates nothing | |
 | R-A3-4 | S | A delegated session applies the project's allow rules (spike item 2) | inspect the delegated session's startup for "Ignoring … permissions.allow entries" | no such line; the research checkout is a trusted workspace | |
+| R-A3-5 | S | An unattended `take-notes` batch touches only lines marked for review | copy an atomic note holding a line with no mark, a line with the accepted mark, and a line with the review mark; from the dispatcher, start a background `take-notes` batch over it and one new note; then compare | the unmarked and accepted lines are unchanged byte for byte; the new note exists, each written line ending with the review mark; nothing outside `writing/1 notes/` changed | |
 
 ### A4
 
