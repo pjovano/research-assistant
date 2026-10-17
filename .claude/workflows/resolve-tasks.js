@@ -1,9 +1,9 @@
 export const meta = {
   name: 'resolve-tasks',
   description: 'Accept each atomic note whose accept task is checked, resolve the checked tasks of the atomic notes and research the stub notes: create each further note, research it and each stub with note-researcher, then revise each note the tasks came from with note-reviewer',
-  whenToUse: 'the user asks for the checked tasks of the atomic notes to be resolved, or the stub notes to be researched; args {limit} caps the further notes and stubs one run takes, 8 if absent',
+  whenToUse: 'the user asks for the checked tasks of the atomic notes to be resolved, or the stub notes to be researched; args {limit} caps the further notes and stubs one run takes, 8 if absent; args {unattended: true} runs it as an unattended run, which accepts no note and deletes no task',
   phases: [
-    { title: 'Accept', detail: 'notes.py accept: every line marked for review of each note whose accept task is checked takes the accepted mark' },
+    { title: 'Accept', detail: 'notes.py accept: every line marked for review of each note whose accept task is checked takes the accepted mark; an unattended run skips it' },
     { title: 'Find', detail: 'notes.py chosen: the checked tasks, each further note created with its starting claim, and the stub notes' },
     { title: 'Research', detail: 'one note-researcher per further note and per stub note' },
     { title: 'Review', detail: 'one note-reviewer per note whose tasks were resolved, once its further notes are researched' },
@@ -20,11 +20,13 @@ const REPLY_OPENING_CHARS = 300
 const REVIEW_STATE = 'review'
 const ENRICH_STATE = 'enrich'
 const SURROUNDING_BACKTICKS = /^`+|`+$/g
+const UNATTENDED_RULE = 'This run is unattended: follow "# Unattended runs" of your instructions wherever it overrides a step.'
 
 const limit = Number.isInteger(args?.limit) && args.limit > 0 ? args.limit : DEFAULT_LIMIT
+const unattended = args?.unattended === true
 
 phase('Accept')
-const acceptance = await relay(`${NOTES} accept --apply`, 'accept', 'Accept')
+const acceptance = await acceptChecked()
 if (acceptance.error) return acceptance
 const accepted = acceptance.accepted
 
@@ -58,6 +60,12 @@ return {
   standing: found.tasks.filter(task => standingLines.has(task.line)),
 }
 
+async function acceptChecked() {
+  if (!unattended) return relay(`${NOTES} accept --apply`, 'accept', 'Accept')
+  log('an unattended run accepts no note: notes.py accept does not run')
+  return { accepted: [] }
+}
+
 async function reviewOnceResearched(note) {
   const tasks = found.tasks.filter(task => task.reviewed === note)
   const reports = await Promise.all(tasks.map(researchedOnce))
@@ -79,7 +87,8 @@ async function researchNote(task) {
 }
 
 async function researchStub(title) {
-  const report = await worker(`Research the atomic note titled: ${title}`, 'note-researcher', `research ${title}`, 'Research')
+  const prompt = [`Research the atomic note titled: ${title}`, ...runLines()].join('\n')
+  const report = await worker(prompt, 'note-researcher', `research ${title}`, 'Research')
   return { note: title, ...report }
 }
 
@@ -93,6 +102,7 @@ function researchPrompt(task) {
     '',
     "Start the search from the task's passages.",
     `Write no relation to the reviewed note that chose the task: ${reviewed.join(', ')}.`,
+    ...runLines(),
   ].join('\n')
 }
 
@@ -105,8 +115,13 @@ function reviewPrompt(note, resolved) {
       ? `- thread \`enrich\`, on this note itself. Its line: ${task.line}`
       : `- thread \`${task.thread}\`, new note “${task.title}”. Its line: ${task.line}`),
     '',
-    "Delete those lines at step 8, and no other task.",
+    unattended ? 'Delete no task line: each chosen task stays checked for an attended run.' : "Delete those lines at step 8, and no other task.",
+    ...runLines(),
   ].join('\n')
+}
+
+function runLines() {
+  return unattended ? ['', UNATTENDED_RULE] : []
 }
 
 async function worker(prompt, agentType, label, phaseTitle) {

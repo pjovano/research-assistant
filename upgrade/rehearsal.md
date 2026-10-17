@@ -162,7 +162,7 @@ No Mac-only check.
 | R-A3-2 | S | A batch starts in the background in the research main checkout | "start a batch" (dry run) from the dispatcher | the batch runs in `~/Developer/research-assistant`; the dispatcher reports once, at the end | |
 | R-A3-3 | S | A request matching no domain is asked about | a request no `handles` entry covers | the dispatcher asks; it delegates nothing | |
 | R-A3-4 | S | A delegated session applies the project's allow rules (spike item 2) | inspect the delegated session's startup for "Ignoring … permissions.allow entries" | no such line; the research checkout is a trusted workspace | |
-| R-A3-5 | S | An unattended `take-notes` batch touches only lines marked for review | copy an atomic note holding a line with no mark, a line with the accepted mark, and a line with the review mark; from the dispatcher, start a background `take-notes` batch over it and one new note; then compare | the unmarked and accepted lines are unchanged byte for byte; the new note exists, each written line ending with the review mark; nothing outside `writing/1 notes/` changed | |
+| R-A3-5 | S | An unattended `take-notes` batch touches only lines marked for review | copy an atomic note holding a line with no mark, a line with the accepted mark, and a line with the review mark; from the dispatcher, start a background `take-notes` batch over it and one new note; then compare | the unmarked and accepted lines are unchanged byte for byte; the new note exists, each claim, explication, relation, and quotation line it holds ending with the review mark, and no task but the accept task in it; nothing outside `writing/1 notes/` changed | |
 
 ### A4
 
