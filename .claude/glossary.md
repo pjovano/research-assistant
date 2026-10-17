@@ -170,6 +170,7 @@ bind every row.
 | affected test modules | the test modules the post-edit hook runs after an edit to a Python file: each test module whose imports, or whose strings naming a `.py` file, reach the edited file | the test modules an edit affects, selected modules, the selection |
 | post-edit hook | the hook in `.claude/settings.json` that runs `harness_hooks.py checks-after-edit` after every edit | edit hook, after-edit check |
 | pre-push hook | `.githooks/pre-push`, which runs the test suite, the linter, and the audit linter's `works` check before every push from a checkout whose `core.hooksPath` names `.githooks` | push hook, pre-push check |
+| folder guard | a `Read(...)` and an `Edit(...)` rule of `permissions.deny` and a `denyRead` entry of the sandbox, all for one sensitive folder of another domain, which `domain.py guards` prints | read guard, deny pair, read denial |
 | checkout | the files of the control plane in one directory: the main checkout, or a worktree | work tree, clone (for a checkout) |
 | worktree | a checkout `git worktree add` made beside the main checkout, sharing its repository | git worktree, linked work tree |
 | audit baseline | `audit/baseline.json`, one digest per control-plane file as of the last accepted audit | manifest, snapshot (for the baseline) |

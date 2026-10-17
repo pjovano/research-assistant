@@ -135,6 +135,24 @@ overwrites the edit or conflicts with it. Change a core unit in `core/` of
 `agent-core`. Reach each core unit `.claude/` uses through a symlink. NEVER
 copy a core unit into `.claude/`: a copy drifts from the vendored core.
 
+**`domain.json` at the control plane's root names the vault's folders and
+the domain's policy.** Its `folders` lists `library` and `research vault`,
+each with write access. The sandbox lets Bash write in `research vault` only
+under its `write_within` folders. The `policy` of `domain.json` holds the
+allow rules, the network hosts, and the commands excluded from the sandbox.
+The `policy` also holds the write paths outside `~/Documents` and the
+commands a hook in `.claude/settings.json` turns into a permission prompt.
+
+**`vendor/agent-core/domain.py settings` generates the `permissions` and
+`sandbox` blocks of `.claude/settings.json` from `domain.json`.**
+
+**A folder guard keeps the domain out of another domain's sensitive
+folder.** `vendor/agent-core/domain.py guards` prints a folder guard for each
+sensitive folder that another domain's manifest lists and `domain.json` does
+not. The folder guards go into `.claude/settings.local.json`, which
+`.gitignore` names. NEVER commit a folder guard: it names another domain's
+folder, and this repository is public.
+
 **The default graph view lives in the control plane.** `obsidian/graph.json`
 holds the Obsidian vault's graph view settings, its colour groups among them.
 If the user asks to restore the graph, ask the user to close the graph view,
@@ -530,6 +548,37 @@ there.
   Bash command.** The sandbox denies Bash every write to `.claude/skills/`,
   `.claude/agents/`, `.claude/workflows/`, and `.claude/settings.json`, and
   no setting lifts the denial.
+
+**Changing the settings.** If a change touches the `permissions` or
+`sandbox` block of `.claude/settings.json`, take these steps:
+
+1. Edit `domain.json`.
+2. Run `~/.research-vault/venv/bin/python vendor/agent-core/domain.py settings`
+   from the repository root.
+3. If the command exits with a nonzero status, write nothing. Fix the fault
+   in `domain.json` that its `error` names, and run step 2 again.
+4. Write the blocks the command prints into `.claude/settings.json` with the
+   Write tool.
+
+NEVER edit either block by hand: the suite fails a block that differs from
+what the command prints.
+
+**Writing the folder guards.** If a manifest under `~/Developer` changes its
+sensitive folders, take these steps on the primary:
+
+1. Run `~/.research-vault/venv/bin/python vendor/agent-core/domain.py guards`
+   from the repository root.
+2. If the command exits with a nonzero status, write nothing. Stop and ask
+   the user: the `error` it prints names the manifest at fault.
+3. If `.claude/settings.local.json` exists, replace its `permissions.deny`
+   and `sandbox.filesystem.denyRead` lists with the printed lists. Keep
+   every other key.
+4. If `.claude/settings.local.json` does not exist, write the printed output
+   as the file.
+5. Write the file with the Write tool.
+
+NEVER write a folder guard outside the primary: elsewhere `~/Developer` holds
+no other domain's manifest.
 
 **Writing notes.** Every note carries LF line endings. The frontmatter carries
 only what something reads: NEVER add a field without a reader.

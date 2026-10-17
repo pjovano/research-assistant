@@ -1,0 +1,9 @@
+{
+  "name": "ledger",
+  "summary": "Reconciles the user's accounts.",
+  "folders": [
+    {"name": "taxes", "access": "write", "sensitive": true},
+    {"name": "library", "access": "read", "sensitive": true},
+    {"name": "receipts", "access": "write"}
+  ]
+}

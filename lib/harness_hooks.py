@@ -31,17 +31,6 @@ AUDIT_TIMEOUT_SECONDS = 60
 SUITE_TIMEOUT_SECONDS = HOOK_TIMEOUT_SECONDS - LINT_TIMEOUT_SECONDS - AUDIT_TIMEOUT_SECONDS - HOOK_OVERHEAD_SECONDS
 REPAIR_COMMAND = ("uv pip sync --reinstall-package {package} --python ~/.research-vault/venv/bin/python "
                   "requirements.lock")
-GUARDED_COMMANDS = {
-    "--replace": "rewrites a corpus file's body; contract §4 allows it only on the user's instruction",
-    "sync --rebuild": "empties the search stores before syncing every corpus file",
-    "drop-page": "deletes a page from the only copy of the PDF when run with --apply",
-    "toc clear": "destroys the whole outline",
-    "revise": "changes or deletes the user's own annotations when run with --apply",
-    "capture_goldens.py --apply": "overwrites the goldens, the only record of prior behaviour",
-    "sweep --apply": "deletes scratch entries",
-    "labels --apply": "rewrites a library PDF with the corpus file's folios as its page labels; contract §5 names "
-                      "it an authorized overwrite of a filed PDF",
-}
 DRIVER_AUTHORIZED_COMMANDS = ("labels --apply",)
 CORPUS_WRITE_REASON = ("the Write tool creates no note under the derived corpus: Stage 1, `file.py`, is the only "
                        "writer of a new corpus file, `transcribe.py file` of a new transcript, and Stage 4, "
@@ -243,12 +232,27 @@ CHECKS_BY_SUFFIX: dict[str, tuple[type[EditCheck], ...]] = {
 CHECKS_AFTER_EDIT = CHECKS_BY_SUFFIX[PYTHON_SUFFIX]
 
 
+class PromptOnPatterns:
+    def __init__(self, project_root: Path) -> None:
+        self._project_root = project_root
+
+    def consequences(self) -> dict[str, str]:
+        from core_path import VendoredCore
+        VendoredCore.join_module_path()
+        from agent_core._domain.manifest import MANIFEST_NAME, DomainManifest
+        return DomainManifest.read(self._project_root / MANIFEST_NAME).policy.prompt_on
+
+
+PROJECT_PROMPT_ON = PromptOnPatterns(PROJECT_ROOT)
+
+
 class BashGuard:
-    def __init__(self, command: str) -> None:
+    def __init__(self, command: str, patterns: PromptOnPatterns = PROJECT_PROMPT_ON) -> None:
         self._command = command
+        self._patterns = patterns
 
     def decision(self) -> dict | None:
-        for fragment, consequence in GUARDED_COMMANDS.items():
+        for fragment, consequence in self._patterns.consequences().items():
             if self._names_in_order(fragment):
                 return permission_decision("ask", f"`{fragment}` {consequence}")
         return None
@@ -307,13 +311,14 @@ class HookCli:
         if subcommand == "checks-before-push":
             return self._checks_before_push()
         if subcommand == "guard-bash":
-            return self._emitted(BashGuard(event.command()).decision())
+            return self._emitted(BashGuard(event.command(), PromptOnPatterns(self._project_root)).decision())
         if subcommand == "guard-write":
             return self._emitted(WriteGuard(event.edited_path(), corpus_directory).decision())
         if subcommand == "ensure-health-watcher":
             return self._emitted(HealthWatcherHook().report(event.command()))
         sys.stderr.write(f"harness_hooks: unknown subcommand {subcommand!r}\n")
         return BLOCKING_EXIT_CODE
+
 
     def _checks_after_edit(self, event: HookEvent) -> int:
         for check in EditedProjectFile(event.edited_path(), self._project_root).checks():

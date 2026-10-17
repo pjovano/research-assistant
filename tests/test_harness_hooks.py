@@ -11,6 +11,8 @@ from _support import LiveTree
 LiveTree.activate()
 
 import harness_hooks
+from agent_core._domain.fields import ManifestError
+from agent_core._domain.manifest import MANIFEST_NAME
 
 
 class TestBashGuard(unittest.TestCase):
@@ -32,6 +34,47 @@ class TestBashGuard(unittest.TestCase):
     def test_rebuild_names_its_consequence(self):
         decision = harness_hooks.BashGuard("python search.py sync --rebuild").decision()
         self.assertIn("empties the search stores", decision["hookSpecificOutput"]["permissionDecisionReason"])
+
+
+class TestBashGuardReadsTheDomainManifest(unittest.TestCase):
+    def setUp(self):
+        self.root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        self.manifest = self.root / MANIFEST_NAME
+
+    def _write_manifest(self, prompt_on: dict) -> harness_hooks.PromptOnPatterns:
+        manifest = {"name": "probe", "summary": "Probes the guard.", "policy": {"prompt_on": prompt_on}}
+        self.manifest.write_text(json.dumps(manifest), encoding="utf-8")
+        return harness_hooks.PromptOnPatterns(self.root)
+
+    def test_a_fragment_the_manifest_names_asks_with_its_consequence(self):
+        patterns = self._write_manifest({"purge --all": "empties the probe store"})
+        decision = harness_hooks.BashGuard("python probe.py purge --all", patterns).decision()
+        self.assertEqual(("ask", "`purge --all` empties the probe store"),
+                         (decision["hookSpecificOutput"]["permissionDecision"],
+                          decision["hookSpecificOutput"]["permissionDecisionReason"]))
+
+    def test_a_fragment_the_manifest_does_not_name_passes_silently(self):
+        patterns = self._write_manifest({"purge --all": "empties the probe store"})
+        self.assertIsNone(harness_hooks.BashGuard("python extract.py extract X.pdf --replace", patterns).decision())
+
+    def test_the_hook_reads_the_manifest_of_the_project_it_runs_for(self):
+        self._write_manifest({"purge --all": "empties the probe store"})
+        event = harness_hooks.HookEvent({"tool_input": {"command": "probe.py purge --all"}})
+        out = io.StringIO()
+        with redirect_stdout(out):
+            harness_hooks.HookCli(self.root).run("guard-bash", event)
+        self.assertIn("empties the probe store", out.getvalue())
+
+    def test_a_malformed_manifest_fails_the_guard_naming_the_manifest(self):
+        self.manifest.write_text("{not json", encoding="utf-8")
+        event = harness_hooks.HookEvent({"tool_input": {"command": "ls"}})
+        with self.assertRaisesRegex(ManifestError, MANIFEST_NAME):
+            harness_hooks.HookCli(self.root).run("guard-bash", event)
+
+    def test_the_project_manifest_names_every_fragment_the_contract_guards(self):
+        contract_fragments = ("--replace", "sync --rebuild", "drop-page", "toc clear", "revise",
+                              "capture_goldens.py --apply", "sweep --apply", "labels --apply")
+        self.assertEqual(set(contract_fragments), set(harness_hooks.PROJECT_PROMPT_ON.consequences()))
 
 
 class TestWriteGuard(unittest.TestCase):
@@ -104,7 +147,7 @@ class TestHookCli(unittest.TestCase):
         event = harness_hooks.HookEvent({"tool_input": {"command": "clean.py drop-page a.pdf --page 3"}})
         out = io.StringIO()
         with redirect_stdout(out):
-            code = harness_hooks.HookCli(Path.cwd()).run("guard-bash", event)
+            code = harness_hooks.HookCli(harness_hooks.PROJECT_ROOT).run("guard-bash", event)
         self.assertEqual(code, 0)
         self.assertEqual(json.loads(out.getvalue())["hookSpecificOutput"]["permissionDecision"], "ask")
 
