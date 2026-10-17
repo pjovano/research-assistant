@@ -129,11 +129,11 @@ choices are independent:
 
 | Piece | Content |
 | --- | --- |
-| `domain.json` | `folders`: the folders under `~/Documents` the domain works on, each with `read` or `write` access. A folder can carry `sensitive: true`, which keeps every domain that doesn't list it from reading it. |
-| research domain | lists today's `library` (write) and `research vault` (write). Nothing moves: invariant 2 holds, and the contract's `vault_dir` rule is unchanged. A CI check confirms `domain.json`, the vault paths `_vault/paths.py` names, and the generated sandbox all name the same folders. |
+| `domain.json` | `folders`: the folders under `~/Documents` the domain works on, each with `read` or `write` access. A folder can carry `sensitive: true`, which keeps every domain that doesn't list it from reading it. `vault` names the folder of `folders`, listed with `write` access, that is the domain's Obsidian vault; a domain without a vault omits it. |
+| research domain | lists today's `library` (write) and `research vault` (write), and its `vault` names `research vault` (A3). Nothing moves: invariant 2 holds, and the contract's `vault_dir` rule is unchanged. A CI check confirms `domain.json`, the vault paths `_vault/paths.py` names, and the generated sandbox all name the same folders. |
 | settings generator (G20) | gives each domain write access to exactly the folders it lists as `write`. G20 ships its own manifest reader, `domain.py manifests`, which reads every `~/Developer/*/domain.json` on the primary, or the manifests named on the command line. From those manifests the generator denies reads of any `sensitive` folder the domain doesn't list, so a research session never sees `taxes` or `medical`. The sandbox's `denyRead` blocks a sandboxed Bash read and not the Read tool (`spikes.md` item 7), so for each such folder the generator writes both a `sandbox.filesystem.denyRead` entry and a `Read(...)` rule in `permissions.deny`. A cloud session enforces no sandbox (`spikes.md` item 1), so the rehearsal checks the guard on the primary, against Bash, Read, Grep, and Glob (R-G20-2, R-G20-3). A3's `registry` builds on the same reader. The dispatcher lists no folders. Tests of the reader, the generator, and `registry` use fixture manifests, since `~/Developer` exists only on the primary. |
-| template and `new-domain` (A5) | asks which folders in `~/Documents` the new domain works on, existing or new, and with what access. For a new folder, it offers to make it an Obsidian vault by copying a default `.obsidian/` config (today's `graph.json` pattern, made general). Folders are created on the Mac at the switch, not in the cloud. |
-| `personal-assistant` (A4) | lists no folders yet. You add them with `new-domain`'s folder step when you build it out. |
+| template and `new-domain` (A5) | makes each new domain an Obsidian vault by default. The domain gets a folder of its own in `~/Documents`, with `write` access, made a vault by copying the template's default `.obsidian/` config (today's `graph.json` pattern, made general), and `domain.json`'s `vault` names it. You MAY decline the vault. The step then asks which other folders in `~/Documents` the domain works on, existing or new, and with what access. Folders are created on the Mac at the switch, not in the cloud. |
+| `personal-assistant` (A4) | lists no folders and no vault yet: A4 declines the default vault. You add its vault and its folders with `new-domain`'s folder step when you build it out. |
 
 ### New: one repo for the core and the dispatcher; contracts in `AGENTS.md`
 
@@ -204,6 +204,16 @@ Settled after W1. A6 builds it.
 - **The personal domain is a skeleton**, and the `inbox` and `schedule`
   dispatcher skills wait for it. This round builds `route`, `delegate`,
   `compose`, and `registry`.
+- **`take-notes` may write unattended.** "Unattended means read-only" stays
+  the default, and an entry skill may carry its own `unattended` value.
+  Research's `take-notes` carries `write`: an unattended run may create and
+  fill atomic notes in `writing/1 notes/`. Each line it writes ends with the
+  review mark, and you accept or reject each line afterwards. The review mark
+  shows what a run added or reworded, never what it removed, and the vault is
+  not in git. So an unattended `take-notes` run changes or deletes only a line
+  that carries the review mark. It never touches a line with no mark (your own
+  wording, a relation you stated, or a task) or a line with the accepted mark.
+  The rest of research stays read-only when unattended, `ingest` aside.
 
 ### Audit upgrade plan
 
@@ -353,7 +363,7 @@ that touch disjoint files.
 | **W3** | a | **A2** audit engine to the core, as is; research checks in `audit/checks.py`; a thin `vault-audit` skill; hook, CI, tests, `extraction-fixer` repointed → **U1** bench → **U3** lint layer, with the `weight` row and the word ratchet → **U4** units, closure, baseline v2 | both | A1, U2 |
 | | b | **G20** research `domain.json` created with its `folders` and `policy`, the manifest reader, and one settings generator, with the sensitive-folder read guard | agent-core + research-assistant | A1 |
 | **W4** | a | **U5** audit workflow and workers, its report opening with the cuts → **U6** loop and fix (worktree), no rule lost → **U7** Check 8 (plus stage timings in `ingest.py`) → **U8** Check 9, current practice, with no growth | agent-core (+ research for timings) | U4 |
-| | b | **A5** domain template + `new-domain`, with the folder step (folders in `~/Documents`, access, optional Obsidian vault) → **A3** dispatcher at `agent-core`'s root: contract, registry, `route`, `delegate`, `compose`, `registry`; the core skills `approvals` and `dispatch` (plain names: vendored skills have no plugin namespace); research `domain.json` completed with `handles`, `entry_skills`, `exposure`, and `unattended` → **A4** `personal-assistant` made by `new-domain`, no skills and no folders yet | agent-core, research-assistant, personal-assistant | G20 |
+| | b | **A5** domain template + `new-domain`, with the folder step (each new domain an Obsidian vault by default, named in `domain.json`'s `vault`; its folders in `~/Documents` and their access; §1) → **A3** dispatcher at `agent-core`'s root: contract, registry, `route`, `delegate`, `compose`, `registry`; the core skills `approvals` and `dispatch` (plain names: vendored skills have no plugin namespace); research `domain.json` completed with `handles`, `entry_skills`, `exposure`, `unattended`, and `vault`, `take-notes` writing unattended (§1) → **A4** `personal-assistant` made by `new-domain`, no skills, no folders, and no vault yet | agent-core, research-assistant, personal-assistant | G20 |
 | | c | **G17** tiers → **G18** `HookIo` + git pre-commit (the X1 affected-module checks; the full suite runs pre-push and in CI) → **G19** worker specs + generator (the agent-host port at `core/lib/agent_core/_ports/agent.py` and its adapters in `core/lib/agent_core/_adapters/agent/`, in `agent-core`). Each repo commits the agent files the generator renders from its specs, and CI fails if they differ from a fresh render. A domain symlinks the core's rendered files, never its specs | agent-core + research-assistant | U3 |
 | **W5** | a | **U2b** the > 40-word sentence cleanup → **G21** capability names in the prose (about 25 instruction files, in slices by skill); the capability names are core terms, defined in the core's `clean-prose`, not in a domain glossary; neither grows a file's word count | research-assistant | U3, U8, G19 |
 | | b | **P15** `bootstrap` and `doctor` for macOS and `mac-local`, with the primary checks (the health job; no iCloud placeholder in the library or the inbox, which stands in for Optimize Mac Storage off); `bootstrap --no-jobs` skips the jobs: the switch uses it, and so does every test install → **P16** the README: install on a Mac for anyone with Obsidian and Zotero; "Two machines: primary and secondaries"; "Retire a former full install" | research-assistant | X3, P6+M4 |
