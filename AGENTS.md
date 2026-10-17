@@ -144,10 +144,14 @@ The `policy` also holds the write paths outside `~/Documents` and the
 commands a hook in `.claude/settings.json` turns into a permission prompt.
 
 **`vendor/agent-core/domain.py settings` generates the `permissions` and
-`sandbox` blocks of `.claude/settings.json` from `domain.json`.** The command
-adds a read guard for each sensitive folder that another domain's manifest
-lists and `domain.json` does not. A read guard is a `denyRead` entry of the
-sandbox and a `Read(...)` rule of `permissions.deny`, both for one folder.
+`sandbox` blocks of `.claude/settings.json` from `domain.json`.**
+
+**A folder guard keeps the domain out of another domain's sensitive
+folder.** `vendor/agent-core/domain.py guards` prints a folder guard for each
+sensitive folder that another domain's manifest lists and `domain.json` does
+not. The folder guards go into `.claude/settings.local.json`, which
+`.gitignore` names. NEVER commit a folder guard: it names another domain's
+folder, and this repository is public.
 
 **The default graph view lives in the control plane.** `obsidian/graph.json`
 holds the Obsidian vault's graph view settings, its colour groups among them.
@@ -551,18 +555,30 @@ there.
 1. Edit `domain.json`.
 2. Run `~/.research-vault/venv/bin/python vendor/agent-core/domain.py settings`
    from the repository root.
-3. If the command exits with a nonzero status, write nothing into
-   `.claude/settings.json`. The `error` the command prints names the
-   manifest at fault. If that manifest is `domain.json`, fix it and run
-   step 2 again. Otherwise, stop and ask the user.
-4. If `~/Developer` exists, write the blocks the command prints into
-   `.claude/settings.json` with the Write tool.
-5. If `~/Developer` does not exist, the command reads no other domain's
-   manifest and prints no read guard. Write the printed blocks with the
-   Write tool, and keep each read guard the committed blocks hold.
+3. If the command exits with a nonzero status, write nothing. Fix the fault
+   in `domain.json` that its `error` names, and run step 2 again.
+4. Write the blocks the command prints into `.claude/settings.json` with the
+   Write tool.
 
-NEVER edit either block by hand beyond step 5: the suite fails a block that
-differs from what the command prints for the committed read guards.
+NEVER edit either block by hand: the suite fails a block that differs from
+what the command prints.
+
+**Writing the folder guards.** If a manifest under `~/Developer` changes its
+sensitive folders, take these steps on the primary:
+
+1. Run `~/.research-vault/venv/bin/python vendor/agent-core/domain.py guards`
+   from the repository root.
+2. If the command exits with a nonzero status, write nothing. Stop and ask
+   the user: the `error` it prints names the manifest at fault.
+3. If `.claude/settings.local.json` exists, replace its `permissions.deny`
+   and `sandbox.filesystem.denyRead` lists with the printed lists. Keep
+   every other key.
+4. If `.claude/settings.local.json` does not exist, write the printed output
+   as the file.
+5. Write the file with the Write tool.
+
+NEVER write a folder guard outside the primary: elsewhere `~/Developer` holds
+no other domain's manifest.
 
 **Writing notes.** Every note carries LF line endings. The frontmatter carries
 only what something reads: NEVER add a field without a reader.

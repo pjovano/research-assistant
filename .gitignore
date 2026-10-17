@@ -3,3 +3,4 @@ __pycache__/
 .ruff_cache/
 :memory:.ses
 /USER.md
+/.claude/settings.local.json
