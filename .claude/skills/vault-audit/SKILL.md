@@ -1,7 +1,7 @@
 ---
 name: vault-audit
 description: "Vault Maintenance — audit the vault's control plane (the contract, the skills, the worker instructions, the code) for contract drift, staleness, redundancy, special cases, and code quality, reading what changed since the last audit and what depends on it. Reports in chat and writes only the audit baseline. Use when asked to audit, review, or trim the vault's own control plane — never research content."
-allowed-tools: Read, Glob, Grep, Bash(~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py:*), Bash(~/.research-vault/venv/bin/python -m unittest discover:*), Bash(git log:*), Bash(ls:*), Bash(find:*), Bash(du:*), Bash(wc:*)
+allowed-tools: Read, Glob, Grep, Bash(~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py:*), Bash(~/.research-vault/venv/bin/python -m unittest discover:*), Bash(git log:*), Bash(ls:*), Bash(find:*), Bash(du:*), Bash(wc:*)
 ---
 
 # vault-audit (Vault Maintenance, run inline by the orchestrator)
@@ -14,8 +14,8 @@ audit baseline, so it MAY run at any time, including mid-batch.
 
 Two definitions fix the scale of a run:
 
-* **Audit baseline.** `.claude/skills/vault-audit/baseline.json` holds one
-  digest per control-plane file, as of the last accepted audit.
+* **Audit baseline.** `audit/baseline.json` holds one digest per
+  control-plane file, as of the last accepted audit.
 * **Audit set.** The audit set is the files this run reads whole: every file
   changed since the last accepted audit, plus every control-plane file whose
   text names one of them.
@@ -38,21 +38,21 @@ full read finds that.
 ## Commands
 
 Every command is `~/.research-vault/venv/bin/python
-.claude/skills/vault-audit/scripts/audit.py <subcommand>`.
+.claude/skills/control-plane-audit/scripts/audit.py <subcommand>`, run from
+the repository's root. Read `.claude/skills/control-plane-audit/SKILL.md`
+before the first command: the core skill states each command, what it
+prints and writes, and its failure branches.
 
-| Command | Prints | Writes |
+`audit/checks.py` adds the research checks to the core's:
+
+| Check | Prints | Runs |
 | --- | --- | --- |
-| `audit.py changed` | `accepted`, the audit set as `changed` and `related`, the `removed` files, and `counts` | nothing |
-| `audit.py lint` | `code`, one row per Clean Code measure; `pointers`, one row per dead path or future date; and `works`, one row per basename of a work in instruction text or in code outside `tests/`; each with `file` and `line` | nothing |
-| `audit.py residue` | the scratch directory's size and age, the conflict copies, the corpus files with no PDF, the bytecode directories, the orphans, and the inbox's contents | nothing |
-| `audit.py accept` | the date recorded and the number of files | the audit baseline |
+| `works`, a key of `audit.py lint` | one row per basename of a work in instruction text or in code outside `tests/`, with `file` and `line` | anywhere |
+| `audit.py residue` | the scratch directory's size and age, the conflict copies, the corpus files with no PDF, the bytecode directories, the orphans, and the inbox's contents | on the primary alone |
 
-If the audit baseline is not valid JSON, every command prints `{"error": …}`
-and exits 1: restore the baseline from git and run the command again.
-
-`audit.py lint` reads every control-plane file whatever the audit set, because
-a script's coverage costs no judgment; `--changed` narrows it. `audit.py
-changed --all` prints every file as the audit set.
+If `machine.json` names `vault_dir`, `audit.py residue` prints
+`{"skipped": …}`: only CI and a test container name it. Then report the
+residue sites as unaudited.
 
 ## Procedure
 

@@ -113,8 +113,8 @@ R-P6+M4-2 and R-P6+M4-3 are retired: `Accelerator` and `Trash` are deferred.
 
 | ID | Phase | Check | Command or action | Passes when | Result |
 | --- | --- | --- | --- | --- | --- |
-| R-A2-1 | S | `residue` runs on a real vault | `vault-audit`'s `residue` against the staging vault, old and new | the same report | |
-| R-A2-2 | S | The count-against-disk `staleness` runs on a real vault | the research `staleness` check against the staging vault | it runs and is not reported skipped | |
+| R-A2-1 | S | `residue` runs on a real vault | against the staging vault, with no `vault_dir` in the staging `machine.json`: `~/.research-vault/venv/bin/python .claude/skills/vault-audit/scripts/audit.py residue` in the old checkout, and `~/.research-vault/venv/bin/python .claude/skills/control-plane-audit/scripts/audit.py residue` in the new one | the same report, and no `skipped` key | |
+| R-A2-2 | S | The count-against-disk `staleness` runs on a real vault | the research `staleness` check against the staging vault; A2 leaves this check to U3, which builds the `staleness` row, so run the line once U3 has merged | it runs and is not reported skipped | |
 
 ### U1, U3, U4
 

@@ -143,7 +143,7 @@ class it pins states its own coverage and is not listed.
 | `test_projects_conversion.py` | Manage projects, the conversions, through `pandoc` over Word files the tests build: `import` writing the next version with its footnotes, headings, and block quotations, listed under `## Drafts`, the Word file left in a temporary inbox; `discard` handing the Word file to the Trash; `export` leaving out the frontmatter, Obsidian comments, and embeds, each export style's font, spacing, margins, and page numbers; each plan writing nothing and each refusal; a machine without `pandoc` |
 | `test_discover_unheld_over_a_citing_set.py` | Discover: `unheld` over a citing set of many entries, where entries sharing no surname are never compared and titles under different first authors are never measured for similarity; citing works that print one reference list in common counted once, in `unheld`, under `--min-citing`, and in `merge`'s local citations, with one case on each side of the common-entries minimum |
 | `test_discover.py` | Discover: `unheld` over a temporary corpus file and PDF reference zone, held-work exclusion, locators, two editions of one work merged, `--min-citing`; `RecordMatch` and `CitationMatch` rules; `merge` through the CLI from stdin and from `--unheld` and `--known` files: candidate deduplication with obtain links and truncated titles, held marking, local citations, ordering, unreachable sources, known items no candidate names |
-| `test_vault_audit.py` | Vault Maintenance: the control-plane groups over a temporary repository; the audit set before and after an acceptance; the baseline over a temporary file — new, changed, removed, accepted with an injected date; the Clean Code measures over hand-written sources; instruction pointers over a temporary root with an injected today — a missing path, a present path, a vault path, a home path, a placeholder, a bare root file, a future date, a past date; named works — a basename in a rule and in a string constant, the basename pattern with placeholders; related files by reference form; the CLI's help |
+| `test_vault_audit.py` | Vault Maintenance, the research checks of `audit/checks.py` under the core's audit engine: named works — a basename in a rule and in a string constant, the basename pattern with placeholders; a vault path, with and without a space, resolved under the vault; the research scope's groups over a temporary repository, and no pattern under `upgrade/`; `residue` skipped where `machine.json` names `vault_dir`, and its sites over a temporary vault where it does not; the lint rows of a fixture plane equal to the rows the engine gave before the move; `accept` writing `audit/baseline.json` under the root; the core skill's symlink, relative and into the vendored core |
 
 Not reachable here: the Zotero connector, ZotMoov attachment polling, the
 conversion engine, and the models behind the search stores.
@@ -162,6 +162,11 @@ conversion engine, and the models behind the search stores.
 vault (contract §5).** Without `--apply` it writes nothing: it reports whether
 each golden still matches and exits non-zero on a difference. It rejects
 unknown arguments: NEVER add a flag that could write on a typo.
+
+`fixtures/pre-a2-audit/lint-rows.json` holds the `code`, `pointers`, and
+`works` rows the audit engine printed over the fixture plane of
+`_audit_plane.py` before the engine moved into the core. NEVER rewrite the
+file: no engine that printed those rows remains to capture them again.
 
 ## Operating rule — updating a golden is a deliberate act
 

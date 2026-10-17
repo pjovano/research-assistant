@@ -172,7 +172,7 @@ bind every row.
 | pre-push hook | `.githooks/pre-push`, which runs the test suite, the linter, and the audit linter's `works` check before every push from a checkout whose `core.hooksPath` names `.githooks` | push hook, pre-push check |
 | checkout | the files of the control plane in one directory: the main checkout, or a worktree | work tree, clone (for a checkout) |
 | worktree | a checkout `git worktree add` made beside the main checkout, sharing its repository | git worktree, linked work tree |
-| audit baseline | `.claude/skills/vault-audit/baseline.json`, one digest per control-plane file as of the last accepted audit | manifest, snapshot (for the baseline) |
+| audit baseline | `audit/baseline.json`, one digest per control-plane file as of the last accepted audit | manifest, snapshot (for the baseline) |
 | audit set | the files one audit reads whole: those changed since the last accepted audit, plus every control-plane file that names one | audit scope, changed set, delta |
 | conflict copy | a sibling file a sync service leaves beside a note or a store when two machines change it at once | conflicted copy, duplicate (for the file) |
 | notation span | notation written as LaTeX between `$` delimiters, `$…$` inline and `$$…$$` displayed, the engine's reading and the form every downstream rule keys on; the legacy `❲…❳` placeholder of older corpus files is also one | placeholder (for a new span), delimited span, math span, inline math (as a name), equation (for an inline span) |
